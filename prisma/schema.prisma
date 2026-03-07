@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model WorkbenchOwner {
+  id               String   @id @default(uuid())
+  productName      String   @unique
+  productOwnerId   String   @default("")
+  mediaOwnerId     String   @default("")
+  creativeOwnerId  String   @default("")
+  taskStatus       String   @default("unassigned")
+  updatedAt        DateTime @updatedAt
+}
+
+model WorkbenchTask {
+  id               String    @id @default(uuid())
+  productName      String?
+  creativeId       String?   // 生命週期對齊時存 campaignId（見 creative-identity.md）
+  draftId          String?   // 投放草稿 ID，深連結用
+  reviewSessionId  String?   // 審判官對話串 ID，用於深連結回該判讀
+  title            String
+  action          String
+  reason          String
+  assigneeId       String?
+  status          String    @default("unassigned")
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  notes           String    @default("")
+  taskSource      String?   // 審判官 | 素材生命週期 | 汰換建議 | 手動
+  priority        String?   // high | medium | low
+  dueDate         DateTime?
+  impactAmount    String?   // 影響金額描述或數值
+  taskType        String?   // 任務類型標籤
+}
+
+model WorkbenchAudit {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String
+  entityId   String
+  action     String
+  oldValue   String?  // JSON
+  newValue   String?  // JSON
+  at         DateTime @default(now())
+}
+
+model WorkbenchMapping {
+  id         String   @id @default(uuid())
+  entityType String   // creative | ad | adset | campaign
+  entityId   String
+  productName String
+  updatedAt  DateTime @updatedAt
+
+  @@unique([entityType, entityId])
+}
+
+model ThresholdVersion {
+  id          String    @id @default(uuid())
+  kind        String    // global | product
+  productId   String?   // null for global
+  config      String    // JSON
+  status      String    @default("draft") // draft | published
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PromptVersion {
+  id          String    @id @default(uuid())
+  mode        String    // boss | buyer | creative
+  content     String    @default("")
+  status      String    @default("draft")
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

@@ -1,0 +1,2 @@
+# 僅筆記／勿當正式 script 使用（實際請用 package.json 的 scripts）
+# "dev": "NODE_ENV=development tsx server/index.ts"
