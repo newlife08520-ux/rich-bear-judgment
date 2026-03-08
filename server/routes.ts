@@ -211,20 +211,33 @@ export async function registerRoutes(
   });
 
   app.post("/api/settings/test-connection", requireAuth, async (req, res) => {
-    const { type, value } = req.body;
+    const type = req.body?.type;
+    const valueRaw = req.body?.value;
+    const value = typeof valueRaw === "string" ? valueRaw : String(valueRaw ?? "");
+    const checkedAt = new Date().toISOString();
+
+    const sendError = (payload: { message: string; errorCode: string; statusCode?: number; testedModel?: string; productionModel?: string; providerErrorMessage?: string; [k: string]: unknown }) => {
+      const statusCode = payload.statusCode && payload.statusCode >= 400 ? payload.statusCode : 200;
+      res.status(statusCode).json({
+        success: false,
+        status: "error",
+        checkedAt,
+        statusCode,
+        ...payload,
+      });
+    };
+
     if (!type || !["ga4", "fb", "ai"].includes(type)) {
-      return res.status(400).json({ success: false, status: "error", message: "無效的連線類型", errorCode: "INVALID_TYPE", checkedAt: new Date().toISOString() });
+      return sendError({ message: "無效的連線類型", errorCode: "INVALID_TYPE", statusCode: 400 });
     }
-    if (!value || !value.trim()) {
+    if (!value.trim()) {
       const emptyMessages: Record<string, string> = {
         ai: "尚未輸入 API Key，請先輸入 AI 模型的 API 金鑰",
         fb: "尚未輸入 Access Token，請先輸入 Facebook API 存取權杖",
         ga4: "尚未輸入 Property ID，請先輸入 GA4 資源 ID",
       };
-      return res.json({ success: false, status: "error", message: emptyMessages[type] || "欄位不能為空", errorCode: "EMPTY_VALUE", checkedAt: new Date().toISOString() });
+      return sendError({ message: emptyMessages[type] || "欄位不能為空", errorCode: "EMPTY_VALUE" });
     }
-
-    const checkedAt = new Date().toISOString();
 
     try {
       if (type === "ai") {
@@ -239,30 +252,30 @@ export async function registerRoutes(
           const text = result.response.text();
           if (text && text.length > 0) {
             return res.json({ success: true, status: "success", message: `API Key 驗證成功，可正常存取 Gemini API。正式審判將使用模型 ${productionModel}`, testedModel: testModel, productionModel, checkedAt });
-          } else {
-            return res.json({ success: false, status: "error", message: `模型回應為空，請確認 API Key 是否正常`, errorCode: "EMPTY_RESPONSE", testedModel: testModel, productionModel, checkedAt });
           }
+          return sendError({ message: "模型回應為空，請確認 API Key 是否正常", errorCode: "EMPTY_RESPONSE", testedModel: testModel, productionModel });
         } catch (err: any) {
-          const errMsg = err.message || String(err);
+          const errMsg = err?.message ?? String(err);
+          const providerErrorMessage = errMsg.slice(0, 500);
           if (errMsg === "TIMEOUT") {
-            return res.json({ success: false, status: "error", message: "驗證逾時（超過 15 秒），請稍後再試", errorCode: "TIMEOUT", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: "驗證逾時（超過 15 秒），請稍後再試", errorCode: "TIMEOUT", testedModel: testModel, productionModel, providerErrorMessage });
           }
           if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
-            return res.json({ success: false, status: "error", message: "API Key 無效，請確認金鑰是否正確", errorCode: "API_KEY_INVALID", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: "API Key 無效，請確認金鑰是否正確", errorCode: "API_KEY_INVALID", testedModel: testModel, productionModel, providerErrorMessage });
           }
           if (errMsg.includes("not found") || errMsg.includes("is not found")) {
-            return res.json({ success: false, status: "error", message: `模型 ${testModel} 不存在，請確認模型名稱是否正確`, errorCode: "MODEL_NOT_FOUND", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: `模型 ${testModel} 不存在，請確認模型名稱是否正確`, errorCode: "MODEL_NOT_FOUND", testedModel: testModel, productionModel, providerErrorMessage });
           }
           if (errMsg.includes("permission") || errMsg.includes("PERMISSION_DENIED")) {
-            return res.json({ success: false, status: "error", message: `目前 API Key 沒有 Gemini API 的存取權限`, errorCode: "PERMISSION_DENIED", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: "目前 API Key 沒有 Gemini API 的存取權限", errorCode: "PERMISSION_DENIED", testedModel: testModel, productionModel, providerErrorMessage });
           }
           if (errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
-            return res.json({ success: false, status: "error", message: "API 配額已用完，請稍後再試或升級方案", errorCode: "QUOTA_EXHAUSTED", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: "API 配額已用完，請稍後再試或升級方案", errorCode: "QUOTA_EXHAUSTED", testedModel: testModel, productionModel, providerErrorMessage });
           }
           if (errMsg.includes("billing") || errMsg.includes("BILLING")) {
-            return res.json({ success: false, status: "error", message: "帳戶帳單問題，請確認 Google Cloud 帳單設定", errorCode: "BILLING_ERROR", testedModel: testModel, productionModel, checkedAt });
+            return sendError({ message: "帳戶帳單問題，請確認 Google Cloud 帳單設定", errorCode: "BILLING_ERROR", testedModel: testModel, productionModel, providerErrorMessage });
           }
-          return res.json({ success: false, status: "error", message: `AI 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "AI_ERROR", testedModel: testModel, productionModel, checkedAt });
+          return sendError({ message: `AI 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "AI_ERROR", testedModel: testModel, productionModel, providerErrorMessage });
         }
       }
 
@@ -305,10 +318,12 @@ export async function registerRoutes(
           }
           return res.json({ success: false, status: "error", message: "Facebook API 回傳未預期的格式", errorCode: "FB_UNKNOWN", checkedAt });
         } catch (err: any) {
+          const errMsg = err?.message ?? String(err);
+          const providerErrorMessage = errMsg.slice(0, 500);
           if (err.code === "ENOTFOUND" || err.code === "ECONNREFUSED" || err.message?.includes("fetch")) {
-            return res.json({ success: false, status: "error", message: "無法連線至 Facebook API，請檢查網路連線", errorCode: "NETWORK_ERROR", checkedAt });
+            return res.json({ success: false, status: "error", message: "無法連線至 Facebook API，請檢查網路連線", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
           }
-          return res.json({ success: false, status: "error", message: `Facebook 連線失敗: ${(err.message || String(err)).slice(0, 200)}`, errorCode: "FB_ERROR", checkedAt });
+          return res.json({ success: false, status: "error", message: `Facebook 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "FB_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
         }
       }
 
@@ -391,18 +406,28 @@ export async function registerRoutes(
           }
           return res.json({ success: false, status: "error", message: "GA4 API 回傳未預期的格式", errorCode: "GA4_UNKNOWN", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
         } catch (err: any) {
-          const errMsg = err.message || String(err);
+          const errMsg = err?.message ?? String(err);
+          const providerErrorMessage = errMsg.slice(0, 500);
           if (errMsg.includes("ENOTFOUND") || errMsg.includes("ECONNREFUSED") || errMsg.includes("network")) {
-            return res.json({ success: false, status: "error", message: "無法連線至 Google Analytics API，請檢查網路連線", errorCode: "NETWORK_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
+            return res.json({ success: false, status: "error", message: "無法連線至 Google Analytics API，請檢查網路連線", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
           }
           if (errMsg.includes("invalid_grant") || errMsg.includes("Invalid JWT")) {
-            return res.json({ success: false, status: "error", message: "Service Account 憑證無效或已過期，請重新產生金鑰", errorCode: "GA4_INVALID_CRED", ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
+            return res.json({ success: false, status: "error", message: "Service Account 憑證無效或已過期，請重新產生金鑰", errorCode: "GA4_INVALID_CRED", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
           }
-          return res.json({ success: false, status: "error", message: `GA4 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "GA4_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
+          return res.json({ success: false, status: "error", message: `GA4 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "GA4_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
         }
       }
     } catch (err: any) {
-      return res.json({ success: false, status: "error", message: `伺服器錯誤: ${(err.message || String(err)).slice(0, 200)}`, errorCode: "SERVER_ERROR", checkedAt });
+      const errMsg = err?.message ?? String(err);
+      return res.status(500).json({
+        success: false,
+        status: "error",
+        message: `伺服器錯誤: ${errMsg.slice(0, 200)}`,
+        errorCode: "SERVER_ERROR",
+        statusCode: 500,
+        providerErrorMessage: errMsg.slice(0, 500),
+        checkedAt,
+      });
     }
   });
 

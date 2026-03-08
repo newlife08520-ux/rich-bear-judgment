@@ -66,6 +66,9 @@ interface ConnectionResult {
   checkedAt: string | null;
   testedModel?: string;
   accountPreview?: { totalCount: number; topNames: string[] };
+  errorCode?: string;
+  statusCode?: number;
+  providerErrorMessage?: string;
 }
 
 const STATUS_LAMP_COLORS: Record<ConnectionStatus, string> = {
@@ -145,16 +148,44 @@ function ApiConnectionSection({
         checkedAt: data.checkedAt || new Date().toISOString(),
         testedModel: data.testedModel,
         accountPreview: data.accountPreview,
+        errorCode: data.errorCode,
+        statusCode: data.statusCode,
+        providerErrorMessage: data.providerErrorMessage,
       });
       if (data.success) {
         toast({ title: "連線成功", description: data.message });
       } else {
         toast({ title: "驗證失敗", description: data.message, variant: "destructive" });
       }
-    } catch {
+    } catch (err: unknown) {
       const checkedAt = new Date().toISOString();
-      setResult({ status: "error", message: "網路錯誤或伺服器無回應，請檢查連線狀態", checkedAt });
-      toast({ title: "連線失敗", description: "無法連線至伺服器，請稍後再試", variant: "destructive" });
+      const errMsg = err instanceof Error ? err.message : String(err);
+      let payload: Partial<ConnectionResult> = {
+        status: "error",
+        message: "網路錯誤或伺服器無回應，請檢查連線狀態",
+        checkedAt,
+      };
+      const match = errMsg.match(/^\d+:\s*(\{[\s\S]*\})$/);
+      if (match) {
+        try {
+          const data = JSON.parse(match[1]);
+          payload = {
+            status: "error",
+            message: data.message || payload.message,
+            checkedAt: data.checkedAt || checkedAt,
+            testedModel: data.testedModel,
+            errorCode: data.errorCode,
+            statusCode: data.statusCode,
+            providerErrorMessage: data.providerErrorMessage,
+          };
+        } catch {
+          payload.message = errMsg.slice(0, 300) || payload.message;
+        }
+      } else if (errMsg && errMsg.length < 500) {
+        payload.message = errMsg;
+      }
+      setResult((prev) => ({ ...prev, ...payload }));
+      toast({ title: "連線失敗", description: payload.message, variant: "destructive" });
     }
   };
 
@@ -178,6 +209,18 @@ function ApiConnectionSection({
           )}
         </div>
       </div>
+      {result.status === "error" && result.message && (
+        <p className="text-xs text-red-600 pl-0.5" data-testid={`error-message-${type}`}>{result.message}</p>
+      )}
+      {result.status === "error" && (result.errorCode != null || result.statusCode != null || result.providerErrorMessage) && (
+        <div className="text-[11px] text-muted-foreground pl-0.5 space-y-0.5 border-l-2 border-muted pl-2" data-testid={`error-diagnostics-${type}`}>
+          {result.errorCode != null && <div><span className="font-medium">errorCode:</span> {result.errorCode}</div>}
+          {result.statusCode != null && <div><span className="font-medium">statusCode:</span> {result.statusCode}</div>}
+          {result.providerErrorMessage != null && result.providerErrorMessage !== result.message && (
+            <div><span className="font-medium">providerErrorMessage:</span> <span className="break-all">{result.providerErrorMessage}</span></div>
+          )}
+        </div>
+      )}
       {showModel && result.testedModel && (
         <div className="flex flex-col gap-1 text-xs text-muted-foreground pl-0.5" data-testid={`tested-model-${type}`}>
           <div className="flex items-center gap-1.5">
