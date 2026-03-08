@@ -57,7 +57,7 @@
 | 項目 | 原因 |
 |------|------|
 | **production 實機驗證** | 需在 staging 網址實際打 /tasks、/health、judgment，本端無法代為操作。 |
-| **migrate 已存在欄位時** | 若 production DB 曾用 `prisma db push` 已含新欄位，`prisma migrate deploy` 可能因「欄位已存在」失敗；start 已用 `;` 讓 server 仍會起動，必要時可手動 `prisma migrate resolve` 或略過該次 migration。 |
+| **migrate 已存在欄位時** | 若 production DB 曾用 `prisma db push` 已含新欄位，`prisma migrate deploy` 可能因「欄位已存在」失敗；start 由 `script/start-production.mjs` 在 migrate 失敗時 log 後仍啟動 server，必要時可手動 `prisma migrate resolve` 或略過該次 migration。 |
 | **judgment 依使用者設定** | 審判官需使用者在「設定」頁填寫 AI API Key，非僅靠環境變數；若未填會回 400 NO_API_KEY。 |
 
 ---
