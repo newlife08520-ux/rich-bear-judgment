@@ -42,6 +42,7 @@ import {
   type ProductLevelMetrics,
   type CreativeTagLevelMetrics,
 } from "@shared/tag-aggregation-engine";
+import { prisma } from "./db";
 import {
   getWorkbenchOwners,
   patchWorkbenchProductOwner,
@@ -2322,17 +2323,44 @@ export async function registerRoutes(
       const msg = err instanceof Error ? err.message : String(err);
       const full = err instanceof Error ? err.stack : String(err);
       console.error("[GET /api/workbench/tasks] full error:", full);
-      // DB schema 未套用（缺欄位 / P3009 等）：回 503 與明確訊息，不偽裝成空任務
+      const prismaErrorCode = (err as { code?: string })?.code;
+      const prismaErrorMessage = msg;
       const isSchemaOrColumnError =
         /column|no such column|Unknown column|SQLITE_ERROR|P3009|P2010|does not exist/i.test(msg);
+
+      let debug: { dbPath: string; tableExists: boolean | null; missingColumns: string[] | null; prismaErrorCode?: string; prismaErrorMessage: string } = {
+        dbPath: "",
+        tableExists: null,
+        missingColumns: null,
+        prismaErrorCode,
+        prismaErrorMessage,
+      };
+      try {
+        const dbFile = process.env.DATABASE_URL?.replace(/^file:/, "") ?? path.join(process.cwd(), ".data", "workbench.db");
+        debug.dbPath = path.isAbsolute(dbFile) ? dbFile : path.resolve(process.cwd(), dbFile);
+        const tableRows = await prisma.$queryRawUnsafe<{ name: string }[]>(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='WorkbenchTask'"
+        );
+        debug.tableExists = tableRows.length > 0;
+        const requiredNewColumns = ["draftId", "reviewSessionId", "taskSource", "priority", "dueDate", "impactAmount", "taskType"];
+        if (debug.tableExists) {
+          const infoRows = await prisma.$queryRawUnsafe<{ name: string }[]>("PRAGMA table_info('WorkbenchTask')");
+          const currentNames = infoRows.map((r) => r.name);
+          debug.missingColumns = requiredNewColumns.filter((c) => !currentNames.includes(c));
+        }
+      } catch (e) {
+        debug.prismaErrorMessage = [msg, (e instanceof Error ? e.message : String(e))].join("; debug gather failed: ");
+      }
+
       if (isSchemaOrColumnError) {
-        console.error("[GET /api/workbench/tasks] schema/column error → 503. 請依上方 full error 對症：若為 P3009 可執行 prisma migrate resolve --applied 20260307120000_add_workbench_task_columns 後重 deploy");
+        console.error("[GET /api/workbench/tasks] schema/column error → 503. debug:", JSON.stringify(debug));
         return res.status(503).json({
           message: "資料庫尚未完成 migration，任務資料暫不可用",
           errorCode: "TASKS_DEGRADED",
+          debug,
         });
       }
-      res.status(500).json({ message: "取得任務列表失敗", error: msg });
+      res.status(500).json({ message: "取得任務列表失敗", error: msg, debug });
     }
   });
 

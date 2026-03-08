@@ -40,6 +40,7 @@ if (migrate.status !== 0) {
 }
 
 console.log("[start-production] 執行 ensure-workbench-task-columns（不論 migrate 成敗皆執行）…");
+console.log("[start-production] 當前 DATABASE_URL:", process.env.DATABASE_URL ?? "(未設，將用預設 .data/workbench.db)");
 const ensure = spawnSync(execPath, [path.join(rootDir, "script", "ensure-workbench-task-columns.mjs")], {
   cwd: rootDir,
   env: process.env,
