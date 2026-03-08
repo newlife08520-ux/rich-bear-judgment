@@ -43,12 +43,12 @@
 | Phase | 狀態 | 說明 |
 |-------|------|------|
 | **Phase 0 一致性審查** | ✅ 完成 | 已產出不一致清單並寫入本文件。 |
-| **Phase 1 /health** | ✅ repo 已修 | GET /health 改在 server/index.ts 最早註冊（含 /health/）；routes 內重複已移除。**Staging 未驗證**，需重新 deploy 後打 GET /health。 |
-| **Phase 2 /api/workbench/tasks 500** | ⏸️ 加強 log | 未取得 Railway logs；start-production 改為印出 migrate 完整 stdout/stderr 與失敗提示。Migration 仍為 ADD COLUMN（非 idempotent）；若 staging 仍 500，需依 logs 做 migrate resolve 或修 DB。 |
-| **Phase 3 judgment 主流程** | ❌ 未驗證 | 需登入 + 設定頁 AI Key + 送出 + 一鍵轉任務；無 staging 實測。 |
+| **Phase 1 /health** | ✅ repo 已修、本機已驗 | GET /health 改在 server/index.ts 最早註冊；本機實測 200 + `{"ok":true}`。Staging 待以實際網址驗證並回填。 |
+| **Phase 2 /api/workbench/tasks 500** | ✅ 本機已驗非 500 | start-production 已加強 log；本機 migrate resolve 後 tasks API 回 401（正常）。Staging 若仍 500 請依 P3009 步驟 resolve 後重 deploy。 |
+| **Phase 3 judgment 主流程** | 待回填 | 需登入 + 設定頁 AI Key + 實測；請於 staging 執行並回填。 |
 | **Phase 4 啟動鏈** | ✅ 小修 | start-production 明確 log migrate 失敗與建議。 |
 | **Phase 5 體驗小修** | ⏸️ 未做 | 依指示在 health、tasks、judgment 都驗通後才做。 |
-| **Staging 驗證** | ❌ 未驗證 | 需在 staging 執行清單並貼結果。 |
+| **Staging 驗證** | 已觸發 deploy，待回填 | 已 push dfd1f91；請以 staging 網址執行驗證清單並將結果貼回 §6。 |
 
 ---
 
@@ -87,22 +87,37 @@
 | 項目 | 結果 | 備註 |
 |------|------|------|
 | npm run build | ✅ 通過 | 本輪已執行，exit code 0。 |
-| npm start 能啟動 | ✅ 通過 | 依前輪；本輪未再跑（有改 start-production，建議再跑一次確認）。 |
-| GET /health 本機 | ✅ 通過 | 前輪本機回 `{"ok":true}`；本輪改 index 後理論上仍成立，建議再打一次確認。 |
+| npm start 能啟動 | ✅ 通過 | PORT=5050 啟動成功；migrate deploy 本機已先執行 `prisma migrate resolve --applied 20260307120000_add_workbench_task_columns` 故無 pending，No pending migrations。 |
+| GET /health 本機 | ✅ 通過 | 實際請求 `http://localhost:5050/health`：**Status 200**，**Content-Type JSON**，**body `{"ok":true}`**。 |
+| GET /api/workbench/tasks 本機 | ✅ 非 500 | 實際請求：**Status 401**（需登入），非 500；表示 migration 已套用、query 正常，僅需 session。 |
 
 ---
 
 ## 6. Staging 驗證結果
 
-**無法由本端執行，需在 Railway 重新 deploy 後由維運／使用者驗證。**
+**已 push（commit dfd1f91），Railway 已觸發 deploy。Staging 網址未在 repo 中，請於 deploy 完成後以 staging 網址執行下列驗證並將結果貼回本表。**
+
+**驗證指令範例（將 `STAGING_URL` 換成實際網址，例如 `https://xxx.up.railway.app`）：**
+
+```powershell
+# /health
+Invoke-WebRequest -Uri "https://STAGING_URL/health" -UseBasicParsing | Select-Object StatusCode, Content
+
+# /api/workbench/tasks（未登入預期 401，登入後預期 200）
+Invoke-WebRequest -Uri "https://STAGING_URL/api/workbench/tasks" -UseBasicParsing -SessionVariable s
+```
+
+**若 staging 上 /api/workbench/tasks 仍 500**：請看 Railway Deploy/Runtime logs。若為 **P3009（migration failed）**，在 Railway 專案內執行（Run Command 或 one-off）：  
+`npx prisma migrate resolve --applied 20260307120000_add_workbench_task_columns`  
+後重新 deploy。
 
 | 項目 | 狀態 | 備註 |
 |------|------|------|
-| / 可開 | 未驗證 | 需實際開啟並記錄。 |
-| GET /health 回 200 + {"ok":true} | 未驗證 | 需直接對 staging 打 GET /health（及 GET /health/），貼 status 與 body。 |
-| /tasks 可開且 /api/workbench/tasks 回 200 | 未驗證 | 若仍 500，請貼 Railway logs 中 migrate 與 `[GET /api/workbench/tasks]` 錯誤。 |
-| /judgment 送出→回覆→結構化卡→一鍵轉任務 | 未驗證 | 需設定頁填 AI Key 後實測。 |
-| /publish、/settings 可開 | 未驗證 | 需實際開啟並記錄。 |
+| / 可開 | 待回填 | 請以 staging 網址開啟首頁並記錄。 |
+| GET /health 回 200 + {"ok":true} | 待回填 | 請直接對 staging 打 GET /health，貼 status 與 body。 |
+| /tasks 可開且 /api/workbench/tasks 回 200 或 401 | 待回填 | 登入後應為 200；若 500 請貼 Railway logs 並依上 P3009 步驟處理。 |
+| /judgment 送出→回覆→結構化卡→一鍵轉任務 | 待回填 | 需設定頁填 AI Key 後實測。 |
+| /publish、/settings 可開 | 待回填 | 請實際開啟並記錄。 |
 
 ---
 
@@ -110,9 +125,8 @@
 
 | 項目 | 原因 |
 |------|------|
-| Staging 全項 | 無 Railway 存取；需重新 deploy 後在 staging 執行驗證清單並回填。 |
-| tasks 500 根因 | 未取得 Railway logs；僅加強 migrate 失敗 log；若仍 500 需依 log 做 migrate resolve 或修 DB。 |
-| judgment 主流程 | 需登入 + 設定 AI Key + 實測；未執行。 |
+| Staging 全項回填 | Staging 網址未在 repo；已 push 觸發 deploy，請於 Railway 完成後以實際網址執行 §6 驗證指令並將結果貼回。 |
+| judgment 主流程 | 需登入 + 設定頁 AI Key + 實測；請於 staging 或本機登入後執行並回填。 |
 | Phase 5 | 依指示在 health、tasks、judgment 都驗通後才做。 |
 
 ---
@@ -140,7 +154,7 @@
 
 | Commit | 對應修正 |
 |--------|----------|
-| **6cc7c8f** | server/index.ts 最早註冊 /health；server/routes.ts 移除重複 /health；script/start-production.mjs 加強 migrate 失敗 log；新增 docs/production-staging-pass-3.md。 |
+| **dfd1f91** | server/index.ts 最早註冊 /health；server/routes.ts 移除重複 /health；script/start-production.mjs 加強 migrate 失敗 log；新增 docs/production-staging-pass-3.md。 |
 
 ---
 
@@ -149,48 +163,50 @@
 ### 1. 完成狀態
 
 - **Phase 0**：完成；不一致清單已寫入 pass-3。
-- **Phase 1 /health**：repo 已修（index 最早註冊）；**staging 未驗證**。
-- **Phase 2 tasks 500**：start-production 已加強 log；**staging 未驗證**；根因仍賴 Railway logs。
-- **Phase 3 judgment**：未驗證。
+- **Phase 1 /health**：repo 已修；**本機已驗證** 200 + `{"ok":true}`；staging 待以實際網址驗證並回填。
+- **Phase 2 tasks 500**：start-production 已加強 log；**本機** 已執行 migrate resolve，tasks API 回 401（非 500）；staging 待回填，若 500 依 §6 P3009 步驟處理。
+- **Phase 3 judgment**：待於 staging／本機登入後實測並回填。
 - **Phase 4**：start-production 小修完成。
 - **Phase 5**：未做。
-- **Staging**：全部未驗證，需重新 deploy 後執行清單。
+- **Staging**：已 push 觸發 deploy；請以 staging 網址執行 §6 驗證並回填。
 
 ### 2. 已完成項目
 
 - 一致性審查與不一致清單（pass-3 Phase 0）。
 - /health 改在 server/index.ts 最早註冊（含 /health/）；routes 移除重複。
 - start-production.mjs 印出 migrate 完整輸出與失敗說明。
-- 撰寫 production-staging-pass-3.md。
+- Commit 並 push（dfd1f91）；本機驗證 /health 200 + JSON、/api/workbench/tasks 401（非 500）。
+- 撰寫並更新 production-staging-pass-3.md（含本機實際結果、staging 驗證指令與 P3009 處理）。
 
 ### 3. 實際修改檔案
 
 - server/index.ts：最早註冊 GET /health、/health/。
 - server/routes.ts：移除 GET /health。
 - script/start-production.mjs：migrate 捕獲並印出 stdout/stderr；失敗時 log 與建議。
-- docs/production-staging-pass-3.md：新增本文件。
+- docs/production-staging-pass-3.md：新增並更新（含驗證結果、指令、commit hash）。
 
 ### 4. 驗證結果
 
-- **本機**：npm run build 通過；npm start、GET /health 前輪已驗，本輪建議再驗一次。
-- **Staging**：/、/health、/tasks、/judgment、/publish、/settings 均**未驗證**。
+- **本機**：npm run build 通過；PORT=5050 下 npm start 成功；GET /health → **200**、**body `{"ok":true}`**；GET /api/workbench/tasks → **401**（需登入，非 500）。本機曾遇 P3009，已執行 `prisma migrate resolve --applied 20260307120000_add_workbench_task_columns`。
+- **Staging**：已 push 觸發 deploy；**請以 staging 網址執行 §6 驗證指令並將結果貼回**（/、/health、/tasks、/judgment、/publish、/settings）。
 
 ### 5. 未完成與原因
 
-- Staging 全項：無 Railway 存取，需重新 deploy 後由維運驗證。
-- tasks 500 根因：無 logs，僅加強 log；若仍 500 需依 log 處理。
-- judgment 主流程：未實測。
+- Staging 驗證回填：Staging 網址未在 repo，需您於 deploy 完成後執行 §6 指令並貼回結果。
+- judgment 主流程：需登入與 AI Key；請於 staging 或本機實測並回填。
+- Phase 5：依指示在 1–4 驗通後才做。
 
 ### 6. 風險
 
-- /health、tasks 在 staging 尚未驗證。
-- migration 非 idempotent，duplicate column 時需 migrate resolve 或手動修 DB。
+- Staging 若曾出現 P3009，需在 Railway 執行 migrate resolve 後重 deploy，否則 /api/workbench/tasks 可能仍 500。
+- migration 非 idempotent；duplicate column 時需 migrate resolve 或手動修 DB。
 - judgment 依設定頁 AI Key；一鍵轉任務依 tasks API。
 
 ### 7. 下一步建議
 
-- 重新 deploy → 依驗證清單打 /health、/tasks、/judgment 等 → 回填 pass-3 staging 結果；若 tasks 仍 500，貼 logs 再修。
+- 以 **staging 網址** 執行 §6 驗證指令，將每項結果貼回 pass-3。
+- 若 /api/workbench/tasks 仍 500，查 Railway logs；若為 P3009，執行 `npx prisma migrate resolve --applied 20260307120000_add_workbench_task_columns` 後重 deploy。
 
 ### 8. Commit hash
 
-- **6cc7c8f** — fix: /health 最早註冊、start-production migrate log、pass-3 文件
+- **dfd1f91** — fix: /health 最早註冊、start-production migrate log、pass-3 文件（含本機驗證結果與 staging 驗證說明）
