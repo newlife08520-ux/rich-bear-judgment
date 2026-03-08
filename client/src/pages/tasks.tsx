@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ListTodo, Plus, Copy, User, Package, Image, Gavel, Send } from "lucide-react";
+import { ListTodo, Plus, Copy, User, Package, Image, Gavel, Send, AlertTriangle } from "lucide-react";
 import { useEmployee } from "@/lib/employee-context";
 import { useAuth } from "@/lib/auth";
 import { TASK_STATUS } from "@/lib/decision-workbench";
@@ -105,13 +105,17 @@ export default function TasksPage() {
   const [batchAssignOpen, setBatchAssignOpen] = useState(false);
   const [batchStatusOpen, setBatchStatusOpen] = useState(false);
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], error: tasksError, isError: tasksIsError } = useQuery({
     queryKey: ["/api/workbench/tasks", onlyMine],
     queryFn: async () => {
       const url = onlyMine ? "/api/workbench/tasks?onlyMine=1" : "/api/workbench/tasks";
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) return [];
-      return res.json();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = (body && typeof body.message === "string" ? body.message : null) || "任務資料暫不可用";
+        throw new Error(msg);
+      }
+      return body as WorkbenchTask[];
     },
   });
 
@@ -268,6 +272,7 @@ export default function TasksPage() {
             variant="outline"
             size="sm"
             className="gap-1"
+            title="複製為純文字，貼到 Slack 或 LINE 即可用"
             onClick={() => {
               const text = formatTodayExecutionList(tasks, employees);
               navigator.clipboard.writeText(text).then(
@@ -339,6 +344,19 @@ export default function TasksPage() {
           </CardContent>
         </Card>
 
+        {tasksIsError && tasksError && (
+          <Card className="border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/20">
+            <CardContent className="py-4 px-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-amber-800 dark:text-amber-200">任務資料暫不可用</p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">{tasksError.message}</p>
+                <p className="text-xs text-muted-foreground mt-2">若為部署環境，請檢查 DB migration 是否已套用，或聯絡維運。</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {selectedCount > 0 && (
           <Card className="bg-muted/50">
             <CardContent className="py-2 px-4 flex flex-wrap items-center gap-3">
@@ -384,7 +402,11 @@ export default function TasksPage() {
                   {tasks.length === 0 ? (
                     <tr>
                       <td colSpan={14} className="p-6 text-center text-muted-foreground">
-                        {onlyMine ? "目前沒有指派給你的任務。" : "尚無任務，請從商品作戰室或 RICH BEAR 審判官一鍵生成，或在此建立。"}
+                        {tasksIsError
+                          ? "任務列表無法載入，請見上方說明。"
+                          : onlyMine
+                            ? "目前沒有指派給你的任務。"
+                            : "尚無任務，請從商品作戰室或 RICH BEAR 審判官一鍵生成，或在此建立。"}
                       </td>
                     </tr>
                   ) : (

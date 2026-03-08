@@ -2322,12 +2322,15 @@ export async function registerRoutes(
       const msg = err instanceof Error ? err.message : String(err);
       const full = err instanceof Error ? err.stack : String(err);
       console.error("[GET /api/workbench/tasks] full error:", full);
-      // DB schema 未套用（缺欄位 / P3009 等）時不讓前端 500，回傳空陣列並在 log 標註
+      // DB schema 未套用（缺欄位 / P3009 等）：回 503 與明確訊息，不偽裝成空任務
       const isSchemaOrColumnError =
         /column|no such column|Unknown column|SQLITE_ERROR|P3009|P2010|does not exist/i.test(msg);
       if (isSchemaOrColumnError) {
-        console.error("[GET /api/workbench/tasks] schema/column error, returning [] — 請在 DB 執行 prisma migrate resolve --applied 20260307120000_add_workbench_task_columns 或 migrate deploy");
-        return res.status(200).json([]);
+        console.error("[GET /api/workbench/tasks] schema/column error → 503. 請依上方 full error 對症：若為 P3009 可執行 prisma migrate resolve --applied 20260307120000_add_workbench_task_columns 後重 deploy");
+        return res.status(503).json({
+          message: "資料庫尚未完成 migration，任務資料暫不可用",
+          errorCode: "TASKS_DEGRADED",
+        });
       }
       res.status(500).json({ message: "取得任務列表失敗", error: msg });
     }
