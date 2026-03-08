@@ -259,5 +259,5 @@
 
 ### 8. Commit hash
 
-- **本輪**：**6ad0e41** — 新增 production-staging-pass-2.md（Phase 0 一致性審查、不一致清單、驗證結果、最終回報 1–8）、修正 production-staging-pass-1.md 過時描述（start 改由 mjs 處理）。
+- **本輪**：**bdad01b** — 新增 production-staging-pass-2.md（Phase 0 一致性審查、不一致清單、驗證結果、最終回報 1–8）、修正 production-staging-pass-1.md 過時描述（start 改由 mjs 處理）。
 - **前輪相關**：725628b（start-production.mjs、static fallback）
