@@ -1,41 +1,12 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile } from "fs/promises";
-
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times
-const allowlist = [
-  "@google/generative-ai",
-  "@prisma/adapter-better-sqlite3",
-  "@prisma/client",
-  "axios",
-  "better-sqlite3",
-  "connect-pg-simple",
-  "cors",
-  "date-fns",
-  "drizzle-orm",
-  "drizzle-zod",
-  "express",
-  "express-rate-limit",
-  "express-session",
-  "jsonwebtoken",
-  "memorystore",
-  "multer",
-  "nanoid",
-  "nodemailer",
-  "openai",
-  "passport",
-  "passport-local",
-  "pg",
-  "stripe",
-  "uuid",
-  "ws",
-  "xlsx",
-  "zod",
-  "zod-validation-error",
-];
+import { execSync } from "child_process";
 
 async function buildAll() {
+  console.log("running prisma generate...");
+  execSync("npx prisma generate", { stdio: "inherit" });
+
   await rm("dist", { recursive: true, force: true });
 
   console.log("building client...");
@@ -43,11 +14,12 @@ async function buildAll() {
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
-  const allDeps = [
+  const allPackages = [
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
-  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+  // 全部 node 套件 external，避免漏包（尤其 @prisma/client、prisma）導致 resolve 失敗
+  const external = allPackages;
 
   await esbuild({
     entryPoints: ["server/index.ts"],
@@ -59,7 +31,7 @@ async function buildAll() {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
-    external: externals,
+    external,
     logLevel: "info",
   });
 }
