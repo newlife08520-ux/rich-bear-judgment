@@ -43,6 +43,7 @@ import {
   type CreativeTagLevelMetrics,
 } from "@shared/tag-aggregation-engine";
 import { prisma } from "./db";
+import { getBuildVersion } from "./version";
 import {
   getWorkbenchOwners,
   patchWorkbenchProductOwner,
@@ -2328,7 +2329,9 @@ export async function registerRoutes(
       const isSchemaOrColumnError =
         /column|no such column|Unknown column|SQLITE_ERROR|P3009|P2010|does not exist/i.test(msg);
 
-      let debug: { dbPath: string; tableExists: boolean | null; missingColumns: string[] | null; prismaErrorCode?: string; prismaErrorMessage: string } = {
+      const buildVersion = getBuildVersion();
+      let debug: { buildVersion: { commit: string; branch: string; timestamp: string }; dbPath: string; tableExists: boolean | null; missingColumns: string[] | null; prismaErrorCode?: string; prismaErrorMessage: string } = {
+        buildVersion,
         dbPath: "",
         tableExists: null,
         missingColumns: null,
@@ -2357,10 +2360,11 @@ export async function registerRoutes(
         return res.status(503).json({
           message: "資料庫尚未完成 migration，任務資料暫不可用",
           errorCode: "TASKS_DEGRADED",
+          buildVersion,
           debug,
         });
       }
-      res.status(500).json({ message: "取得任務列表失敗", error: msg, debug });
+      res.status(500).json({ message: "取得任務列表失敗", error: msg, buildVersion, debug });
     }
   });
 

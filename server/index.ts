@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { getBuildVersion } from "./version";
 
 const app = express();
 const httpServer = createServer(app);
@@ -87,6 +88,9 @@ app.use((req, res, next) => {
 
   const port = parseInt(process.env.PORT || "5000", 10);
   const host = process.env.HOST || "0.0.0.0";
+
+  const buildVersion = getBuildVersion();
+  console.log(`[build-version] commit=${buildVersion.commit} branch=${buildVersion.branch} timestamp=${buildVersion.timestamp}`);
 
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {

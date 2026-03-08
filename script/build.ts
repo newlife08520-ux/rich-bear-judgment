@@ -1,7 +1,8 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, writeFile } from "fs/promises";
 import { execSync } from "child_process";
+import path from "path";
 
 async function buildAll() {
   console.log("running prisma generate...");
@@ -34,6 +35,19 @@ async function buildAll() {
     external,
     logLevel: "info",
   });
+
+  let commit = process.env.RAILWAY_GIT_COMMIT_SHA ?? "";
+  let branch = process.env.RAILWAY_GIT_BRANCH ?? "";
+  try {
+    if (!commit) commit = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+    if (!branch) branch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    if (!commit) commit = "unknown";
+    if (!branch) branch = "unknown";
+  }
+  const version = { commit, branch, timestamp: new Date().toISOString() };
+  await writeFile(path.join("dist", "version.json"), JSON.stringify(version, null, 0));
+  console.log("[build-version] written dist/version.json:", version);
 }
 
 buildAll().catch((err) => {
