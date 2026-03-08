@@ -13,12 +13,16 @@ const rootDir = path.resolve(__dirname, "..");
 console.log("[start-production] Running prisma migrate deploy...");
 const migrate = spawnSync("npx", ["prisma", "migrate", "deploy"], {
   cwd: rootDir,
-  stdio: "inherit",
   shell: true,
+  encoding: "utf8",
 });
+if (migrate.stdout) process.stdout.write(migrate.stdout);
+if (migrate.stderr) process.stderr.write(migrate.stderr);
 
 if (migrate.status !== 0) {
-  console.error("[start-production] prisma migrate deploy failed (status:", migrate.status, "). Starting server anyway.");
+  console.error("[start-production] prisma migrate deploy FAILED (exit code:", migrate.status, ")");
+  console.error("[start-production] 若為 duplicate column，可於 DB 手動執行 prisma migrate resolve --applied 20260307120000_add_workbench_task_columns 後重 deploy");
+  console.error("[start-production] 仍將啟動 server，但 /api/workbench/tasks 可能 500，請檢查 DB 與 migration 狀態。");
 }
 
 console.log("[start-production] Starting server: node dist/index.cjs");

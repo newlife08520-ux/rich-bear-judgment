@@ -155,6 +155,8 @@ export async function registerRoutes(
     });
   });
 
+  /** 存活檢查已改在 server/index.ts 最早註冊，此處不再重複 */
+
   /** 正式環境驗證：ffprobe 是否可執行；不須登入。失敗時 code: ENOENT=未安裝/PATH、PERM=權限、TIMEOUT=逾時、OTHER */
   app.get("/api/health/ffprobe", (_req, res) => {
     const result = checkFfprobeAvailable();
@@ -2304,10 +2306,15 @@ export async function registerRoutes(
   });
 
   app.get("/api/workbench/tasks", requireAuth, async (req, res) => {
-    const userId = req.session.userId!;
-    const onlyMine = req.query.onlyMine === "1" || req.query.onlyMine === "true";
-    const tasks = await getWorkbenchTasks(onlyMine ? { assigneeId: userId } : undefined);
-    res.json(tasks);
+    try {
+      const userId = req.session.userId!;
+      const onlyMine = req.query.onlyMine === "1" || req.query.onlyMine === "true";
+      const tasks = await getWorkbenchTasks(onlyMine ? { assigneeId: userId } : undefined);
+      res.json(tasks);
+    } catch (err) {
+      console.error("[GET /api/workbench/tasks]", err);
+      res.status(500).json({ message: "取得任務列表失敗", error: err instanceof Error ? err.message : String(err) });
+    }
   });
 
   app.patch("/api/workbench/tasks/batch", requireAuth, async (req, res) => {

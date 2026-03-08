@@ -61,6 +61,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // 必須早於 registerRoutes 與 serveStatic，確保 staging/production 一定由 server 回 JSON，不被 SPA 接走
+  app.get(["/health", "/health/"], (_req, res) => res.status(200).json({ ok: true }));
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
