@@ -23,7 +23,7 @@ if (migrate.status !== 0) {
   const stderr = (migrate.stderr || "").concat(migrate.stdout || "");
   const isP3009OrDuplicate = /P3009|duplicate column|failed migrations/i.test(stderr);
   if (isP3009OrDuplicate) {
-    console.log("[start-production] 偵測到 P3009/duplicate column，執行 migrate resolve 並補齊欄位…");
+    console.log("[start-production] 偵測到 P3009/duplicate column，執行 migrate resolve…");
     const resolve = spawnSync("npx", ["prisma", "migrate", "resolve", "--applied", "20260307120000_add_workbench_task_columns"], {
       cwd: rootDir,
       shell: true,
@@ -31,24 +31,24 @@ if (migrate.status !== 0) {
     });
     if (resolve.stdout) process.stdout.write(resolve.stdout);
     if (resolve.stderr) process.stderr.write(resolve.stderr);
-    if (resolve.status === 0) {
-      const ensure = spawnSync(execPath, [path.join(rootDir, "script", "ensure-workbench-task-columns.mjs")], {
-        cwd: rootDir,
-        env: process.env,
-        encoding: "utf8",
-      });
-      if (ensure.stdout) process.stdout.write(ensure.stdout);
-      if (ensure.stderr) process.stderr.write(ensure.stderr);
-      if (ensure.status !== 0) {
-        console.error("[start-production] ensure-workbench-task-columns 失敗，/api/workbench/tasks 可能仍 503");
-      }
-    } else {
+    if (resolve.status !== 0) {
       console.error("[start-production] migrate resolve 失敗，/api/workbench/tasks 可能仍 503");
     }
   } else {
     console.error("[start-production] prisma migrate deploy FAILED (exit code:", migrate.status, ")");
-    console.error("[start-production] 若為 P3009/duplicate column，下次啟動會自動嘗試 resolve + 補欄位");
   }
+}
+
+console.log("[start-production] 執行 ensure-workbench-task-columns（不論 migrate 成敗皆執行）…");
+const ensure = spawnSync(execPath, [path.join(rootDir, "script", "ensure-workbench-task-columns.mjs")], {
+  cwd: rootDir,
+  env: process.env,
+  encoding: "utf8",
+});
+if (ensure.stdout) process.stdout.write(ensure.stdout);
+if (ensure.stderr) process.stderr.write(ensure.stderr);
+if (ensure.status !== 0) {
+  console.error("[start-production] ensure-workbench-task-columns 執行失敗 exitCode=", ensure.status, "，/api/workbench/tasks 可能仍 503");
 }
 
 console.log("[start-production] Starting server: node dist/index.cjs");

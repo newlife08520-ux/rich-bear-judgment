@@ -35,28 +35,40 @@ function main() {
   const tableInfo = db.prepare('PRAGMA table_info("WorkbenchTask")').all();
   const existing = new Set(tableInfo.map((r) => r.name));
 
+  const alreadyThere = COLUMNS.filter((c) => existing.has(c.name)).map((c) => c.name);
+  const toAdd = COLUMNS.filter((c) => !existing.has(c.name));
+
+  console.log("[ensure-workbench-task-columns] DB:", dbPath);
+  if (alreadyThere.length > 0) {
+    console.log("[ensure-workbench-task-columns] 已存在欄位:", alreadyThere.join(", "));
+  }
+  if (toAdd.length === 0) {
+    console.log("[ensure-workbench-task-columns] 無需補欄，共 " + COLUMNS.length + " 欄位皆已存在。");
+    db.close();
+    return;
+  }
+  console.log("[ensure-workbench-task-columns] 待補欄位:", toAdd.map((c) => c.name).join(", "));
+
   let added = 0;
-  for (const { name, sql } of COLUMNS) {
-    if (existing.has(name)) continue;
+  for (const { name, sql } of toAdd) {
     try {
       db.exec(sql);
-      console.log("[ensure-workbench-task-columns] Added column:", name);
+      console.log("[ensure-workbench-task-columns] 已補上欄位:", name);
       added++;
     } catch (e) {
       if (/duplicate column name/i.test(e.message)) {
-        existing.add(name);
+        console.log("[ensure-workbench-task-columns] 欄位已存在（略過）:", name);
         continue;
       }
-      console.error("[ensure-workbench-task-columns] Failed to add", name, e.message);
+      console.error("[ensure-workbench-task-columns] 補欄失敗 column=", name, "error=", e.message);
+      console.error("[ensure-workbench-task-columns] 完整錯誤:", e);
       db.close();
       process.exit(1);
     }
   }
 
   db.close();
-  if (added > 0) {
-    console.log("[ensure-workbench-task-columns] Done. Added", added, "column(s).");
-  }
+  console.log("[ensure-workbench-task-columns] 完成。本次補上 " + added + " 個欄位。");
 }
 
 main();
