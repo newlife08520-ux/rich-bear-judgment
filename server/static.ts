@@ -12,8 +12,10 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("/{*path}", (_req, res) => {
+  // SPA fallback：僅對「非 /health、非 /api」的 GET 回傳 index.html（不用 app.get("*")，Express 5 path-to-regexp 不支援裸 *）
+  app.use((req, res, next) => {
+    if (req.method !== "GET") return next();
+    if (req.path === "/health" || req.path.startsWith("/api/")) return next();
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
