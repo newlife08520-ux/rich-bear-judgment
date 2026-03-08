@@ -91,10 +91,10 @@ export function getAssembledSystemPrompt(options: AssembleOptions): string {
   return parts.filter(Boolean).join("\n\n");
 }
 
-/** 結構化輸出指示：請模型在回覆最後以 ```json 輸出裁決摘要，供前端裁決工作台使用 */
+/** 結構化輸出指示：請模型在回覆最後以 ```json 輸出裁決摘要，供前端裁決工作台使用。通過與否與門檻由系統計算，勿輸出 passed/threshold。 */
 export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
 
-【結構化輸出】請在每次回覆的最後，以單一 \`\`\`json 程式碼區塊輸出以下 JSON（可與上方內文重複，無法填寫的欄位可省略或空字串）：
+【結構化輸出】請在每次回覆的最後，以單一 \`\`\`json 程式碼區塊輸出以下 JSON（可與上方內文重複，無法填寫的欄位可省略或空字串）。請勿輸出 passed 或 threshold，由系統依 score 與門檻計算通過與否。
 {
   "summary": "一句總判決",
   "nextAction": "先做什麼",
@@ -104,7 +104,10 @@ export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
   "reasons": "詳細原因",
   "suggestions": "具體建議",
   "evidence": "證據與指標",
-  "impactAmount": "影響金額（例：約 5 萬、NT$10000，可從證據推估）"
+  "impactAmount": "影響金額（例：約 5 萬、NT$10000，可從證據推估）",
+  "score": 0到100的綜合評分（數字）,
+  "blockingReasons": ["阻擋放行的原因1", "原因2"],
+  "pendingItems": ["待補事項1", "待辦2"]
 }
 `;
 

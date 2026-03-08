@@ -69,6 +69,9 @@ const FILE_API_THRESHOLD = FILE_API_THRESHOLD_MB * 1024 * 1024;
 
 const LAST_SESSION_KEY = "judgment-last-session-id";
 
+/** 審核門檻：第一版由系統固定，不交給模型 */
+const DEFAULT_REVIEW_THRESHOLD = 85;
+
 /** 外層三模式，對應後端片段組裝 */
 type UIMode = "boss" | "buyer" | "creative";
 
@@ -117,8 +120,10 @@ type ParsedJudgment = {
   reason: string;
   suggestions: string;
   evidence: string;
-  /** 影響金額（結構化或從 evidence 推導；fallback URL 或 null） */
   impactAmount: string;
+  score?: number;
+  blockingReasons?: string[];
+  pendingItems?: string[];
 };
 
 const CONFIDENCE_LABELS: Record<string, string> = { high: "高", medium: "中", low: "低" };
@@ -132,7 +137,7 @@ function structuredConfidenceToKey(c: StructuredJudgment["confidence"]): ParsedJ
   return null;
 }
 
-/** 後端結構化欄位 → 前端裁決骨架（供摘要卡與一鍵轉任務使用） */
+/** 後端結構化欄位 → 前端裁決骨架（供摘要卡與一鍵轉任務使用）。passed 由系統依 score >= threshold 計算，不從模型來。 */
 function mapStructuredToParsed(s: StructuredJudgment): ParsedJudgment {
   return {
     verdict: s.summary ?? "",
@@ -144,10 +149,13 @@ function mapStructuredToParsed(s: StructuredJudgment): ParsedJudgment {
     suggestions: s.suggestions ?? "",
     evidence: s.evidence ?? "",
     impactAmount: s.impactAmount ?? "",
+    score: s.score,
+    blockingReasons: s.blockingReasons,
+    pendingItems: s.pendingItems,
   };
 }
 
-/** 從 AI 長文解析出固定區塊；無結構時盡力提取總判決、建議動作、關鍵理由（fallback） */
+/** 從 AI 長文解析出固定區塊；無結構時盡力提取總判決、建議動作、關鍵理由（fallback）。舊資料無 score 時不填。 */
 function parseJudgmentContent(raw: string): ParsedJudgment {
   const out: ParsedJudgment = {
     verdict: "",
@@ -250,31 +258,110 @@ const PROBLEM_TYPE_TO_TASK_TYPE: Record<NonNullable<ProblemType>, string> = {
   漏斗: "ga4_funnel",
 };
 
-/** 裁決工作台：固定骨架卡片；優先使用 message.structuredJudgment，否則 fallback 前端 parser。context 用於一鍵轉任務預填商品/素材/金額/對話串。 */
+/** 單則裁決的標題與內文（用於固定結構裁決報告） */
+function getParsedForMessage(message: ChatMessage): ParsedJudgment {
+  return message.structuredJudgment != null
+    ? mapStructuredToParsed(message.structuredJudgment)
+    : parseJudgmentContent(message.content);
+}
+
+/** 轉任務時收斂欄位：一句明確任務、執行動作、簡短原因，避免過長造成列表難讀 */
+function buildTaskPayloadFromParsed(
+  parsed: ParsedJudgment,
+  ctx: JudgmentContext
+): TaskCreateFromJudgmentPayload {
+  const title = (parsed.verdict || "審判建議").replace(/\s+/g, " ").trim().slice(0, 60) || "審判建議";
+  const actionLine = parsed.actionFirst.split(/\n/)[0]?.trim() || parsed.actionFirst.trim();
+  const action = actionLine.slice(0, 150) || "請見完整內容";
+  const reason = (parsed.reason || parsed.suggestions).replace(/\s+/g, " ").trim().slice(0, 300) || "";
+  return {
+    title,
+    action,
+    reason,
+    taskType: parsed.problemType ? PROBLEM_TYPE_TO_TASK_TYPE[parsed.problemType] : null,
+    priority: parsed.confidence ?? null,
+    taskSource: "審判官",
+    productName: ctx.productName ?? null,
+    creativeId: ctx.creativeId ?? null,
+    impactAmount: (parsed.impactAmount && parsed.impactAmount.trim()) ? parsed.impactAmount.trim() : (ctx.impactAmount ?? null),
+    reviewSessionId: ctx.sessionId ?? null,
+  };
+}
+
+/** 裁決工作台：固定骨架卡片；頂部三主動作（匯出報告、轉為任務、審核結果）、審核區塊、收斂轉任務。 */
 function JudgmentWorkbenchBubble({
   message,
   judgmentContext,
   onCreateTask,
+  onExportReport,
+  auditBlockId,
 }: {
   message: ChatMessage;
   judgmentContext?: JudgmentContext | null;
   onCreateTask?: (payload: TaskCreateFromJudgmentPayload) => void;
+  onExportReport?: (msg: ChatMessage) => void;
+  auditBlockId?: string;
 }) {
   const ctx = judgmentContext ?? { sessionId: null, productName: null, creativeId: null, impactAmount: null };
-  const parsed =
-    message.structuredJudgment != null
-      ? mapStructuredToParsed(message.structuredJudgment)
-      : parseJudgmentContent(message.content);
+  const parsed = getParsedForMessage(message);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const hasEvidence = parsed.evidence.trim().length > 0;
   const evidencePreview = parsed.evidence.trim().slice(0, 80) + (parsed.evidence.length > 80 ? "…" : "");
 
+  const hasScore = typeof parsed.score === "number";
+  const passed = hasScore && parsed.score! >= DEFAULT_REVIEW_THRESHOLD;
+
   return (
     <div className="flex justify-start w-full max-w-3xl">
       <div className="w-full space-y-3">
-        {/* 頂部摘要卡：一眼看到總判決與先做什麼 */}
+        {/* 頂部摘要卡：三主動作 + 一句總判決 + 先做什麼 + 審核區塊（有 score 時） */}
         <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
           <CardContent className="p-4 space-y-3">
+            {/* 三主動作：匯出報告、轉為任務、審核結果 */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
+              {onExportReport && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => onExportReport(message)}
+                  data-testid="button-export-report"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  匯出報告
+                </Button>
+              )}
+              {onCreateTask && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => onCreateTask(buildTaskPayloadFromParsed(parsed, ctx))}
+                  data-testid="button-create-task"
+                >
+                  <ListTodo className="w-3.5 h-3.5" />
+                  轉為任務
+                </Button>
+              )}
+              {auditBlockId ? (
+                hasScore ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => document.getElementById(auditBlockId)?.scrollIntoView({ behavior: "smooth" })}
+                  >
+                    審核結果
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground px-2 py-1.5" title="本則無評分">審核結果（本則無評分）</span>
+                )
+              ) : null}
+            </div>
+
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">一句總判決</p>
@@ -298,38 +385,49 @@ function JudgmentWorkbenchBubble({
                 )}
               </div>
             </div>
+
             {parsed.actionFirst && (
-              <>
-                <div className="border-t border-gray-100 pt-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">先做什麼</p>
-                  <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{parsed.actionFirst}</div>
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">先做什麼</p>
+                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{parsed.actionFirst}</div>
+              </div>
+            )}
+
+            {/* 審核區塊：有 score 時顯示綜合分數、門檻、通過/未通過、blockingReasons、pendingItems */}
+            {hasScore && (
+              <div id={auditBlockId} className="border-t border-gray-200 pt-3 space-y-2 rounded-md bg-gray-50 p-3">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">審核結果</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <span className="text-gray-600">綜合分數</span>
+                  <span className="font-medium">{parsed.score}</span>
+                  <span className="text-gray-600">門檻分數</span>
+                  <span className="font-medium">{DEFAULT_REVIEW_THRESHOLD}</span>
+                  <span className="text-gray-600">結果</span>
+                  <span className={passed ? "font-medium text-green-700" : "font-medium text-amber-700"}>
+                    {passed ? "通過" : "未通過"}
+                  </span>
                 </div>
-                {onCreateTask && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() =>
-                      onCreateTask({
-                        title: parsed.verdict.slice(0, 80) || "審判建議",
-                        action: parsed.actionFirst.slice(0, 500) || "請見完整內容",
-                        reason: (parsed.reason || parsed.suggestions).slice(0, 1000) || "",
-                        taskType: parsed.problemType ? PROBLEM_TYPE_TO_TASK_TYPE[parsed.problemType] : null,
-                        priority: parsed.confidence ?? null,
-                        taskSource: "審判官",
-                        productName: ctx.productName ?? null,
-                        creativeId: ctx.creativeId ?? null,
-                        impactAmount: (parsed.impactAmount && parsed.impactAmount.trim()) ? parsed.impactAmount.trim() : (ctx.impactAmount ?? null),
-                        reviewSessionId: ctx.sessionId ?? null,
-                      })
-                    }
-                  >
-                    <ListTodo className="w-3.5 h-3.5" />
-                    一鍵轉任務
-                  </Button>
+                {parsed.blockingReasons && parsed.blockingReasons.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-0.5">阻擋原因</p>
+                    <ul className="list-disc list-inside text-sm text-gray-800 space-y-0.5">
+                      {parsed.blockingReasons.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-              </>
+                {parsed.pendingItems && parsed.pendingItems.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-0.5">待辦／待補</p>
+                    <ul className="list-disc list-inside text-sm text-gray-800 space-y-0.5">
+                      {parsed.pendingItems.map((p, i) => (
+                        <li key={i}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -445,18 +543,80 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-function exportFullSessionAsPdf(session: ReviewSession) {
-  const assistantMessages = session.messages.filter((m) => m.role === "assistant");
-  if (assistantMessages.length === 0) {
-    return;
+const REPORT_STYLES = `
+  @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  body { font-family: system-ui, "Segoe UI", "Microsoft JhengHei", sans-serif; padding: 0; margin: 0; color: #1a1a1a; line-height: 1.7; }
+  .print-header { padding: 16px 24px; border-bottom: 2px solid #e5e5e5; margin-bottom: 20px; }
+  .print-header .title { font-size: 1.25rem; font-weight: 700; }
+  .print-header .meta { font-size: 0.875rem; color: #666; margin-top: 4px; }
+  .content { padding: 0 24px 24px; max-width: 720px; margin: 0 auto; }
+  .report-block { page-break-inside: avoid; margin-bottom: 1.5em; padding: 12px 0; border-bottom: 1px solid #eee; }
+  .report-block:last-child { border-bottom: 0; }
+  .report-block h2 { font-size: 1rem; color: #666; margin: 0 0 4px 0; font-weight: 600; }
+  .report-block .value { font-size: 0.95rem; margin-bottom: 12px; white-space: pre-wrap; }
+  .report-block ul { margin: 0.25em 0; padding-left: 1.5em; }
+  .report-block li { margin: 0.2em 0; }
+  .footer { margin-top: 2em; font-size: 12px; color: #666; padding: 0 24px 24px; }
+`;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** 單則裁決 → 固定結構裁決報告區塊 HTML（總判決、分數/是否通過、先做什麼、詳細原因、具體建議、證據與指標、影響金額） */
+function buildReportBlockHtml(parsed: ParsedJudgment, index: number): string {
+  const hasScore = typeof parsed.score === "number";
+  const passed = hasScore && parsed.score! >= DEFAULT_REVIEW_THRESHOLD;
+  const sections: string[] = [];
+
+  sections.push(`<div class="report-block"><h2>總判決</h2><div class="value">${escapeHtml(parsed.verdict || "—")}</div></div>`);
+
+  if (hasScore) {
+    sections.push(
+      `<div class="report-block"><h2>分數／是否通過</h2><div class="value">綜合分數 ${parsed.score}，門檻 ${DEFAULT_REVIEW_THRESHOLD}，${passed ? "通過" : "未通過"}</div></div>`
+    );
   }
-  const blocks = assistantMessages
-    .map((m) => {
-      const contentEl = document.querySelector(`[data-print-content="${m.id}"]`);
-      return contentEl ? contentEl.innerHTML : "";
-    })
-    .filter(Boolean);
-  const combinedHtml = blocks.map((html) => `<div class="prose-block">${html}</div>`).join("");
+
+  sections.push(`<div class="report-block"><h2>先做什麼</h2><div class="value">${escapeHtml(parsed.actionFirst || "—")}</div></div>`);
+  sections.push(`<div class="report-block"><h2>詳細原因</h2><div class="value">${escapeHtml(parsed.reason || "—")}</div></div>`);
+  sections.push(`<div class="report-block"><h2>具體建議</h2><div class="value">${escapeHtml(parsed.suggestions || "—")}</div></div>`);
+  sections.push(`<div class="report-block"><h2>證據與指標</h2><div class="value">${escapeHtml(parsed.evidence || "—")}</div></div>`);
+  if (parsed.impactAmount?.trim()) {
+    sections.push(`<div class="report-block"><h2>影響金額</h2><div class="value">${escapeHtml(parsed.impactAmount)}</div></div>`);
+  }
+  if (parsed.blockingReasons?.length) {
+    sections.push(
+      `<div class="report-block"><h2>阻擋原因</h2><ul>${parsed.blockingReasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>`
+    );
+  }
+  if (parsed.pendingItems?.length) {
+    sections.push(
+      `<div class="report-block"><h2>待辦／待補</h2><ul>${parsed.pendingItems.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul></div>`
+    );
+  }
+
+  const title = index > 0 ? `裁決 ${index + 1}` : "裁決";
+  return `<div class="report-section"><h2 style="font-size:1.1rem; margin-bottom:8px;">${title}</h2>${sections.join("")}</div>`;
+}
+
+/** 整場 session 的固定結構裁決報告 HTML */
+function buildReportHtmlFromSession(session: ReviewSession): string {
+  const assistantMessages = session.messages.filter((m) => m.role === "assistant");
+  const blocks = assistantMessages.map((m, i) => buildReportBlockHtml(getParsedForMessage(m), i));
+  return blocks.join("");
+}
+
+/** 單則訊息的裁決報告 HTML（用於卡片上的「匯出報告」） */
+function buildReportHtmlFromMessage(message: ChatMessage): string {
+  const parsed = getParsedForMessage(message);
+  return buildReportBlockHtml(parsed, 0);
+}
+
+function openReportPrintWindow(title: string, meta: string, bodyHtml: string) {
   const win = window.open("", "_blank");
   if (!win) return;
   const dateStr = new Date().toLocaleDateString("zh-TW", {
@@ -471,34 +631,15 @@ function exportFullSessionAsPdf(session: ReviewSession) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Rich Bear 華麗熊 - 完整對話報告</title>
-  <style>
-    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-    body { font-family: system-ui, "Segoe UI", "Microsoft JhengHei", sans-serif; padding: 0; margin: 0; color: #1a1a1a; line-height: 1.7; }
-    .print-header { padding: 16px 24px; border-bottom: 2px solid #e5e5e5; margin-bottom: 20px; }
-    .print-header .title { font-size: 1.25rem; font-weight: 700; }
-    .print-header .meta { font-size: 0.875rem; color: #666; margin-top: 4px; }
-    .content { padding: 0 24px 24px; max-width: 720px; margin: 0 auto; }
-    .prose-block { page-break-inside: avoid; margin-bottom: 1.5em; }
-    .prose-block h1 { font-size: 1.25rem; margin-top: 0.5em; margin-bottom: 0.25em; }
-    .prose-block h2 { font-size: 1.1rem; margin-top: 0.5em; margin-bottom: 0.25em; }
-    .prose-block p { margin: 0.5em 0; }
-    .prose-block ul, .prose-block ol { margin: 0.5em 0; padding-left: 1.5em; }
-    .prose-block li { margin: 0.25em 0; }
-    .prose-block strong { font-weight: 600; }
-    .prose-block code { background: #f0f0f0; padding: 0.15em 0.35em; border-radius: 4px; font-size: 0.9em; }
-    .prose-block table { border-collapse: collapse; width: 100%; }
-    .prose-block th, .prose-block td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-    .prose-block th { background: #f5f5f5; font-weight: 600; }
-    .footer { margin-top: 2em; font-size: 12px; color: #666; padding: 0 24px 24px; }
-  </style>
+  <title>${escapeHtml(title)}</title>
+  <style>${REPORT_STYLES}</style>
 </head>
 <body>
   <div class="print-header">
-    <div class="title">👑 Rich Bear 華麗熊 - 完整對話報告</div>
-    <div class="meta">${session.title || "內容判讀"} · ${dateStr}</div>
+    <div class="title">👑 裁決報告 — Rich Bear 華麗熊</div>
+    <div class="meta">${escapeHtml(meta)} · ${dateStr}</div>
   </div>
-  <div class="content">${combinedHtml}</div>
+  <div class="content">${bodyHtml}</div>
   <p class="footer">AI 行銷總監 · ${dateStr}</p>
 </body>
 </html>
@@ -509,6 +650,20 @@ function exportFullSessionAsPdf(session: ReviewSession) {
     win.print();
     win.onafterprint = () => win.close();
   }, 300);
+}
+
+/** 匯出整場對話為固定結構裁決報告 PDF（不再抓 DOM） */
+function exportFullSessionAsPdf(session: ReviewSession) {
+  const assistantMessages = session.messages.filter((m) => m.role === "assistant");
+  if (assistantMessages.length === 0) return;
+  const bodyHtml = buildReportHtmlFromSession(session);
+  openReportPrintWindow(session.title || "內容判讀", session.title || "裁決報告", bodyHtml);
+}
+
+/** 匯出單則裁決為固定結構裁決報告 PDF */
+function exportSingleMessageAsPdf(message: ChatMessage, sessionTitle: string) {
+  const bodyHtml = buildReportHtmlFromMessage(message);
+  openReportPrintWindow(sessionTitle || "單則裁決", sessionTitle || "裁決報告", bodyHtml);
 }
 
 /** 從 location 字串解析查詢參數（審判官上下文：商品名、素材 ID、影響金額等） */
@@ -819,6 +974,10 @@ export default function JudgmentPage() {
     exportFullSessionAsPdf(session);
   };
 
+  const handleExportSingleReport = (msg: ChatMessage) => {
+    exportSingleMessageAsPdf(msg, session?.title ?? "裁決");
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -863,7 +1022,7 @@ export default function JudgmentPage() {
           data-testid="button-export-full-report"
         >
           <Download className="w-3.5 h-3.5" />
-          📄 匯出完整對話報告
+          📄 匯出裁決報告
         </Button>
         <Button
           variant="outline"
@@ -1080,6 +1239,8 @@ export default function JudgmentPage() {
                           impactAmount: urlContext.impactAmount,
                         }}
                         onCreateTask={handleCreateTaskFromJudgment}
+                        onExportReport={handleExportSingleReport}
+                        auditBlockId={`audit-${msg.id}`}
                       />
                     ),
                   )}

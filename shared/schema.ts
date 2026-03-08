@@ -313,6 +313,12 @@ export interface StructuredJudgment {
   evidence?: string;
   /** 影響金額（可從 evidence 或結構化欄位推導） */
   impactAmount?: string;
+  /** 綜合評分 0–100；通過與否由系統依 threshold 計算，不由模型回傳 */
+  score?: number;
+  /** 阻擋通過的原因（須先排除才能放行） */
+  blockingReasons?: string[];
+  /** 待補／待辦事項（非阻擋） */
+  pendingItems?: string[];
 }
 
 export interface ChatMessage {
@@ -344,6 +350,9 @@ export const structuredJudgmentSchema = z.object({
   suggestions: z.string().optional(),
   evidence: z.string().optional(),
   impactAmount: z.string().optional(),
+  score: z.number().min(0).max(100).optional(),
+  blockingReasons: z.array(z.string()).optional(),
+  pendingItems: z.array(z.string()).optional(),
 });
 
 export const chatMessageSchema = z.object({

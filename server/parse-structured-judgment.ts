@@ -86,6 +86,28 @@ export function parseStructuredJudgmentFromResponse(text: string): StructuredJud
       ? impactAmountRaw
       : extractAmountFromText([evidence, summary, nextAction].filter(Boolean).join(" "));
 
+  const scoreRaw = parsed.score;
+  const score =
+    typeof scoreRaw === "number" && Number.isFinite(scoreRaw)
+      ? Math.min(100, Math.max(0, Math.round(scoreRaw)))
+      : typeof scoreRaw === "string"
+        ? (() => {
+            const n = parseFloat(scoreRaw);
+            return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : undefined;
+          })()
+        : undefined;
+
+  const blockingReasons = Array.isArray(parsed.blockingReasons)
+    ? (parsed.blockingReasons as unknown[])
+        .map((x) => (typeof x === "string" ? x.trim() : ""))
+        .filter(Boolean)
+    : undefined;
+  const pendingItems = Array.isArray(parsed.pendingItems)
+    ? (parsed.pendingItems as unknown[])
+        .map((x) => (typeof x === "string" ? x.trim() : ""))
+        .filter(Boolean)
+    : undefined;
+
   return {
     ...(summary && { summary }),
     ...(nextAction && { nextAction }),
@@ -96,5 +118,8 @@ export function parseStructuredJudgmentFromResponse(text: string): StructuredJud
     ...(suggestions && { suggestions }),
     ...(evidence && { evidence }),
     ...(impactAmount && { impactAmount }),
+    ...(score !== undefined && { score }),
+    ...(blockingReasons?.length && { blockingReasons }),
+    ...(pendingItems?.length && { pendingItems }),
   };
 }
