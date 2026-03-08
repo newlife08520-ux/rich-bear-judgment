@@ -759,20 +759,27 @@ export default function JudgmentPage() {
       : undefined;
 
     try {
-      const res = await apiRequest("POST", "/api/content-judgment/chat", {
-        sessionId: session?.id,
-        uiMode,
-        message: { content: content || "（僅附檔，請總監根據附件內容審視）", attachments: messageAttachments },
+      const res = await fetch("/api/content-judgment/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: session?.id,
+          uiMode,
+          message: { content: content || "（僅附檔，請總監根據附件內容審視）", attachments: messageAttachments },
+        }),
+        credentials: "include",
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const errMsg = data.message || "送出失敗，請稍後再試";
-        if (data.errorCode === "NO_API_KEY") {
+        const errMsg = (data && typeof data.message === "string" ? data.message : null) || "送出失敗，請稍後再試";
+        if (data && data.errorCode === "NO_API_KEY") {
           toast({
             variant: "destructive",
             title: "尚未設定 API Key",
-            description: "請到「設定中心」輸入 AI API Key 後再試",
+            description: "請到「設定」頁面輸入 AI API Key（Gemini）後再試",
           });
+        } else {
+          toast({ variant: "destructive", title: "送出失敗", description: errMsg });
         }
         setSubmitError(errMsg);
         return;

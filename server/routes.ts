@@ -535,79 +535,86 @@ export async function registerRoutes(
       });
     }
 
-    const { sessionId, message, uiMode } = parsed.data;
-    // 一律使用 workbench 片段組裝，不讀 storage、不用 draft。未帶 uiMode 時預設 creative。
-    const effectiveMode: UIMode = uiMode && ["boss", "buyer", "creative"].includes(uiMode) ? (uiMode as UIMode) : "creative";
-    const publishedMain = await getPublishedPrompt(effectiveMode);
-    // 未發布時：customMainPrompt 為 null，組裝層會用 Base Core + 內層 A/B/C/D + calibration，絕不吃 draft 或舊 storage。
-    const systemPrompt =
-      getAssembledSystemPrompt({
-        uiMode: effectiveMode,
-        customMainPrompt: publishedMain,
-      }) + STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION;
+    try {
+      const { sessionId, message, uiMode } = parsed.data;
+      const effectiveMode: UIMode = uiMode && ["boss", "buyer", "creative"].includes(uiMode) ? (uiMode as UIMode) : "creative";
+      const publishedMain = await getPublishedPrompt(effectiveMode);
+      const systemPrompt =
+        getAssembledSystemPrompt({
+          uiMode: effectiveMode,
+          customMainPrompt: publishedMain,
+        }) + STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION;
 
-    let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
-    if (sessionId && !session) {
-      return res.status(404).json({ message: "找不到該對話串" });
-    }
-    if (session && session.userId !== userId) {
-      return res.status(403).json({ message: "無權存取此對話" });
-    }
+      let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
+      if (sessionId && !session) {
+        return res.status(404).json({ message: "找不到該對話串" });
+      }
+      if (session && session.userId !== userId) {
+        return res.status(403).json({ message: "無權存取此對話" });
+      }
 
-    const now = new Date().toISOString();
-    const userMsgId = `msg-${randomUUID().slice(0, 8)}`;
-    const userMessage = {
-      id: userMsgId,
-      role: "user" as const,
-      content: message.content,
-      attachments: message.attachments?.map((a) => ({ type: a.type, url: "", name: a.name })),
-      createdAt: now,
-    };
-
-    if (!session) {
-      const title = message.content.slice(0, 50).trim() || "新判讀";
-      session = {
-        id: `rs-${randomUUID().slice(0, 8)}`,
-        userId,
-        title,
-        messages: [],
+      const now = new Date().toISOString();
+      const userMsgId = `msg-${randomUUID().slice(0, 8)}`;
+      const userMessage = {
+        id: userMsgId,
+        role: "user" as const,
+        content: message.content,
+        attachments: message.attachments?.map((a) => ({ type: a.type, url: "", name: a.name })),
         createdAt: now,
-        updatedAt: now,
       };
-    }
 
-    session.messages.push(userMessage);
-    const contentForAi = await enrichContentWithUrls(message.content);
-    const assistantText = await callGeminiChat(
-      apiKey,
-      systemPrompt,
-      session.messages.slice(0, -1),
-      contentForAi,
-      message.attachments,
-    );
+      if (!session) {
+        const title = message.content.slice(0, 50).trim() || "新判讀";
+        session = {
+          id: `rs-${randomUUID().slice(0, 8)}`,
+          userId,
+          title,
+          messages: [],
+          createdAt: now,
+          updatedAt: now,
+        };
+      }
 
-    if (assistantText == null) {
-      session.messages.pop();
-      return res.status(502).json({
-        message: "AI 回覆失敗，請確認 API Key 或稍後再試",
-        errorCode: "AI_CALL_FAILED",
+      session.messages.push(userMessage);
+      const contentForAi = await enrichContentWithUrls(message.content);
+      const assistantText = await callGeminiChat(
+        apiKey,
+        systemPrompt,
+        session.messages.slice(0, -1),
+        contentForAi,
+        message.attachments,
+      );
+
+      if (assistantText == null) {
+        session.messages.pop();
+        return res.status(502).json({
+          message: "AI 回覆失敗，請確認 API Key 或稍後再試",
+          errorCode: "AI_CALL_FAILED",
+        });
+      }
+
+      const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
+      const structuredJudgment = parseStructuredJudgmentFromResponse(assistantText);
+      const assistantMessage = {
+        id: assistantMsgId,
+        role: "assistant" as const,
+        content: assistantText,
+        createdAt: new Date().toISOString(),
+        ...(structuredJudgment && { structuredJudgment }),
+      };
+      session.messages.push(assistantMessage);
+      session.updatedAt = new Date().toISOString();
+      storage.saveReviewSession(session);
+
+      res.json({ session, userMessage, assistantMessage });
+    } catch (err) {
+      console.error("[POST /api/content-judgment/chat]", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({
+        message: msg || "審判官處理失敗，請稍後再試",
+        errorCode: "SERVER_ERROR",
       });
     }
-
-    const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
-    const structuredJudgment = parseStructuredJudgmentFromResponse(assistantText);
-    const assistantMessage = {
-      id: assistantMsgId,
-      role: "assistant" as const,
-      content: assistantText,
-      createdAt: new Date().toISOString(),
-      ...(structuredJudgment && { structuredJudgment }),
-    };
-    session.messages.push(assistantMessage);
-    session.updatedAt = new Date().toISOString();
-    storage.saveReviewSession(session);
-
-    res.json({ session, userMessage, assistantMessage });
   });
 
   app.get("/api/review-sessions", requireAuth, (req, res) => {
@@ -2312,8 +2319,17 @@ export async function registerRoutes(
       const tasks = await getWorkbenchTasks(onlyMine ? { assigneeId: userId } : undefined);
       res.json(tasks);
     } catch (err) {
-      console.error("[GET /api/workbench/tasks]", err);
-      res.status(500).json({ message: "取得任務列表失敗", error: err instanceof Error ? err.message : String(err) });
+      const msg = err instanceof Error ? err.message : String(err);
+      const full = err instanceof Error ? err.stack : String(err);
+      console.error("[GET /api/workbench/tasks] full error:", full);
+      // DB schema 未套用（缺欄位 / P3009 等）時不讓前端 500，回傳空陣列並在 log 標註
+      const isSchemaOrColumnError =
+        /column|no such column|Unknown column|SQLITE_ERROR|P3009|P2010|does not exist/i.test(msg);
+      if (isSchemaOrColumnError) {
+        console.error("[GET /api/workbench/tasks] schema/column error, returning [] — 請在 DB 執行 prisma migrate resolve --applied 20260307120000_add_workbench_task_columns 或 migrate deploy");
+        return res.status(200).json([]);
+      }
+      res.status(500).json({ message: "取得任務列表失敗", error: msg });
     }
   });
 
