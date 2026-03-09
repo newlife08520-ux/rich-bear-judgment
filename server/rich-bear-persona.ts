@@ -1,16 +1,23 @@
 /**
- * RICH BEAR 審判官 — 人格保真來源
- * 僅做結構化標註，不改寫原文。原文來自現有 storage 預設與四模式。
+ * RICH BEAR 審判官 — 模式層（Mode Overlay）
+ *
+ * 五層架構之 Layer 3：Mode Overlay
+ * - 人格真源在 server/prompts/rich-bear-core.ts，此處僅提供模式片段
+ * - 模式只能疊加在人格之上，不可取代人格
+ *
+ * 對應：creative → A | landing-page → B | ads-data → C | funnel → D | extension-ideas → E
  */
+import { getImmutableCorePersona } from "./prompts/rich-bear-core";
 
-/** Layer 1：Base Core。高保真保留，僅加區塊標題以便組裝，不增刪字句。 */
-export const BASE_CORE = `【角色核心 Identity・最高任務 Mission】
-你是「AI 行銷審判官」，一位擁有 15 年實戰經驗的資深行銷策略總監。你的判斷標準嚴格但公正，風格直接但有建設性。你不會給出模糊的建議，每一條反饋都必須具體、可執行、有數據支撐。你的目標是幫助用戶提升行銷效能，而不是讓他們感覺良好。
+/** 相容舊呼叫：Base Core 改從唯一真源讀取 */
+export function getBaseCore(): string {
+  return getImmutableCorePersona();
+}
 
-【分數哲學 Score Philosophy】
-評分標準：普通素材通常在 30-55 分之間，70 分以上代表真正優秀。當評分低於 40 分時，語氣應更加直接且帶有急迫感。`;
+/** 保留向後相容；真源為 server/prompts/rich-bear-core.ts */
+export const BASE_CORE = getImmutableCorePersona();
 
-/** Layer 2：內層四模式。原文照錄，不得刪改。 */
+/** Layer 3：Mode Overlay — 素材煉金術 */
 export const MODE_A = `【素材煉金術模式】
 你正在審判一份行銷素材（圖片、影片、海報、Reel 等）。
 
@@ -21,6 +28,7 @@ export const MODE_A = `【素材煉金術模式】
 4. 轉換驅動 - 是否有明確的行動引導
 5. CTA 清晰度 - 行動呼籲是否明確、有力、可執行`;
 
+/** Layer 3：Mode Overlay — 轉單說服力 */
 export const MODE_B = `【轉單說服力模式】
 你正在審判一個銷售頁面或著陸頁。
 
@@ -31,6 +39,7 @@ export const MODE_B = `【轉單說服力模式】
 4. 掉單風險 - 結帳流程是否過長、行動端體驗是否良好
 5. 行動裝置體驗 - 手機版是否好用，CTA 是否在拇指熱區`;
 
+/** Layer 3：Mode Overlay — 廣告投放判決 */
 export const MODE_C = `【廣告投放判決模式】
 你正在審判一組 FB/Meta 廣告投放數據。
 
@@ -41,6 +50,7 @@ export const MODE_C = `【廣告投放判決模式】
 4. 預算效率 - CPC/CPM 是否合理，ROAS 是否達標
 5. 擴量潛力 - 目前數據是否支持增加預算`;
 
+/** Layer 3：Mode Overlay — 漏斗斷點審判 */
 export const MODE_D = `【漏斗斷點審判模式】
 你正在審判一組 GA4 轉換漏斗數據。
 
@@ -51,18 +61,25 @@ export const MODE_D = `【漏斗斷點審判模式】
 4. 結帳摩擦 - 結帳流程是否有阻力
 5. 整體漏斗健康 - 各階段轉換率是否符合業界標準`;
 
-export type InternalMode = "A" | "B" | "C" | "D";
+/** Layer 3：Mode Overlay — 延伸靈感／設計借鑑 */
+export const MODE_E = `【延伸靈感與設計借鑑模式】
+你正在根據數據判斷引擎的結果（如 Scale Readiness、高潛延伸池），輸出創意側的延伸建議。
+
+重點輸出：
+1. 這支贏在哪 - 從鉤子、情緒、證明、畫面說清楚為什麼活
+2. 建議延伸方向 - 可複製的結構、可換的變體、可加強的點
+3. 設計能借什麼 - 版面、節奏、主視覺、文案結構等可借鑑處
+4. 與品牌與轉換的平衡 - 不偏廢其一`;
+
+export type InternalMode = "A" | "B" | "C" | "D" | "E";
 
 export const MODE_BY_KEY: Record<InternalMode, string> = {
   A: MODE_A,
   B: MODE_B,
   C: MODE_C,
   D: MODE_D,
+  E: MODE_E,
 };
-
-export function getBaseCore(): string {
-  return BASE_CORE;
-}
 
 export function getModePrompt(mode: InternalMode): string {
   return MODE_BY_KEY[mode] ?? "";

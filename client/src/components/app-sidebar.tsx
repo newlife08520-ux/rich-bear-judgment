@@ -49,7 +49,7 @@ const growthNavItems = [
 
 /** 分析：報表與成績（成功率頁為輔助指標，定義未成熟前僅供參考） */
 const analysisNavItems = [
-  { title: "成功率成績單", icon: BarChart3, url: "/scorecard" },
+  { title: "素材工廠效率與命中率", icon: BarChart3, url: "/scorecard" },
 ];
 
 /** 工具與設定 */

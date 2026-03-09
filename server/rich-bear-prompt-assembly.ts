@@ -1,6 +1,14 @@
 /**
- * RICH BEAR 審判官 — 片段式組裝，不送兩份全文。
- * 外層三模式（Boss / 投手 / 創意）→ 內層四模式（A/B/C/D）＋ Hidden Calibration。
+ * 華麗熊 Prompt 五層組裝
+ *
+ * 組裝順序固定（不可打亂）：
+ * 1. Immutable Core Persona（人格真源，server/prompts/rich-bear-core.ts）
+ * 2. Hidden Calibration（校準層，不改變人格靈魂）
+ * 3. Mode Overlay（creative | landing-page | ads-data | funnel | extension-ideas）
+ * 4. Data Context（本次任務的資料：商品名、BE/Target ROAS、1d/3d/7d、素材圖等，由呼叫方帶入）
+ * 5. Output Schema（結構化輸出格式）
+ *
+ * 分工：數學與數據判斷由「數據判斷引擎」負責；創意解讀、成交槓桿、素材延伸、設計借鑑由華麗熊人格負責。
  */
 import { getBaseCore, getModePrompt, type InternalMode } from "./rich-bear-persona";
 import {
@@ -12,16 +20,15 @@ import {
 
 export type UIMode = "boss" | "buyer" | "creative";
 
-export type JudgmentType = "creative" | "landing_page" | "fb_ads" | "ga4_funnel";
+export type JudgmentType = "creative" | "landing_page" | "fb_ads" | "ga4_funnel" | "extension_ideas";
 
-/** 外層三模式 → 內層四模式優先順序（依需求：Boss→B,C,D；投手→C,D；創意→A,B） */
+/** 外層三模式 → 內層模式優先順序 */
 const UI_MODE_TO_INTERNAL: Record<UIMode, InternalMode[]> = {
   boss: ["B", "C", "D"],
   buyer: ["C", "D"],
   creative: ["A", "B"],
 };
 
-/** 依 UI 模式決定載入的 calibration 片段（創意=全四；投手=Brand+少量Emotional；Boss=Emotional+Brand） */
 function getCalibrationParts(mode: UIMode): string[] {
   switch (mode) {
     case "creative":
@@ -32,21 +39,15 @@ function getCalibrationParts(mode: UIMode): string[] {
         CALIBRATION_SLICE_EXAMPLE,
       ];
     case "buyer":
-      return [
-        CALIBRATION_SLICE_BRAND_CONVERSION,
-        CALIBRATION_SLICE_EMOTIONAL_TRIGGER,
-      ];
+      return [CALIBRATION_SLICE_BRAND_CONVERSION, CALIBRATION_SLICE_EMOTIONAL_TRIGGER];
     case "boss":
-      return [
-        CALIBRATION_SLICE_EMOTIONAL_TRIGGER,
-        CALIBRATION_SLICE_BRAND_CONVERSION,
-      ];
+      return [CALIBRATION_SLICE_EMOTIONAL_TRIGGER, CALIBRATION_SLICE_BRAND_CONVERSION];
     default:
       return [];
   }
 }
 
-/** 依審判類型回傳對應內層模式，用於單次任務組裝 */
+/** 審判類型 → 內層模式（Mode Overlay） */
 export function judgmentTypeToInternalModes(judgmentType: JudgmentType): InternalMode[] {
   switch (judgmentType) {
     case "creative":
@@ -57,41 +58,50 @@ export function judgmentTypeToInternalModes(judgmentType: JudgmentType): Interna
       return ["C"];
     case "ga4_funnel":
       return ["D"];
+    case "extension_ideas":
+      return ["E"];
     default:
       return ["A"];
   }
 }
 
 export interface AssembleOptions {
-  /** 外層模式（Boss / 投手 / 創意） */
   uiMode: UIMode;
-  /** 若提供且非空，在 Base Core 之上疊加該 mode 已發布主 prompt（來自 workbench） */
+  /** 已發布主 prompt（workbench），疊加在 Core 之後、不取代人格 */
   customMainPrompt?: string | null;
-  /** 若提供，僅載入此任務對應的內層模式；否則依 uiMode 載入整包 */
   judgmentType?: JudgmentType;
+  /** Layer 4：Data Context。本次任務的資料（商品名、成本比、BE/Target、1d/3d/7d、ATC、素材圖等），由呼叫方組好字串傳入 */
+  dataContext?: string | null;
 }
 
 /**
- * 組裝最終 system prompt，順序固定：
- * 1. Base Core（永遠載入，人格靈魂）
- * 2. 該 mode 已發布主 prompt（若有）
- * 3. 對應內層 A/B/C/D 模式片段
- * 4. 對應 Hidden Calibration 片段
+ * 五層組裝：Core → Calibration → Mode Overlay → Data Context → Output Schema
  */
 export function getAssembledSystemPrompt(options: AssembleOptions): string {
-  const { uiMode, customMainPrompt, judgmentType } = options;
-  const baseCore = getBaseCore();
+  const { uiMode, customMainPrompt, judgmentType, dataContext } = options;
+
+  const layer1Core = getBaseCore();
   const publishedOverlay = (customMainPrompt && customMainPrompt.trim()) || "";
   const internalModes = judgmentType
     ? judgmentTypeToInternalModes(judgmentType)
     : UI_MODE_TO_INTERNAL[uiMode];
-  const modeParts = internalModes.map((m) => getModePrompt(m)).filter(Boolean);
-  const calibrationParts = getCalibrationParts(uiMode);
-  const parts = [baseCore, ...(publishedOverlay ? [publishedOverlay] : []), ...modeParts, ...calibrationParts];
+  const layer3ModeParts = internalModes.map((m) => getModePrompt(m)).filter(Boolean);
+  const layer2Calibration = getCalibrationParts(uiMode);
+  const layer4Data = (dataContext && dataContext.trim()) || "";
+
+  const parts = [
+    layer1Core,
+    ...(publishedOverlay ? [publishedOverlay] : []),
+    ...layer2Calibration,
+    ...layer3ModeParts,
+    ...(layer4Data ? [layer4Data] : []),
+    STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION,
+  ];
+  /* 順序：1 Core 2 (published) 3 Calibration 4 Mode 5 Data 6 Output */
   return parts.filter(Boolean).join("\n\n");
 }
 
-/** 結構化輸出指示：請模型在回覆最後以 ```json 輸出裁決摘要，供前端裁決工作台使用。通過與否與門檻由系統計算，勿輸出 passed/threshold。 */
+/** Layer 5：Output Schema。結構化輸出，非人格內容。 */
 export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
 
 【結構化輸出】請在每次回覆的最後，以單一 \`\`\`json 程式碼區塊輸出以下 JSON（可與上方內文重複，無法填寫的欄位可省略或空字串）。請勿輸出 passed 或 threshold，由系統依 score 與門檻計算通過與否。
@@ -111,10 +121,11 @@ export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
 }
 `;
 
-/** 依審判類型推測建議的 UI 模式（用於預設選單或未指定時） */
+/** 依審判類型推測建議的 UI 模式 */
 export function suggestUIModeFromJudgmentType(judgmentType: JudgmentType): UIMode {
   switch (judgmentType) {
     case "creative":
+    case "extension_ideas":
       return "creative";
     case "landing_page":
       return "boss";
@@ -124,4 +135,53 @@ export function suggestUIModeFromJudgmentType(judgmentType: JudgmentType): UIMod
     default:
       return "creative";
   }
+}
+
+/**
+ * 組裝 Data Context 區塊（Layer 4）。呼叫方傳入數據判斷引擎結果與任務資料，供華麗熊輸出創意解讀與延伸建議。
+ * 不包含人格與校準，僅為當次任務的資料。
+ */
+export function buildDataContextSection(context: {
+  productName?: string;
+  costRatio?: number;
+  breakEvenRoas?: number;
+  targetRoas?: number;
+  profitHeadroom?: number;
+  roas1d?: number;
+  roas3d?: number;
+  roas7d?: number;
+  trendCore?: number;
+  momentum?: number;
+  scaleReadinessScore?: number;
+  suggestedAction?: string;
+  suggestedPct?: number | string;
+  reason?: string;
+  whyNotMore?: string;
+  atc?: number;
+  purchases?: number;
+  spend?: number;
+  revenue?: number;
+  [k: string]: unknown;
+}): string {
+  const lines: string[] = ["【本任務資料・Data Context】"];
+  if (context.productName != null) lines.push(`商品：${context.productName}`);
+  if (context.costRatio != null) lines.push(`成本比：${context.costRatio}`);
+  if (context.breakEvenRoas != null) lines.push(`保本 ROAS：${context.breakEvenRoas}`);
+  if (context.targetRoas != null) lines.push(`目標 ROAS：${context.targetRoas}`);
+  if (context.profitHeadroom != null) lines.push(`Profit Headroom：${context.profitHeadroom}`);
+  if (context.roas1d != null || context.roas3d != null || context.roas7d != null) {
+    lines.push(`1d/3d/7d ROAS：${context.roas1d ?? "-"} / ${context.roas3d ?? "-"} / ${context.roas7d ?? "-"}`);
+  }
+  if (context.trendCore != null) lines.push(`TrendCore：${context.trendCore}`);
+  if (context.momentum != null) lines.push(`Momentum：${context.momentum}`);
+  if (context.scaleReadinessScore != null) lines.push(`Scale Readiness：${context.scaleReadinessScore}`);
+  if (context.suggestedAction != null) lines.push(`建議動作：${context.suggestedAction}`);
+  if (context.suggestedPct != null) lines.push(`建議幅度：${context.suggestedPct}`);
+  if (context.reason != null) lines.push(`原因：${context.reason}`);
+  if (context.whyNotMore != null) lines.push(`為什麼不是更大或更小：${context.whyNotMore}`);
+  if (context.atc != null) lines.push(`ATC：${context.atc}`);
+  if (context.purchases != null) lines.push(`購買數：${context.purchases}`);
+  if (context.spend != null) lines.push(`花費：${context.spend}`);
+  if (context.revenue != null) lines.push(`營收：${context.revenue}`);
+  return lines.join("\n");
 }

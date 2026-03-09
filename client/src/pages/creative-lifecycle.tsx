@@ -1,6 +1,8 @@
 /**
- * P3-3 素材/新品生命週期看板 + ROI 漏斗 + label filter（含 Lucky）
- * 支援 /creative-lifecycle?creativeId= 深連結：篩選到對應素材、滾動並高亮。
+ * 第三層：流程管理引擎 — 素材生命週期中心
+ * 目標為作戰系統：待初審→待驗證→第一次決策點→存活池→拉升池→死亡池→靈感池。
+ * 目前以 ROI 漏斗標籤（Winner/Underfunded/Lucky/FunnelWeak/Retired 等）呈現；未來每支素材將承載 Scale Readiness、預算建議、借鑑點、whyNotMore。
+ * 支援 /creative-lifecycle?creativeId= 深連結。
  */
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
