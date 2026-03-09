@@ -1251,6 +1251,24 @@ interface ActionCenterData {
   riskyCampaigns: Array<{ campaignId: string; campaignName: string; accountId: string; spend: number; revenue: number; suggestion: string }>;
   funnelWarnings?: FunnelWarningItem[];
   failureRatesByTag?: Record<string, number>;
+  budgetActionTable?: Array<{
+    campaignId: string;
+    campaignName: string;
+    accountId: string;
+    productName: string;
+    spend: number;
+    roas: number;
+    impactAmount: number;
+    sampleStatus: string;
+    scaleScore: number;
+    trendABC: string | null;
+    suggestedAction: string;
+    suggestedPct: number | "關閉";
+    reason: string;
+  }>;
+  tierMainAccount?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
+  tierHighPotentialCreatives?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number }>;
+  tierNoise?: Array<{ campaignId: string; campaignName: string; productName: string; spend: number; reason: string }>;
 }
 
 export default function DashboardPage() {
@@ -1268,7 +1286,7 @@ export default function DashboardPage() {
     queryKey: actionCenterQueryKey,
     queryFn: async () => {
       const res = await fetch(`/api/dashboard/action-center?${actionCenterParams.toString()}`, { credentials: "include" });
-      if (!res.ok) return { productLevel: [], creativeLeaderboard: [], hiddenGems: [], urgentStop: [], riskyCampaigns: [], funnelWarnings: [], failureRatesByTag: {} };
+      if (!res.ok) return { productLevel: [], creativeLeaderboard: [], hiddenGems: [], urgentStop: [], riskyCampaigns: [], funnelWarnings: [], failureRatesByTag: {}, budgetActionTable: [] };
       return res.json();
     },
   });
@@ -1553,6 +1571,44 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {actionData?.budgetActionTable && actionData.budgetActionTable.length > 0 && (
+          <Card data-testid="card-budget-action-table">
+            <CardContent className="pt-4">
+              <h3 className="font-semibold mb-3">今日預算動作總表（依獲利規則 + 趨勢）</h3>
+              <div className="overflow-x-auto text-sm">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">活動／商品</th>
+                      <th className="text-right p-2">花費</th>
+                      <th className="text-right p-2">ROAS</th>
+                      <th className="text-right p-2">影響金額</th>
+                      <th className="text-center p-2">樣本</th>
+                      <th className="text-center p-2">建議動作</th>
+                      <th className="text-center p-2">建議幅度</th>
+                      <th className="text-left p-2 max-w-[200px]">原因</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {actionData.budgetActionTable.slice(0, 30).map((r) => (
+                      <tr key={r.campaignId} className="border-b border-muted/50">
+                        <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                        <td className="text-right p-2">{formatCurrency(r.spend)}</td>
+                        <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                        <td className="text-right p-2">{formatCurrency(r.impactAmount)}</td>
+                        <td className="text-center p-2">{r.sampleStatus}</td>
+                        <td className="text-center p-2 font-medium">{r.suggestedAction}</td>
+                        <td className="text-center p-2">{r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct > 0 ? "+" : ""}${r.suggestedPct}%`}</td>
+                        <td className="p-2 text-muted-foreground text-xs max-w-[200px] truncate" title={r.reason}>{r.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         )}

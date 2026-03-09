@@ -636,6 +636,9 @@ export default function SettingsPage() {
                 <Link href="/settings/thresholds">門檻設定</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
+                <Link href="/settings/profit-rules">獲利規則中心</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
                 <Link href="/settings/prompts">Prompt 設定</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
@@ -661,6 +664,9 @@ export default function SettingsPage() {
             <CardContent className="flex flex-wrap gap-3">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/settings/thresholds">門檻設定</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/settings/profit-rules">獲利規則中心</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href="/settings/prompts">Prompt 設定</Link>

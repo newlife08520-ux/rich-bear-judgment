@@ -81,4 +81,4 @@
 
 ## 六、Commit
 
-（實作完成後填寫 commit hash）
+`d8e9423` — refactor(product): 資料判斷邏輯、決策首頁、分數可解釋、導航與成功率頁

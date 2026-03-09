@@ -20,6 +20,7 @@ import {
   Settings,
   LogOut,
   BarChart3,
+  Calculator,
   Image,
   Send,
   ListChecks,
@@ -53,6 +54,7 @@ const analysisNavItems = [
 
 /** 工具與設定 */
 const toolsNavItems = [
+  { title: "獲利規則中心", icon: Calculator, url: "/settings/profit-rules" },
   { title: "設定中心", icon: Settings, url: "/settings" },
 ];
 

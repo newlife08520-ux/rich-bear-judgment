@@ -23,6 +23,7 @@ import SettingsPage from "@/pages/settings";
 import TeamSettingsPage from "@/pages/team-settings";
 import SettingsThresholdsPage from "@/pages/settings-thresholds";
 import SettingsPromptsPage from "@/pages/settings-prompts";
+import SettingsProfitRulesPage from "@/pages/settings-profit-rules";
 import AssetsPage from "@/pages/assets";
 import PublishPlaceholderPage from "@/pages/publish-placeholder";
 import PublishHistoryPlaceholderPage from "@/pages/publish-history-placeholder";
@@ -89,6 +90,7 @@ function AuthenticatedApp() {
                 <Route path="/settings/team" component={TeamSettingsPage} />
                 <Route path="/settings/thresholds" component={SettingsThresholdsPage} />
                 <Route path="/settings/prompts" component={SettingsPromptsPage} />
+                <Route path="/settings/profit-rules" component={SettingsProfitRulesPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route component={NotFound} />
               </Switch>

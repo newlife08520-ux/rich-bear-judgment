@@ -1790,3 +1790,33 @@ export interface PublishTemplate {
   adNameTemplate?: string;
   createdAt: string;
 }
+
+// ========== 獲利規則中心 ==========
+export interface ProductProfitRule {
+  costRatio: number;
+  targetNetMargin: number;
+  minSpend: number;
+  minClicks: number;
+  minATC: number;
+  minPurchases: number;
+}
+
+export const DEFAULT_PROFIT_RULE: ProductProfitRule = {
+  costRatio: 0.4,
+  targetNetMargin: 0.15,
+  minSpend: 100,
+  minClicks: 30,
+  minATC: 3,
+  minPurchases: 1,
+};
+
+export function breakEvenRoas(costRatio: number): number {
+  if (costRatio >= 1) return Infinity;
+  return 1 / (1 - costRatio);
+}
+
+export function targetRoas(costRatio: number, targetNetMargin: number): number {
+  const margin = 1 - costRatio - targetNetMargin;
+  if (margin <= 0) return Infinity;
+  return 1 / margin;
+}

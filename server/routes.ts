@@ -80,6 +80,9 @@ import {
 import { buildDecisionCards, type CreativeLeaderboardRow } from "@shared/decision-cards-engine";
 import { classifyMaterialTier } from "@shared/material-tier";
 import { SCORE_DEFINITIONS } from "@shared/score-definitions";
+import { breakEvenRoas, targetRoas } from "@shared/schema";
+import { computeScaleScore, getBudgetAction, getTrendABC } from "@shared/scale-score-engine";
+import { getProductProfitRules, getProductProfitRule, setProductProfitRule } from "./profit-rules-store";
 import {
   computeRoiFunnel,
   computeBaselineFromRows,
@@ -996,6 +999,31 @@ export async function registerRoutes(
   app.get("/api/settings", requireAuth, (req, res) => {
     const settings = storage.getSettings(req.session.userId!);
     res.json(settings);
+  });
+
+  app.get("/api/profit-rules", requireAuth, (_req, res) => {
+    res.json(getProductProfitRules());
+  });
+
+  app.put("/api/profit-rules", requireAuth, (req, res) => {
+    const { productName, ...rule } = req.body as { productName: string; costRatio?: number; targetNetMargin?: number; minSpend?: number; minClicks?: number; minATC?: number; minPurchases?: number };
+    if (!productName || typeof productName !== "string") {
+      return res.status(400).json({ message: "請提供 productName" });
+    }
+    const updated = setProductProfitRule(productName, rule);
+    res.json(updated);
+  });
+
+  app.get("/api/profit-rules/calculations", requireAuth, (req, res) => {
+    const productName = req.query.productName as string;
+    const rule = productName ? getProductProfitRule(productName) : null;
+    if (!rule) return res.json({ breakEvenRoas: null, targetRoas: null });
+    res.json({
+      breakEvenRoas: breakEvenRoas(rule.costRatio),
+      targetRoas: targetRoas(rule.costRatio, rule.targetNetMargin),
+      costRatio: rule.costRatio,
+      targetNetMargin: rule.targetNetMargin,
+    });
   });
 
   app.put("/api/settings", requireAuth, (req, res) => {
@@ -2064,6 +2092,49 @@ export async function registerRoutes(
       for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
       return Math.abs(h);
     };
+    const totalAccountSpend = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.spend, 0);
+    const totalAccountRevenue = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.revenue, 0);
+    const campaignList = accountIdSet
+      ? (batch.campaignMetrics as CampaignMetrics[]).filter((c) => accountIdSet.has(normalizeAccountId(c.accountId)))
+      : (batch.campaignMetrics as CampaignMetrics[]);
+    const budgetActionTable = campaignList.map((c) => {
+      const productName = resolveProduct(c) ?? "未分類";
+      const rule = getProductProfitRule(productName);
+      const input = {
+        spend: c.spend,
+        revenue: c.revenue,
+        roas: c.roas,
+        addToCart: c.addToCart ?? 0,
+        conversions: c.conversions,
+        clicks: c.clicks,
+        impressions: c.impressions,
+        multiWindow: c.multiWindow ?? undefined,
+        totalAccountSpend,
+        totalAccountRevenue,
+        rule,
+      };
+      const { score, breakdown } = computeScaleScore(input);
+      const budgetAction = getBudgetAction(input);
+      const trendABC = getTrendABC(c.multiWindow ?? undefined, breakEvenRoas(rule.costRatio), targetRoas(rule.costRatio, rule.targetNetMargin));
+      const impactAmount = c.revenue - c.spend;
+      const sampleStatus = breakdown.confidenceScore >= 12 ? "足" : breakdown.confidenceScore >= 8 ? "勉強" : "不足";
+      return {
+        campaignId: c.campaignId,
+        campaignName: c.campaignName,
+        accountId: c.accountId,
+        productName,
+        spend: c.spend,
+        roas: c.roas,
+        impactAmount,
+        sampleStatus,
+        scaleScore: score,
+        trendABC,
+        suggestedAction: budgetAction.action,
+        suggestedPct: budgetAction.suggestedPct,
+        reason: budgetAction.reason,
+      };
+    });
+
     const creativeLeaderboard = creativeRaw.map((c) => {
       const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
       const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
@@ -2077,7 +2148,33 @@ export async function registerRoutes(
         c.revenue,
         totalRevenue
       );
-      return { ...c, thumbnailUrl, budgetSuggestion, materialTier, impressions: c.impressions ?? 0, clicks: c.clicks ?? 0 };
+      const rule = getProductProfitRule(c.productName);
+      const input = {
+        spend: c.spend,
+        revenue: c.revenue,
+        roas: c.roas,
+        addToCart: 0,
+        conversions: c.conversions,
+        clicks: c.clicks ?? 0,
+        impressions: c.impressions ?? 0,
+        totalAccountSpend,
+        totalAccountRevenue,
+        rule,
+      };
+      const { score } = computeScaleScore(input);
+      const budgetAction = getBudgetAction(input);
+      return {
+        ...c,
+        thumbnailUrl,
+        budgetSuggestion,
+        materialTier,
+        impressions: c.impressions ?? 0,
+        clicks: c.clicks ?? 0,
+        scaleScore: score,
+        suggestedAction: budgetAction.action,
+        suggestedPct: budgetAction.suggestedPct,
+        budgetReason: budgetAction.reason,
+      };
     });
     const failureRatesByTag = getHistoricalFailureRateByTag(rows);
 
@@ -2141,6 +2238,13 @@ export async function registerRoutes(
     const funnelRows = stitchFunnelData(fbRows, ga4Mock);
     const funnelWarnings = runFunnelDiagnostics(funnelRows);
 
+    const tierMain = productLevel.filter((p) => {
+      const revShare = totalRevenue > 0 ? p.revenue / totalRevenue : 0;
+      return revShare >= 0.15 && p.roas >= 1;
+    }).sort((a, b) => b.revenue - a.revenue);
+    const tierNoise = budgetActionTable.filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉").map((r) => ({ campaignId: r.campaignId, campaignName: r.campaignName, productName: r.productName, spend: r.spend, reason: r.reason }));
+    const tierHighPotential = creativeLeaderboard.filter((c) => (c as { materialTier?: string }).materialTier === "Potential" || (c as { materialTier?: string }).materialTier === "Winner").filter((c) => (c as { scaleScore?: number }).scaleScore >= 60).sort((a, b) => b.revenue - a.revenue);
+
     res.json({
       productLevel,
       creativeLeaderboard,
@@ -2149,6 +2253,10 @@ export async function registerRoutes(
       riskyCampaigns,
       funnelWarnings,
       failureRatesByTag,
+      budgetActionTable,
+      tierMainAccount: tierMain,
+      tierHighPotentialCreatives: tierHighPotential.slice(0, 10),
+      tierNoise: tierNoise.slice(0, 20),
     });
   });
 
