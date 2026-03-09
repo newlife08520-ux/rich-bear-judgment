@@ -29,6 +29,10 @@ export interface DecisionCardBlock {
   copyableText?: string;
 }
 
+import type { MaterialTier } from "./material-tier";
+
+export type { MaterialTier };
+
 export interface CreativeLeaderboardRow {
   productName: string;
   materialStrategy: string;
@@ -41,6 +45,8 @@ export interface CreativeLeaderboardRow {
   clicks?: number;
   frequency?: number;
   campaignCount?: number;
+  /** 素材分級：Unproven 不列入黑榜；Loser 才可列黑榜 */
+  materialTier?: MaterialTier;
 }
 
 export interface DecisionCardsInput {

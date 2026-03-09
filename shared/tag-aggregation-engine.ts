@@ -209,6 +209,8 @@ export function aggregateByCreativeTagsWithResolver(
         conversions: row.conversions,
         cpa,
         campaignCount: 1,
+        impressions: row.impressions ?? 0,
+        clicks: row.clicks ?? 0,
       });
     } else {
       existing.spend += row.spend;
@@ -217,6 +219,8 @@ export function aggregateByCreativeTagsWithResolver(
       existing.campaignCount += 1;
       existing.roas = existing.spend > 0 ? existing.revenue / existing.spend : 0;
       existing.cpa = existing.conversions > 0 ? existing.spend / existing.conversions : 0;
+      existing.impressions += row.impressions ?? 0;
+      existing.clicks += row.clicks ?? 0;
     }
   }
 
@@ -255,6 +259,8 @@ export interface CreativeTagLevelMetrics {
   conversions: number;
   cpa: number;
   campaignCount: number;
+  impressions: number;
+  clicks: number;
 }
 
 export function aggregateByCreativeTags(
@@ -282,6 +288,8 @@ export function aggregateByCreativeTags(
         conversions: row.conversions,
         cpa,
         campaignCount: 1,
+        impressions: row.impressions ?? 0,
+        clicks: row.clicks ?? 0,
       });
     } else {
       existing.spend += row.spend;
@@ -290,6 +298,8 @@ export function aggregateByCreativeTags(
       existing.campaignCount += 1;
       existing.roas = existing.spend > 0 ? existing.revenue / existing.spend : 0;
       existing.cpa = existing.conversions > 0 ? existing.spend / existing.conversions : 0;
+      existing.impressions += row.impressions ?? 0;
+      existing.clicks += row.clicks ?? 0;
     }
   }
 

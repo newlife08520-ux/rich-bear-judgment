@@ -78,6 +78,8 @@ import {
   runFunnelDiagnostics,
 } from "@shared/funnel-stitching";
 import { buildDecisionCards, type CreativeLeaderboardRow } from "@shared/decision-cards-engine";
+import { classifyMaterialTier } from "@shared/material-tier";
+import { SCORE_DEFINITIONS } from "@shared/score-definitions";
 import {
   computeRoiFunnel,
   computeBaselineFromRows,
@@ -1489,6 +1491,10 @@ export async function registerRoutes(
     res.json(status);
   });
 
+  app.get("/api/scoring/definitions", requireAuth, (_req, res) => {
+    res.json({ definitions: SCORE_DEFINITIONS });
+  });
+
   app.get("/api/dashboard/cross-account-summary", requireAuth, (req, res) => {
     const batch = getBatchFromRequest(req);
     if (!batch || !batch.summary) {
@@ -2052,6 +2058,7 @@ export async function registerRoutes(
 
     const productLevel: ProductLevelMetrics[] = aggregateByProductWithResolver(rows, resolveProduct, scopeProducts);
     const creativeRaw: CreativeTagLevelMetrics[] = aggregateByCreativeTagsWithResolver(rows, resolveProduct, scopeProducts);
+    const totalRevenue = productLevel.reduce((s, p) => s + p.revenue, 0);
     const seedHash = (s: string) => {
       let h = 0;
       for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
@@ -2061,12 +2068,20 @@ export async function registerRoutes(
       const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
       const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
       const budgetSuggestion = getBudgetRecommendation(c.spend, c.roas) ?? undefined;
-      return { ...c, thumbnailUrl, budgetSuggestion };
+      const materialTier = classifyMaterialTier(
+        c.spend,
+        c.impressions ?? 0,
+        c.clicks ?? 0,
+        c.conversions,
+        c.roas,
+        c.revenue,
+        totalRevenue
+      );
+      return { ...c, thumbnailUrl, budgetSuggestion, materialTier, impressions: c.impressions ?? 0, clicks: c.clicks ?? 0 };
     });
     const failureRatesByTag = getHistoricalFailureRateByTag(rows);
 
     const totalSpend = productLevel.reduce((s, p) => s + p.spend, 0);
-    const totalRevenue = productLevel.reduce((s, p) => s + p.revenue, 0);
     const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
     const sortedBySpend = [...productLevel].sort((a, b) => a.spend - b.spend);
     const medianSpend = sortedBySpend.length > 0

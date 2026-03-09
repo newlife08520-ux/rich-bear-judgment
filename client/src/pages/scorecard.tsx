@@ -125,13 +125,14 @@ export default function ScorecardPage() {
       <div className="flex-1 p-4 md:p-6 space-y-4">
         <Card className="bg-muted/30">
           <CardContent className="py-3 px-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">KPI 說明</p>
+            <p className="font-medium text-foreground mb-1">KPI 定義與計算來源</p>
             <ul className="space-y-0.5 text-xs">
-              <li><strong>成功率</strong> = Winner 數／本月上線數（達標占比）</li>
-              <li><strong>Lucky 率</strong> = Lucky 數／本月上線數（需補量驗證的占比）</li>
-              <li><strong>漏斗通過率</strong> = 漏斗健康達標占比（ATC／購買轉換符合基準）</li>
-              <li><strong>平均品質分</strong> = ROI + 漏斗 + 置信度綜合分數</li>
+              <li><strong>成功率</strong> = Winner 數／本月上線數。成功定義：ROI 漏斗引擎判定為 Winner（達 minSpend/minClicks/minPurchases 且 ROAS 達標、漏斗健康）。</li>
+              <li><strong>Lucky 率</strong> = Lucky 數／本月上線數。Lucky：花費低於門檻但有轉換，可能是運氣，需補量到門檻後再評估。</li>
+              <li><strong>漏斗通過率</strong> = 漏斗健康達標數／本月上線數（ATC／購買轉換符合設定基準）。</li>
+              <li><strong>平均品質分</strong> = 各筆 ROI + 漏斗 + 置信度綜合分數的平均。</li>
             </ul>
+            <p className="text-amber-700 dark:text-amber-400 mt-2 text-xs font-medium">若多數為 0%：可能本月尚無上線、或門檻未達。此頁為輔助指標，定義與資料源成熟前請勿單獨作為核心考核依據。</p>
           </CardContent>
         </Card>
         <Tabs value={groupBy} onValueChange={(v) => setGroupBy(v as "product" | "person")}>

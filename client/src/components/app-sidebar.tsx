@@ -30,20 +30,31 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useEmployee, getDepartmentLabel } from "@/lib/employee-context";
 
-/** 日常主導航：一眼知道每天會用的頁面 */
-const dailyNavItems = [
+/** 決策：優先回答誰賺錢、誰危險、先做哪幾件事 */
+const decisionNavItems = [
   { title: "今日決策中心", icon: LayoutDashboard, url: "/" },
   { title: "商品作戰室", icon: Package, url: "/products" },
   { title: "任務中心", icon: ListTodo, url: "/tasks" },
   { title: "RICH BEAR 審判官", icon: Gavel, url: "/judgment" },
+];
+
+/** 成長：擴量、素材與投放 */
+const growthNavItems = [
   { title: "素材中心", icon: Image, url: "/assets" },
   { title: "素材生命週期", icon: TrendingUp, url: "/creative-lifecycle" },
-  { title: "成功率成績單", icon: BarChart3, url: "/scorecard" },
   { title: "投放中心", icon: Send, url: "/publish" },
   { title: "投放紀錄", icon: ListChecks, url: "/publish/history" },
 ];
 
-const settingsNavItem = { title: "設定中心", icon: Settings, url: "/settings" };
+/** 分析：報表與成績（成功率頁為輔助指標，定義未成熟前僅供參考） */
+const analysisNavItems = [
+  { title: "成功率成績單", icon: BarChart3, url: "/scorecard" },
+];
+
+/** 工具與設定 */
+const toolsNavItems = [
+  { title: "設定中心", icon: Settings, url: "/settings" },
+];
 
 const roleLabels: Record<string, string> = {
   admin: "最高管理員",
@@ -56,7 +67,29 @@ export function AppSidebar() {
   const { employee } = useEmployee();
   const [location] = useLocation();
 
-  const navItems = [ ...dailyNavItems, settingsNavItem ];
+  const renderNav = (items: typeof decisionNavItems, groupLabel: string) => (
+    <SidebarGroup key={groupLabel}>
+      <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.url}>
+              <SidebarMenuButton
+                asChild
+                data-active={location === item.url || (item.url !== "/" && location.startsWith(item.url)) || undefined}
+                data-testid={`nav-${item.url.replace("/", "") || "dashboard"}`}
+              >
+                <Link href={item.url}>
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 
   return (
     <Sidebar>
@@ -75,42 +108,10 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>日常</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {dailyNavItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    data-active={location === item.url || undefined}
-                    data-testid={`nav-${item.url.replace("/", "") || "dashboard"}`}
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>管理與設定</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild data-active={location === "/settings" || location.startsWith("/settings/") || undefined}>
-                  <Link href="/settings">
-                    <Settings className="w-4 h-4" />
-                    <span>設定中心</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderNav(decisionNavItems, "決策")}
+        {renderNav(growthNavItems, "成長")}
+        {renderNav(analysisNavItems, "分析")}
+        {renderNav(toolsNavItems, "工具")}
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-sidebar-border">

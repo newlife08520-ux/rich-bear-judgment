@@ -37,6 +37,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
@@ -855,6 +862,14 @@ function ProductRedBlackBoard({
 const PLACEHOLDER_THUMB = "https://placehold.co/120x90/1a1a2e/eee?text=素材";
 
 /** 素材與文案金榜：轉換率/ROAS 最高的素材組合，霸屏展示 + 縮圖 + 歷史陣亡率警告 */
+const MATERIAL_TIER_LABELS: Record<string, string> = {
+  Winner: "贏家",
+  Potential: "潛力股",
+  Borderline: "觀察中",
+  Loser: "成效差",
+  Unproven: "樣本不足",
+};
+
 function CreativeLeaderboardHero({
   creativeLeaderboard,
   failureRatesByTag = {},
@@ -871,12 +886,17 @@ function CreativeLeaderboardHero({
     cpa: number;
     thumbnailUrl?: string;
     budgetSuggestion?: string;
+    materialTier?: string;
   }>;
   failureRatesByTag?: Record<string, number>;
   department?: string;
 }) {
   if (!creativeLeaderboard.length) return null;
-  const topCreatives = [...creativeLeaderboard].sort((a, b) => b.roas - a.roas).slice(0, 8);
+  const winnerOrPotential = creativeLeaderboard.filter((c) => c.materialTier === "Winner" || c.materialTier === "Potential");
+  const topCreatives = [...winnerOrPotential]
+    .sort((a, b) => b.revenue - a.revenue || b.roas - a.roas)
+    .slice(0, 8);
+  if (topCreatives.length === 0) return null;
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
@@ -901,9 +921,14 @@ function CreativeLeaderboardHero({
                     className="w-24 h-20 object-cover shrink-0 bg-muted"
                   />
                   <div className="flex-1 min-w-0 p-3">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-xs font-bold text-amber-600 dark:text-amber-400 w-5">{i + 1}</span>
                       <Badge variant="secondary" className="text-[10px]">{r.productName}</Badge>
+                      {r.materialTier && (
+                        <Badge variant="outline" className="text-[10px] text-amber-600">
+                          {MATERIAL_TIER_LABELS[r.materialTier] ?? r.materialTier}
+                        </Badge>
+                      )}
                     </div>
                     <p className="font-semibold text-sm mb-0.5">
                       {r.materialStrategy} + {r.headlineSnippet}
@@ -964,8 +989,8 @@ function CreativeBlacklistSection({
     },
   });
 
-  if (!creativeLeaderboard.length) return null;
-  const worstCreatives = [...creativeLeaderboard].sort((a, b) => a.roas - b.roas).slice(0, 6);
+  const losersOnly = creativeLeaderboard.filter((c) => c.materialTier === "Loser");
+  const worstCreatives = [...losersOnly].sort((a, b) => a.roas - b.roas).slice(0, 6);
 
   return (
     <>
@@ -974,8 +999,11 @@ function CreativeBlacklistSection({
           <CardContent className="pt-4">
             <h3 className="font-semibold mb-4 flex items-center gap-2 text-red-700 dark:text-red-400">
               <TrendingDown className="w-4 h-4" />
-              🚨 素材黑榜 · 成效最差
+              🚨 素材黑榜 · 成效最差（已達樣本門檻才列入）
             </h3>
+            {worstCreatives.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">無符合條件的黑榜素材；樣本不足者不列入，避免誤判。</p>
+            ) : (
             <div className="space-y-3">
               {worstCreatives.map((r, i) => {
                 const failRate = failureRatesByTag[r.materialStrategy];
@@ -1025,6 +1053,7 @@ function CreativeBlacklistSection({
                 );
               })}
             </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -1162,6 +1191,46 @@ interface FunnelWarningItem {
   message: string;
 }
 
+/** 分數說明：可點擊展開定義、計算來源、門檻、顏色、對應動作 */
+function ScoreDefinitionsTrigger() {
+  const { data } = useQuery<{ definitions: Array<{ key: string; name: string; definition: string; calculationSource: string; thresholds: string; colorRule: string; suggestedAction: string }> }>({
+    queryKey: ["/api/scoring/definitions"],
+    queryFn: async () => {
+      const res = await fetch("/api/scoring/definitions", { credentials: "include" });
+      if (!res.ok) return { definitions: [] };
+      return res.json();
+    },
+  });
+  const definitions = data?.definitions ?? [];
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
+          <BarChart3 className="w-3.5 h-3.5" />
+          分數怎麼算？
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>分數定義與門檻</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 text-sm">
+          {definitions.map((d) => (
+            <div key={d.key} className="rounded-lg border p-3 space-y-1">
+              <p className="font-medium text-foreground">{d.name}</p>
+              <p className="text-muted-foreground">{d.definition}</p>
+              <p className="text-xs"><span className="font-medium">計算來源：</span>{d.calculationSource}</p>
+              <p className="text-xs"><span className="font-medium">門檻：</span>{d.thresholds}</p>
+              <p className="text-xs"><span className="font-medium">顏色：</span>{d.colorRule}</p>
+              <p className="text-xs text-primary"><span className="font-medium">建議動作：</span>{d.suggestedAction}</p>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** Action Center API 回傳格式 */
 interface ActionCenterData {
   productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount: number }>;
@@ -1249,14 +1318,17 @@ export default function DashboardPage() {
   });
 
   const syncMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts?: { runRefreshAfterSync?: boolean }) => {
       const res = await apiRequest("POST", "/api/accounts/sync", {});
       return res.json();
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, variables?: { runRefreshAfterSync?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts/synced"] });
       const count = data.syncedAccounts?.length || 0;
       toast({ title: "帳號同步完成", description: `已同步 ${count} 個帳號` });
+      if (variables?.runRefreshAfterSync) {
+        refreshMutation.mutate();
+      }
     },
     onError: () => {
       toast({ title: "帳號同步失敗", variant: "destructive" });
@@ -1340,8 +1412,7 @@ export default function DashboardPage() {
             variant="outline"
             size="sm"
             onClick={() => {
-              syncMutation.mutate();
-              setTimeout(() => refreshMutation.mutate(), 500);
+              syncMutation.mutate({ runRefreshAfterSync: true });
             }}
             disabled={!!isRefreshing}
             className="gap-2"
@@ -1357,11 +1428,12 @@ export default function DashboardPage() {
 
       <div className="min-h-full p-4 md:p-6 space-y-6 page-container-fluid">
         <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="py-4">
+          <CardContent className="py-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-lg font-medium">
               {greeting}！<span className="text-primary">{employee.name}</span>
               。30 秒掌握今日重點，下方可切換角色視角。
             </p>
+            <ScoreDefinitionsTrigger />
           </CardContent>
         </Card>
 
@@ -1379,10 +1451,12 @@ export default function DashboardPage() {
         )}
 
         {actionData?.productLevel && actionData.productLevel.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="section-today-focus">
+          <>
+            <h2 className="text-base font-semibold text-foreground">決策焦點 · 優先回答四問</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="section-today-focus">
             <Card className="border-emerald-200 dark:border-emerald-800">
               <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> 今日最值得加碼 Top3</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> 1. 今天誰在賺錢</h4>
                 <ul className="space-y-1">
                   {[...actionData.productLevel].filter((p) => p.roas >= 1).sort((a, b) => b.roas - a.roas).slice(0, 3).map((p) => (
                     <li key={p.productName} className="flex justify-between text-sm">
@@ -1396,7 +1470,7 @@ export default function DashboardPage() {
             </Card>
             <Card className="border-red-200 dark:border-red-800">
               <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5" /> 今日最危險 Top3</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5" /> 2. 今天誰最危險</h4>
                 <ul className="space-y-1">
                   {[...actionData.productLevel].filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).sort((a, b) => b.spend - a.spend).slice(0, 3).map((p) => (
                     <li key={p.productName} className="flex justify-between text-sm">
@@ -1408,40 +1482,53 @@ export default function DashboardPage() {
                 {actionData.productLevel.filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).length === 0 && <p className="text-xs text-muted-foreground">尚無</p>}
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-amber-200 dark:border-amber-800">
               <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2">今日待處理素材 Top5</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" /> 3. 今天誰最值得放大</h4>
                 {actionData.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 ? (
                   <ul className="space-y-1">
-                    {[...actionData.creativeLeaderboard].sort((a, b) => a.roas - b.roas).slice(0, 5).map((c, i) => (
-                      <li key={`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}-${i}`} className="text-sm truncate">
-                        <Link href="/products" className="hover:underline">{c.productName}</Link> · {c.materialStrategy}+{c.headlineSnippet} <span className="text-red-600">ROAS {c.roas.toFixed(2)}</span>
-                      </li>
-                    ))}
+                    {[...actionData.creativeLeaderboard]
+                      .filter((c) => (c as { materialTier?: string }).materialTier === "Winner" || (c as { materialTier?: string }).materialTier === "Potential")
+                      .sort((a, b) => b.revenue - a.revenue || b.roas - a.roas)
+                      .slice(0, 5)
+                      .map((c, i) => (
+                        <li key={`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}-${i}`} className="text-sm truncate">
+                          <Link href="/products" className="hover:underline">{c.productName}</Link> · {c.materialStrategy}+{c.headlineSnippet} <span className="text-emerald-600">ROAS {c.roas.toFixed(2)}</span>
+                        </li>
+                      ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-muted-foreground">尚無</p>
+                  <p className="text-xs text-muted-foreground">尚無達標贏家/潛力股</p>
                 )}
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> 警報與任務</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> 4. 今天先做哪 3 件事</h4>
                 <p className="text-sm">
                   高優先級警報 <strong>{(actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0)}</strong> 則
                   {((actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0)) > 0 && (
                     <Link href="/" className="ml-1 text-primary hover:underline">查看</Link>
                   )}
                 </p>
-                <p className="text-sm mt-1 text-muted-foreground">
-                  待分配任務：<strong>{unassignedTaskCount}</strong> 則
-                  {unassignedTaskCount > 0 && (
-                    <Link href="/tasks" className="ml-1 text-primary hover:underline">前往任務中心</Link>
+                <ul className="text-sm space-y-1 mt-1">
+                  {(actionData?.riskyCampaigns?.length ?? 0) > 0 && (
+                    <li><Link href="/products" className="text-primary hover:underline">1. 處理危險活動 ({actionData!.riskyCampaigns!.length} 則)</Link></li>
                   )}
-                </p>
+                  {(actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0) > 0 && (
+                    <li><Link href="/" className="text-primary hover:underline">2. 查看警報與止血建議</Link></li>
+                  )}
+                  {unassignedTaskCount > 0 && (
+                    <li><Link href="/tasks" className="text-primary hover:underline">3. 前往任務中心 ({unassignedTaskCount} 則待分配)</Link></li>
+                  )}
+                </ul>
+                {((actionData?.riskyCampaigns?.length ?? 0) === 0 && (actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0) === 0 && unassignedTaskCount === 0) && (
+                  <p className="text-xs text-muted-foreground mt-1">暫無優先事項，可查看下方報表</p>
+                )}
               </CardContent>
             </Card>
           </div>
+          </>
         )}
 
         {(employee.department === "ADMIN" || employee.department === "MARKETING") && actionData?.funnelWarnings && actionData.funnelWarnings.length > 0 && (
