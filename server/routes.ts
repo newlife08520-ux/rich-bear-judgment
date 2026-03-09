@@ -81,7 +81,7 @@ import { buildDecisionCards, type CreativeLeaderboardRow } from "@shared/decisio
 import { classifyMaterialTier } from "@shared/material-tier";
 import { SCORE_DEFINITIONS } from "@shared/score-definitions";
 import { breakEvenRoas, targetRoas } from "@shared/schema";
-import { computeScaleScore, getBudgetAction, getTrendABC } from "@shared/scale-score-engine";
+import { computeScaleReadiness, getBudgetRecommendation as getScaleBudgetRecommendation, getTrendABC, creativeEdge } from "@shared/scale-score-engine";
 import { getProductProfitRules, getProductProfitRule, setProductProfitRule } from "./profit-rules-store";
 import {
   computeRoiFunnel,
@@ -2050,6 +2050,11 @@ export async function registerRoutes(
         urgentStop: [],
         riskyCampaigns: [],
         failureRatesByTag: {},
+        budgetActionTable: [],
+        tableRescue: [],
+        tableScaleUp: [],
+        tableNoMisjudge: [],
+        tableExtend: [],
       });
     }
 
@@ -2113,11 +2118,11 @@ export async function registerRoutes(
         totalAccountRevenue,
         rule,
       };
-      const { score, breakdown } = computeScaleScore(input);
-      const budgetAction = getBudgetAction(input);
-      const trendABC = getTrendABC(c.multiWindow ?? undefined, breakEvenRoas(rule.costRatio), targetRoas(rule.costRatio, rule.targetNetMargin));
+      const { score, breakdown, trendSignals } = computeScaleReadiness(input);
+      const rec = getScaleBudgetRecommendation(input);
+      const trendABC = getTrendABC(c.multiWindow ?? undefined, breakEvenRoas(rule.costRatio));
       const impactAmount = c.revenue - c.spend;
-      const sampleStatus = breakdown.confidenceScore >= 12 ? "足" : breakdown.confidenceScore >= 8 ? "勉強" : "不足";
+      const sampleStatus = breakdown.confidenceScore >= 70 ? "足" : breakdown.confidenceScore >= 40 ? "勉強" : "不足";
       return {
         campaignId: c.campaignId,
         campaignName: c.campaignName,
@@ -2127,14 +2132,22 @@ export async function registerRoutes(
         roas: c.roas,
         impactAmount,
         sampleStatus,
-        scaleScore: score,
+        scaleReadinessScore: score,
+        profitHeadroom: breakdown.profitHeadroom,
         trendABC,
-        suggestedAction: budgetAction.action,
-        suggestedPct: budgetAction.suggestedPct,
-        reason: budgetAction.reason,
+        trendCore: trendSignals.trendCore,
+        momentum: trendSignals.momentum,
+        suggestedAction: rec.action,
+        suggestedPct: rec.suggestedPct,
+        reason: rec.reason,
+        whyNotMore: rec.whyNotMore,
       };
     });
 
+    const productAvgRoasByProduct = new Map<string, number>();
+    for (const p of productLevel) {
+      productAvgRoasByProduct.set(p.productName, p.spend > 0 ? p.revenue / p.spend : 0);
+    }
     const creativeLeaderboard = creativeRaw.map((c) => {
       const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
       const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
@@ -2161,8 +2174,10 @@ export async function registerRoutes(
         totalAccountRevenue,
         rule,
       };
-      const { score } = computeScaleScore(input);
-      const budgetAction = getBudgetAction(input);
+      const { score, breakdown } = computeScaleReadiness(input);
+      const rec = getScaleBudgetRecommendation(input);
+      const productAvgRoas = productAvgRoasByProduct.get(c.productName) ?? 0;
+      const edge = creativeEdge(c.roas, productAvgRoas);
       return {
         ...c,
         thumbnailUrl,
@@ -2170,10 +2185,14 @@ export async function registerRoutes(
         materialTier,
         impressions: c.impressions ?? 0,
         clicks: c.clicks ?? 0,
-        scaleScore: score,
-        suggestedAction: budgetAction.action,
-        suggestedPct: budgetAction.suggestedPct,
-        budgetReason: budgetAction.reason,
+        scaleReadinessScore: score,
+        funnelReadiness: breakdown.funnelReadiness,
+        suggestedAction: rec.action,
+        suggestedPct: rec.suggestedPct,
+        budgetReason: rec.reason,
+        whyNotMore: rec.whyNotMore,
+        productAverageRoas: productAvgRoas,
+        creativeEdge: edge,
       };
     });
     const failureRatesByTag = getHistoricalFailureRateByTag(rows);
@@ -2242,8 +2261,22 @@ export async function registerRoutes(
       const revShare = totalRevenue > 0 ? p.revenue / totalRevenue : 0;
       return revShare >= 0.15 && p.roas >= 1;
     }).sort((a, b) => b.revenue - a.revenue);
-    const tierNoise = budgetActionTable.filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉").map((r) => ({ campaignId: r.campaignId, campaignName: r.campaignName, productName: r.productName, spend: r.spend, reason: r.reason }));
-    const tierHighPotential = creativeLeaderboard.filter((c) => (c as { materialTier?: string }).materialTier === "Potential" || (c as { materialTier?: string }).materialTier === "Winner").filter((c) => (c as { scaleScore?: number }).scaleScore >= 60).sort((a, b) => b.revenue - a.revenue);
+
+    const tableRescue = budgetActionTable.filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const tableScaleUp = budgetActionTable.filter((r) => r.suggestedAction === "可加碼" || r.suggestedAction === "高潛延伸").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const tableNoMisjudge = budgetActionTable.filter((r) => r.suggestedAction === "維持").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const creativeWithEdge = creativeLeaderboard as Array<{ productName: string; spend: number; revenue: number; roas: number; conversions: number; scaleReadinessScore?: number; funnelReadiness?: number; creativeEdge?: number; [k: string]: unknown }>;
+    const spendThreshold = totalAccountSpend * 0.2;
+    const tableExtend = creativeWithEdge.filter((c) => {
+      const edge = c.creativeEdge ?? 0;
+      const funnelOk = (c.funnelReadiness ?? 0) >= 50 || c.conversions > 0;
+      const sampleOk = c.conversions > 0 && c.spend >= 10;
+      const lowSpend = c.spend <= spendThreshold || c.spend < 500;
+      return edge >= 1.2 && funnelOk && sampleOk && lowSpend;
+    }).sort((a, b) => (b.creativeEdge ?? 0) - (a.creativeEdge ?? 0));
+
+    const tierNoise = tableRescue.map((r) => ({ campaignId: r.campaignId, campaignName: r.campaignName, productName: r.productName, spend: r.spend, reason: r.reason }));
+    const tierHighPotential = tableExtend.slice(0, 10).map((c) => ({ ...c, revenue: c.revenue }));
 
     res.json({
       productLevel,
@@ -2254,8 +2287,12 @@ export async function registerRoutes(
       funnelWarnings,
       failureRatesByTag,
       budgetActionTable,
+      tableRescue,
+      tableScaleUp,
+      tableNoMisjudge,
+      tableExtend,
       tierMainAccount: tierMain,
-      tierHighPotentialCreatives: tierHighPotential.slice(0, 10),
+      tierHighPotentialCreatives: tierHighPotential,
       tierNoise: tierNoise.slice(0, 20),
     });
   });

@@ -1231,6 +1231,25 @@ function ScoreDefinitionsTrigger() {
   );
 }
 
+/** 預算動作列（活動維度） */
+interface BudgetActionRow {
+  campaignId: string;
+  campaignName: string;
+  accountId: string;
+  productName: string;
+  spend: number;
+  roas: number;
+  impactAmount: number;
+  sampleStatus: string;
+  scaleReadinessScore?: number;
+  profitHeadroom?: number;
+  trendABC: string | null;
+  suggestedAction: string;
+  suggestedPct: number | "關閉";
+  reason: string;
+  whyNotMore?: string;
+}
+
 /** Action Center API 回傳格式 */
 interface ActionCenterData {
   productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount: number }>;
@@ -1245,27 +1264,23 @@ interface ActionCenterData {
     cpa: number;
     thumbnailUrl?: string;
     budgetSuggestion?: string;
+    scaleReadinessScore?: number;
+    creativeEdge?: number;
+    suggestedAction?: string;
+    suggestedPct?: number | "關閉";
+    budgetReason?: string;
+    whyNotMore?: string;
   }>;
   hiddenGems: Array<{ productName: string; spend: number; revenue: number; roas: number; message: string }>;
   urgentStop: Array<{ campaignId: string; campaignName: string; accountId: string; spend: number; message: string }>;
   riskyCampaigns: Array<{ campaignId: string; campaignName: string; accountId: string; spend: number; revenue: number; suggestion: string }>;
   funnelWarnings?: FunnelWarningItem[];
   failureRatesByTag?: Record<string, number>;
-  budgetActionTable?: Array<{
-    campaignId: string;
-    campaignName: string;
-    accountId: string;
-    productName: string;
-    spend: number;
-    roas: number;
-    impactAmount: number;
-    sampleStatus: string;
-    scaleScore: number;
-    trendABC: string | null;
-    suggestedAction: string;
-    suggestedPct: number | "關閉";
-    reason: string;
-  }>;
+  budgetActionTable?: BudgetActionRow[];
+  tableRescue?: BudgetActionRow[];
+  tableScaleUp?: BudgetActionRow[];
+  tableNoMisjudge?: BudgetActionRow[];
+  tableExtend?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number; conversions: number; creativeEdge?: number; scaleReadinessScore?: number; [k: string]: unknown }>;
   tierMainAccount?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
   tierHighPotentialCreatives?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number }>;
   tierNoise?: Array<{ campaignId: string; campaignName: string; productName: string; spend: number; reason: string }>;
@@ -1575,42 +1590,153 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {actionData?.budgetActionTable && actionData.budgetActionTable.length > 0 && (
-          <Card data-testid="card-budget-action-table">
-            <CardContent className="pt-4">
-              <h3 className="font-semibold mb-3">今日預算動作總表（依獲利規則 + 趨勢）</h3>
-              <div className="overflow-x-auto text-sm">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">活動／商品</th>
-                      <th className="text-right p-2">花費</th>
-                      <th className="text-right p-2">ROAS</th>
-                      <th className="text-right p-2">影響金額</th>
-                      <th className="text-center p-2">樣本</th>
-                      <th className="text-center p-2">建議動作</th>
-                      <th className="text-center p-2">建議幅度</th>
-                      <th className="text-left p-2 max-w-[200px]">原因</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {actionData.budgetActionTable.slice(0, 30).map((r) => (
-                      <tr key={r.campaignId} className="border-b border-muted/50">
-                        <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
-                        <td className="text-right p-2">{formatCurrency(r.spend)}</td>
-                        <td className="text-right p-2">{r.roas.toFixed(2)}</td>
-                        <td className="text-right p-2">{formatCurrency(r.impactAmount)}</td>
-                        <td className="text-center p-2">{r.sampleStatus}</td>
-                        <td className="text-center p-2 font-medium">{r.suggestedAction}</td>
-                        <td className="text-center p-2">{r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct > 0 ? "+" : ""}${r.suggestedPct}%`}</td>
-                        <td className="p-2 text-muted-foreground text-xs max-w-[200px] truncate" title={r.reason}>{r.reason}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+        {((actionData?.tableRescue?.length ?? 0) + (actionData?.tableScaleUp?.length ?? 0) + (actionData?.tableNoMisjudge?.length ?? 0) + (actionData?.tableExtend?.length ?? 0)) > 0 && (
+          <>
+            {actionData?.tableRescue && actionData.tableRescue.length > 0 && (
+              <Card data-testid="card-table-rescue" className="border-red-200 dark:border-red-800">
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-red-700 dark:text-red-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    今日先救
+                  </h3>
+                  <div className="overflow-x-auto text-sm">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">活動／商品</th>
+                          <th className="text-right p-2">花費</th>
+                          <th className="text-right p-2">ROAS</th>
+                          <th className="text-center p-2">建議幅度</th>
+                          <th className="text-left p-2 max-w-[220px]">原因</th>
+                          <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {actionData.tableRescue.map((r) => (
+                          <tr key={r.campaignId} className="border-b border-muted/50">
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="text-right p-2">{formatCurrency(r.spend)}</td>
+                            <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="text-center p-2 font-medium">{r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}</td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.reason}>{r.reason}</td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.whyNotMore ?? ""}>{r.whyNotMore ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {actionData?.tableScaleUp && actionData.tableScaleUp.length > 0 && (
+              <Card data-testid="card-table-scale-up" className="border-emerald-200 dark:border-emerald-800">
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                    <Rocket className="w-4 h-4" />
+                    今日可加碼
+                  </h3>
+                  <div className="overflow-x-auto text-sm">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">活動／商品</th>
+                          <th className="text-right p-2">花費</th>
+                          <th className="text-right p-2">ROAS</th>
+                          <th className="text-center p-2">建議幅度</th>
+                          <th className="text-left p-2 max-w-[220px]">原因</th>
+                          <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {actionData.tableScaleUp.map((r) => (
+                          <tr key={r.campaignId} className="border-b border-muted/50">
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="text-right p-2">{formatCurrency(r.spend)}</td>
+                            <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="text-center p-2 font-medium">
+                              {r.suggestedPct === "關閉" ? "關閉" : (r.suggestedPct as number) > 0 ? `+${r.suggestedPct}%` : `${r.suggestedPct}%`}
+                            </td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.reason}>{r.reason}</td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.whyNotMore ?? ""}>{r.whyNotMore ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {actionData?.tableNoMisjudge && actionData.tableNoMisjudge.length > 0 && (
+              <Card data-testid="card-table-no-misjudge" className="border-amber-200 dark:border-amber-800">
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                    <Shield className="w-4 h-4" />
+                    今日不要誤判
+                  </h3>
+                  <div className="overflow-x-auto text-sm">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">活動／商品</th>
+                          <th className="text-right p-2">花費</th>
+                          <th className="text-right p-2">ROAS</th>
+                          <th className="text-left p-2 max-w-[220px]">原因</th>
+                          <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {actionData.tableNoMisjudge.map((r) => (
+                          <tr key={r.campaignId} className="border-b border-muted/50">
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="text-right p-2">{formatCurrency(r.spend)}</td>
+                            <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.reason}>{r.reason}</td>
+                            <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.whyNotMore ?? ""}>{r.whyNotMore ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {actionData?.tableExtend && actionData.tableExtend.length > 0 && (
+              <Card data-testid="card-table-extend" className="border-violet-200 dark:border-violet-800">
+                <CardContent className="pt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-violet-700 dark:text-violet-400">
+                    <Zap className="w-4 h-4" />
+                    今日值得延伸
+                  </h3>
+                  <div className="overflow-x-auto text-sm">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">商品／素材</th>
+                          <th className="text-right p-2">花費</th>
+                          <th className="text-right p-2">營收</th>
+                          <th className="text-right p-2">ROAS</th>
+                          <th className="text-right p-2">Creative Edge</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {actionData.tableExtend.map((c, i) => (
+                          <tr key={`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}-${i}`} className="border-b border-muted/50">
+                            <td className="p-2 truncate max-w-[200px]" title={`${c.productName} · ${c.materialStrategy} · ${c.headlineSnippet}`}>
+                              {c.productName} · {c.materialStrategy}
+                            </td>
+                            <td className="text-right p-2">{formatCurrency(c.spend)}</td>
+                            <td className="text-right p-2">{formatCurrency(c.revenue)}</td>
+                            <td className="text-right p-2">{c.roas.toFixed(2)}</td>
+                            <td className="text-right p-2">{(c.creativeEdge ?? 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         {actionData?.productLevel && actionData.productLevel.length > 0 && (
