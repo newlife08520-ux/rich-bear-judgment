@@ -1,7 +1,9 @@
 /**
- * 高手操作模擬引擎：獲利能力 × 趨勢感 × 漏斗穩定度 × 影響力 × 信心
+ * 高手操作模擬引擎 1.0（staging 驗收用，不宣稱完成）
+ * 獲利能力 × 趨勢感 × 漏斗穩定度 × 影響力 × 信心
  * Scale Readiness Score 1–100 + 預算建議（BaseChange × Confidence × Impact × Trend）
  */
+export const SCALE_ENGINE_VERSION = "1.0";
 import type { MultiWindowMetrics } from "@shared/schema";
 import type { ProductProfitRule } from "@shared/schema";
 import { breakEvenRoas, targetRoas, DEFAULT_PROFIT_RULE } from "@shared/schema";
