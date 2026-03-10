@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAppScope } from "@/hooks/use-app-scope";
 import { AccountExceptionsBlock } from "@/components/account-exceptions-block";
 import type { ReviewSession, ChatMessage, StructuredJudgment } from "@shared/schema";
+import { type Workflow, workflowLabels } from "@shared/schema";
 import type { DecisionCardBlock } from "@shared/decision-cards-engine";
 
 /** 一鍵轉任務預填 payload（對應 POST /api/workbench/tasks） */
@@ -81,12 +82,12 @@ const UI_MODE_LABELS: Record<UIMode, string> = {
   creative: "創意模式",
 };
 
-/** 空狀態四大入口；各自對應 mode，點擊時切換 uiMode 再帶入預設 prompt */
-const EMPTY_ENTRIES: { id: string; label: string; short: string; icon: string; mode: UIMode; prompt?: string }[] = [
-  { id: "material", label: "素材審判", short: "圖片／影片／文案", icon: "👁️", mode: "creative", prompt: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？" },
-  { id: "landing", label: "商品頁審判", short: "銷售頁架構與轉換", icon: "🛍️", mode: "boss", prompt: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。" },
-  { id: "ads", label: "廣告數據審判", short: "廣告投放與成效", icon: "📊", mode: "buyer", prompt: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？" },
-  { id: "ga4", label: "GA4 漏斗審判", short: "漏斗斷點與優化", icon: "📈", mode: "buyer", prompt: "請從漏斗數據幫我找出斷點與優化建議。" },
+/** 空狀態四大入口；點擊時切換 workflow + uiMode 再帶入預設 prompt */
+const EMPTY_ENTRIES: { id: string; label: string; short: string; icon: string; mode: UIMode; workflow: Workflow; prompt?: string }[] = [
+  { id: "material", label: "素材審判", short: "圖片／影片／文案", icon: "👁️", mode: "creative", workflow: "audit", prompt: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？" },
+  { id: "landing", label: "商品頁架構", short: "銷售頁架構與轉換", icon: "🛍️", mode: "boss", workflow: "create", prompt: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。" },
+  { id: "ads", label: "廣告數據審判", short: "廣告投放與成效", icon: "📊", mode: "buyer", workflow: "audit", prompt: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？" },
+  { id: "ga4", label: "GA4 漏斗審判", short: "漏斗斷點與優化", icon: "📈", mode: "buyer", workflow: "audit", prompt: "請從漏斗數據幫我找出斷點與優化建議。" },
 ];
 
 type PendingAttachment = {
@@ -769,6 +770,7 @@ export default function JudgmentPage() {
   const [historySearch, setHistorySearch] = useState("");
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [uiMode, setUiMode] = useState<UIMode>("creative");
+  const [workflow, setWorkflow] = useState<Workflow>("clarify");
 
   const scope = useAppScope();
   const decisionCardsParams = new URLSearchParams();
@@ -991,6 +993,7 @@ export default function JudgmentPage() {
         body: JSON.stringify({
           sessionId: session?.id,
           uiMode,
+          workflow,
           message: { content: content || "（僅附檔，請總監根據附件內容審視）", attachments: messageAttachments },
         }),
         credentials: "include",
@@ -1014,6 +1017,7 @@ export default function JudgmentPage() {
       setSession(data.session);
       setInputText("");
       setAttachments([]);
+      if (data.workflow) setWorkflow(data.workflow);
       if (!session?.id && data.session?.id) {
         setLocation(`/judgment?sessionId=${data.session.id}`, { replace: true });
       }
@@ -1033,6 +1037,7 @@ export default function JudgmentPage() {
     setSession(null);
     setInputText("");
     setAttachments([]);
+    setWorkflow("clarify");
     setSubmitError(null);
     setLocation("/judgment", { replace: true });
   };
@@ -1284,6 +1289,7 @@ export default function JudgmentPage() {
                             key={e.id}
                             className="cursor-pointer hover:bg-muted/60 transition-colors"
                             onClick={() => {
+                              setWorkflow(e.workflow);
                               setUiMode(e.mode);
                               if (e.prompt) handleQuickPrompt(e.prompt);
                             }}
@@ -1359,6 +1365,23 @@ export default function JudgmentPage() {
 
               <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 no-print">
                 <div className="max-w-4xl mx-auto flex flex-col gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground shrink-0">工作流：</span>
+                    {(Object.keys(workflowLabels) as Workflow[]).map((w) => (
+                      <Button
+                        key={w}
+                        type="button"
+                        variant={workflow === w ? "default" : "outline"}
+                        size="sm"
+                        className="shrink-0 rounded-full text-xs h-7"
+                        onClick={() => setWorkflow(w)}
+                        data-testid={`workflow-${w}`}
+                      >
+                        {workflowLabels[w]}
+                      </Button>
+                    ))}
+                    <Badge variant="secondary" className="text-[10px] shrink-0">目前：{workflowLabels[workflow]}</Badge>
+                  </div>
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
                     {QUICK_PROMPTS.map((q) => (
                       <Button

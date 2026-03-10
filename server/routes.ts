@@ -6,7 +6,7 @@ import multer from "multer";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { storage } from "./storage";
-import { loginSchema, settingsSchema, contentJudgmentInputSchema, contentJudgmentChatRequestSchema, META_ACCOUNT_STATUS_MAP, resolveDateRange, buildScopeKey, detectContentType, contentTypeToJudgmentType } from "@shared/schema";
+import { loginSchema, settingsSchema, contentJudgmentInputSchema, contentJudgmentChatRequestSchema, type Workflow, META_ACCOUNT_STATUS_MAP, resolveDateRange, buildScopeKey, detectContentType, contentTypeToJudgmentType } from "@shared/schema";
 import type { MetaAdAccount, SyncedAccount, CampaignMetrics, GA4FunnelMetrics, AnalysisBatch, DataSourceStatus, DataFlowStatus, ContentJudgmentResult } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { callGeminiContentJudgment, callGeminiChat } from "./gemini";
@@ -69,7 +69,7 @@ import {
   publishPrompt,
   rollbackPrompt,
 } from "./workbench-db";
-import { getAssembledSystemPrompt, buildDataContextSection, suggestUIModeFromJudgmentType, STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
+import { getAssembledSystemPrompt, buildDataContextSection, suggestUIModeFromJudgmentType, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
 import { parseStructuredJudgmentFromResponse } from "./parse-structured-judgment";
 import { CALIBRATION_MODULE_NAMES } from "./rich-bear-calibration";
 import {
@@ -554,6 +554,25 @@ export async function registerRoutes(
     }
   });
 
+  /** 意圖路由：依訊息內容推斷工作流（未帶 workflow 時使用）。定版 5 工作流 clarify|create|audit|strategy|task */
+  function inferWorkflow(content: string): Workflow {
+    const t = content.trim().toLowerCase();
+    if (/審|判|打分|幫我看|評估|評分|看這支|看這個|幫我審|判讀/.test(t)) return "audit";
+    if (/寫|產出|架構|腳本|文案|幫我做|生出|延伸方向|銷售頁|短影音/.test(t)) return "create";
+    if (/哪個該拉|該停|分配|優先|策略|取捨|拉停/.test(t)) return "strategy";
+    if (/拆任務|轉任務|任務列表|分給團隊|任務拆/.test(t)) return "task";
+    return "clarify";
+  }
+
+  /** audit 工作流：有附件、或內容含 URL、或內容長度足夠才視為輸入充足，否則先追問 */
+  function isInputSufficientForAudit(message: { content: string; attachments?: { type: string; url?: string; name?: string }[] }): boolean {
+    const hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
+    const hasUrl = /https?:\/\/\S+/i.test(message.content.trim());
+    const minLength = 30;
+    const sufficientLength = message.content.trim().length >= minLength;
+    return hasAttachments || hasUrl || sufficientLength;
+  }
+
   app.post("/api/content-judgment/chat", requireAuth, async (req, res) => {
     const parsed = contentJudgmentChatRequestSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -571,14 +590,39 @@ export async function registerRoutes(
     }
 
     try {
-      const { sessionId, message, uiMode } = parsed.data;
+      const { sessionId, message, uiMode, workflow: bodyWorkflow } = parsed.data;
       const effectiveMode: UIMode = uiMode && ["boss", "buyer", "creative"].includes(uiMode) ? (uiMode as UIMode) : "creative";
+      const effectiveWorkflow: Workflow = bodyWorkflow && ["clarify", "create", "audit", "strategy", "task"].includes(bodyWorkflow) ? bodyWorkflow : inferWorkflow(message.content);
+
+      if (effectiveWorkflow === "audit" && !isInputSufficientForAudit(message)) {
+        const needMoreMsg = "請先上傳素材、貼上連結或貼上要審的文案／數據，我再幫你審。";
+        let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
+        if (sessionId && !session) {
+          return res.status(404).json({ message: "找不到該對話串" });
+        }
+        if (session && session.userId !== userId) {
+          return res.status(403).json({ message: "無權存取此對話" });
+        }
+        const now = new Date().toISOString();
+        const userMsgId = `msg-${randomUUID().slice(0, 8)}`;
+        const userMessage = { id: userMsgId, role: "user" as const, content: message.content, attachments: message.attachments?.map((a) => ({ type: a.type, url: "", name: a.name })), createdAt: now };
+        if (!session) {
+          session = { id: `rs-${randomUUID().slice(0, 8)}`, userId, title: message.content.slice(0, 50).trim() || "新判讀", messages: [], createdAt: now, updatedAt: now };
+        }
+        session.messages.push(userMessage);
+        const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
+        session.messages.push({ id: assistantMsgId, role: "assistant" as const, content: needMoreMsg, createdAt: now });
+        session.updatedAt = now;
+        storage.saveReviewSession(session);
+        return res.json({ session, userMessage, assistantMessage: session.messages[session.messages.length - 1], needMoreInput: true, workflow: "audit" });
+      }
+
       const publishedMain = await getPublishedPrompt(effectiveMode);
-      const systemPrompt =
-        getAssembledSystemPrompt({
-          uiMode: effectiveMode,
-          customMainPrompt: publishedMain,
-        }) + STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION;
+      const systemPrompt = getAssembledSystemPrompt({
+        uiMode: effectiveMode,
+        customMainPrompt: publishedMain,
+        workflow: effectiveWorkflow,
+      });
 
       let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
       if (sessionId && !session) {
@@ -629,7 +673,7 @@ export async function registerRoutes(
       }
 
       const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
-      const structuredJudgment = parseStructuredJudgmentFromResponse(assistantText);
+      const structuredJudgment = effectiveWorkflow === "audit" ? parseStructuredJudgmentFromResponse(assistantText) : undefined;
       const assistantMessage = {
         id: assistantMsgId,
         role: "assistant" as const,
@@ -641,7 +685,7 @@ export async function registerRoutes(
       session.updatedAt = new Date().toISOString();
       storage.saveReviewSession(session);
 
-      res.json({ session, userMessage, assistantMessage });
+      res.json({ session, userMessage, assistantMessage, workflow: effectiveWorkflow });
     } catch (err) {
       console.error("[POST /api/content-judgment/chat]", err);
       const msg = err instanceof Error ? err.message : String(err);

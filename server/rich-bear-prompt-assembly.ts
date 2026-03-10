@@ -1,53 +1,31 @@
 /**
- * 華麗熊 Prompt 五層組裝
+ * 華麗熊 Prompt 五層組裝 — 定版順序
  *
  * 組裝順序固定（不可打亂）：
- * 1. Immutable Core Persona（人格真源，server/prompts/rich-bear-core.ts）
- * 2. Hidden Calibration（校準層，不改變人格靈魂）
- * 3. Mode Overlay（creative | landing-page | ads-data | funnel | extension-ideas）
- * 4. Data Context（本次任務的資料：商品名、BE/Target ROAS、1d/3d/7d、素材圖等，由呼叫方帶入）
- * 5. Output Schema（結構化輸出格式）
+ * 1. Core Persona（唯一人格真源，server/prompts/rich-bear-core.ts）
+ * 2. Hidden Calibration（隱性校準層，server/rich-bear-calibration.ts）
+ * 3. Workflow Overlay（clarify | create | audit | strategy | task；audit 時可加 MODE A/B/C/D 焦點）
+ * 4. Data Context（本次任務的資料，由呼叫方帶入）
+ * 5. Output Schema（僅 audit 工作流時附加結構化評分卡）
  *
- * 分工：數學與數據判斷由「數據判斷引擎」負責；創意解讀、成交槓桿、素材延伸、設計借鑑由華麗熊人格負責。
+ * 人格唯一真源在 Core；Calibration 不取代人格；Workflow 是工作方式，不是第二人格。
  */
 import { getBaseCore, getModePrompt, type InternalMode } from "./rich-bear-persona";
-import {
-  CALIBRATION_SLICE_EMOTIONAL_TRIGGER,
-  CALIBRATION_SLICE_VISUAL_IMPACT,
-  CALIBRATION_SLICE_BRAND_CONVERSION,
-  CALIBRATION_SLICE_EXAMPLE,
-} from "./rich-bear-calibration";
+import { getHiddenCalibration } from "./rich-bear-calibration";
+import { getWorkflowOverlay, type WorkflowKey } from "./rich-bear-workflow-overlays";
 
 export type UIMode = "boss" | "buyer" | "creative";
 
 export type JudgmentType = "creative" | "landing_page" | "fb_ads" | "ga4_funnel" | "extension_ideas";
 
-/** 外層三模式 → 內層模式優先順序 */
+/** 外層三模式 → 內層模式優先順序（僅在 workflow=audit 時用於「審哪一類」焦點） */
 const UI_MODE_TO_INTERNAL: Record<UIMode, InternalMode[]> = {
   boss: ["B", "C", "D"],
   buyer: ["C", "D"],
   creative: ["A", "B"],
 };
 
-function getCalibrationParts(mode: UIMode): string[] {
-  switch (mode) {
-    case "creative":
-      return [
-        CALIBRATION_SLICE_EMOTIONAL_TRIGGER,
-        CALIBRATION_SLICE_VISUAL_IMPACT,
-        CALIBRATION_SLICE_BRAND_CONVERSION,
-        CALIBRATION_SLICE_EXAMPLE,
-      ];
-    case "buyer":
-      return [CALIBRATION_SLICE_BRAND_CONVERSION, CALIBRATION_SLICE_EMOTIONAL_TRIGGER];
-    case "boss":
-      return [CALIBRATION_SLICE_EMOTIONAL_TRIGGER, CALIBRATION_SLICE_BRAND_CONVERSION];
-    default:
-      return [];
-  }
-}
-
-/** 審判類型 → 內層模式（Mode Overlay） */
+/** 審判類型 → 內層模式 */
 export function judgmentTypeToInternalModes(judgmentType: JudgmentType): InternalMode[] {
   switch (judgmentType) {
     case "creative":
@@ -65,43 +43,53 @@ export function judgmentTypeToInternalModes(judgmentType: JudgmentType): Interna
   }
 }
 
+/** 工作流定版 5 個：clarify | create | audit | strategy | task */
+export type Workflow = WorkflowKey;
+
 export interface AssembleOptions {
   uiMode: UIMode;
   /** 已發布主 prompt（workbench），疊加在 Core 之後、不取代人格 */
   customMainPrompt?: string | null;
   judgmentType?: JudgmentType;
-  /** Layer 4：Data Context。本次任務的資料（商品名、成本比、BE/Target、1d/3d/7d、ATC、素材圖等），由呼叫方組好字串傳入 */
+  /** Layer 4：Data Context */
   dataContext?: string | null;
+  /** 工作流：決定 Layer 3 overlay 與是否加 Layer 5 評分卡 */
+  workflow?: Workflow;
 }
 
 /**
- * 五層組裝：Core → Calibration → Mode Overlay → Data Context → Output Schema
+ * 五層組裝：Core → Calibration → Workflow Overlay（audit 時加 MODE 焦點）→ Data Context → Output Schema（僅 audit）
  */
 export function getAssembledSystemPrompt(options: AssembleOptions): string {
-  const { uiMode, customMainPrompt, judgmentType, dataContext } = options;
+  const { uiMode, customMainPrompt, judgmentType, dataContext, workflow } = options;
+  const effectiveWorkflow: Workflow = workflow ?? "clarify";
+  const isAudit = effectiveWorkflow === "audit";
 
   const layer1Core = getBaseCore();
   const publishedOverlay = (customMainPrompt && customMainPrompt.trim()) || "";
-  const internalModes = judgmentType
-    ? judgmentTypeToInternalModes(judgmentType)
-    : UI_MODE_TO_INTERNAL[uiMode];
-  const layer3ModeParts = internalModes.map((m) => getModePrompt(m)).filter(Boolean);
-  const layer2Calibration = getCalibrationParts(uiMode);
+  const layer2Calibration = getHiddenCalibration();
   const layer4Data = (dataContext && dataContext.trim()) || "";
+
+  const layer3Parts: string[] = [getWorkflowOverlay(effectiveWorkflow)];
+  if (isAudit) {
+    const internalModes = judgmentType
+      ? judgmentTypeToInternalModes(judgmentType)
+      : UI_MODE_TO_INTERNAL[uiMode];
+    layer3Parts.push(...internalModes.map((m) => getModePrompt(m)).filter(Boolean));
+  }
 
   const parts = [
     layer1Core,
     ...(publishedOverlay ? [publishedOverlay] : []),
-    ...layer2Calibration,
-    ...layer3ModeParts,
+    layer2Calibration,
+    ...layer3Parts,
     ...(layer4Data ? [layer4Data] : []),
-    STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION,
+    ...(isAudit ? [STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION] : []),
   ];
-  /* 順序：1 Core 2 (published) 3 Calibration 4 Mode 5 Data 6 Output */
   return parts.filter(Boolean).join("\n\n");
 }
 
-/** Layer 5：Output Schema。結構化輸出，非人格內容。 */
+/** Layer 5：Output Schema。僅 audit 工作流使用。 */
 export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
 
 【結構化輸出】請在每次回覆的最後，以單一 \`\`\`json 程式碼區塊輸出以下 JSON（可與上方內文重複，無法填寫的欄位可省略或空字串）。請勿輸出 passed 或 threshold，由系統依 score 與門檻計算通過與否。
@@ -121,7 +109,6 @@ export const STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION = `
 }
 `;
 
-/** 依審判類型推測建議的 UI 模式 */
 export function suggestUIModeFromJudgmentType(judgmentType: JudgmentType): UIMode {
   switch (judgmentType) {
     case "creative":
@@ -137,10 +124,6 @@ export function suggestUIModeFromJudgmentType(judgmentType: JudgmentType): UIMod
   }
 }
 
-/**
- * 組裝 Data Context 區塊（Layer 4）。呼叫方傳入數據判斷引擎結果與任務資料，供華麗熊輸出創意解讀與延伸建議。
- * 不包含人格與校準，僅為當次任務的資料。
- */
 export function buildDataContextSection(context: {
   productName?: string;
   costRatio?: number;

@@ -387,10 +387,24 @@ export const chatAttachmentSchema = z.object({
 export const uiModeSchema = z.enum(["boss", "buyer", "creative"]);
 export type UIMode = z.infer<typeof uiModeSchema>;
 
+/** 工作流：陪跑收斂 / 創作 / 審判 / 策略 / 任務；影響 system overlay、輸出格式、行為規則（定版 5 個） */
+export const workflowSchema = z.enum(["clarify", "create", "audit", "strategy", "task"]);
+export type Workflow = z.infer<typeof workflowSchema>;
+
+export const workflowLabels: Record<Workflow, string> = {
+  clarify: "陪跑收斂",
+  create: "幫我做",
+  audit: "幫我審",
+  strategy: "看策略",
+  task: "轉任務",
+};
+
 export const contentJudgmentChatRequestSchema = z.object({
   sessionId: z.string().optional(),
   /** 審判官模式：boss / 投手(buyer) / 創意(creative)，有則用片段組裝，無則用設定頁 systemPrompt */
   uiMode: uiModeSchema.optional(),
+  /** 工作流偏向：有則依此選 overlay 與輸出格式；無則由後端依訊息意圖推斷 */
+  workflow: workflowSchema.optional(),
   message: z.object({
     content: z.string().min(1, "請輸入內容"),
     attachments: z.array(chatAttachmentSchema).optional(),
