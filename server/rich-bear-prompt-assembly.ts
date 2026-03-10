@@ -3,12 +3,13 @@
  *
  * 組裝順序固定（不可打亂）：
  * 1. Core Persona（唯一人格真源，server/prompts/rich-bear-core.ts）
- * 2. Hidden Calibration（隱性校準層，server/rich-bear-calibration.ts）
- * 3. Workflow Overlay（clarify | create | audit | strategy | task；audit 時可加 MODE A/B/C/D 焦點）
- * 4. Data Context（本次任務的資料，由呼叫方帶入）
- * 5. Output Schema（僅 audit 工作流時附加結構化評分卡）
+ * 2. 角色視角補充 Overlay（publishedOverlay；來自設定頁「已發布」，僅加法補充，不可覆蓋 Core，不可重寫 Hidden Calibration）
+ * 3. Hidden Calibration（隱性校準層，server/rich-bear-calibration.ts；只讀，不可由設定頁覆寫）
+ * 4. Workflow Overlay（clarify | create | audit | strategy | task；audit 時可加 MODE A/B/C/D 焦點）
+ * 5. Data Context（本次任務的資料，由呼叫方帶入）
+ * 6. Output Schema（僅 audit 工作流時附加結構化評分卡）
  *
- * 人格唯一真源在 Core；Calibration 不取代人格；Workflow 是工作方式，不是第二人格。
+ * 人格只定一次（Core）；Calibration 只定一次；公式只算一次（數據引擎）；視角只負責怎麼看（Overlay）；workflow 只負責怎麼做。
  */
 import { getBaseCore, getModePrompt, type InternalMode } from "./rich-bear-persona";
 import { getHiddenCalibration } from "./rich-bear-calibration";
@@ -18,7 +19,10 @@ export type UIMode = "boss" | "buyer" | "creative";
 
 export type JudgmentType = "creative" | "landing_page" | "fb_ads" | "ga4_funnel" | "extension_ideas";
 
-/** 外層三模式 → 內層模式優先順序（僅在 workflow=audit 時用於「審哪一類」焦點） */
+/**
+ * audit mode profile：僅在 workflow=audit 時使用，決定要疊哪些審判骨架（MODE A/B/C/D）。
+ * 與「視角 view role」區分：視角負責選哪一份 publishedOverlay；此表只負責 audit 時的 MODE 組合。
+ */
 const UI_MODE_TO_INTERNAL: Record<UIMode, InternalMode[]> = {
   boss: ["B", "C", "D"],
   buyer: ["C", "D"],
@@ -47,18 +51,20 @@ export function judgmentTypeToInternalModes(judgmentType: JudgmentType): Interna
 export type Workflow = WorkflowKey;
 
 export interface AssembleOptions {
+  /** 視角（view role）：Boss / 投手 / 創意。用於選取 publishedOverlay 與 audit 時的 MODE 組合。 */
   uiMode: UIMode;
-  /** 已發布主 prompt（workbench），疊加在 Core 之後、不取代人格 */
+  /** 角色視角補充 Overlay（設定頁「已發布」內容）。僅加法補充，不可覆蓋 Core Persona，不可重寫 Hidden Calibration。 */
   customMainPrompt?: string | null;
+  /** 審判類型；當 workflow=audit 時與 uiMode 一起決定疊哪些 MODE（audit mode profile）。 */
   judgmentType?: JudgmentType;
-  /** Layer 4：Data Context */
+  /** Layer 4：Data Context（數據引擎產出之結果字串，非公式本身）。 */
   dataContext?: string | null;
-  /** 工作流：決定 Layer 3 overlay 與是否加 Layer 5 評分卡 */
+  /** 工作流：決定 Layer 3 overlay 與是否加 Layer 5 評分卡。 */
   workflow?: Workflow;
 }
 
 /**
- * 五層組裝：Core → Calibration → Workflow Overlay（audit 時加 MODE 焦點）→ Data Context → Output Schema（僅 audit）
+ * 五層組裝：Core → 視角補充 Overlay → Calibration → Workflow Overlay（audit 時加 MODE）→ Data Context → Output Schema（僅 audit）
  */
 export function getAssembledSystemPrompt(options: AssembleOptions): string {
   const { uiMode, customMainPrompt, judgmentType, dataContext, workflow } = options;

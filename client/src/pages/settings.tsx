@@ -639,7 +639,7 @@ export default function SettingsPage() {
                 <Link href="/settings/profit-rules">獲利規則中心</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/settings/prompts">Prompt 設定</Link>
+                <Link href="/settings/prompts">角色視角 Overlay</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href="/settings/team">團隊權限</Link>
@@ -669,7 +669,7 @@ export default function SettingsPage() {
                 <Link href="/settings/profit-rules">獲利規則中心</Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/settings/prompts">Prompt 設定</Link>
+                <Link href="/settings/prompts">角色視角 Overlay</Link>
               </Button>
             </CardContent>
           </Card>

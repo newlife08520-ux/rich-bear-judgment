@@ -72,6 +72,7 @@ import {
 import { getAssembledSystemPrompt, buildDataContextSection, suggestUIModeFromJudgmentType, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
 import { parseStructuredJudgmentFromResponse } from "./parse-structured-judgment";
 import { CALIBRATION_MODULE_NAMES } from "./rich-bear-calibration";
+import { validateOverlayContent } from "./prompt-overlay-validation";
 import {
   fetchMockGA4DataByProduct,
   stitchFunnelData,
@@ -477,15 +478,25 @@ export async function registerRoutes(
     });
     const judgmentType = contentTypeToJudgmentType(contentType);
     const uiMode = suggestUIModeFromJudgmentType(judgmentType as AssemblyJudgmentType);
+    const hasUrl = /https?:\/\/\S+/i.test((input.url ?? "").trim());
+    const textLen = (input.text ?? "").trim().length;
+    const inputSufficient = hasUrl || textLen >= 30;
+    if (!inputSufficient) {
+      return res.status(400).json({
+        message: "請提供 URL 或至少 30 字以上內容再審。單次審判與對話審判一致，需有足夠素材或文案才進行 audit。",
+        errorCode: "INPUT_INSUFFICIENT_FOR_AUDIT",
+      });
+    }
     const publishedMain = await getPublishedPrompt(uiMode);
     const systemPrompt = getAssembledSystemPrompt({
       uiMode,
       customMainPrompt: publishedMain,
       judgmentType: judgmentType as AssemblyJudgmentType,
+      workflow: "audit",
     });
     const userPrompt = buildContentJudgmentUserPrompt(settings, input, contentType, judgmentType);
 
-    console.log(`[ContentJudgment] type=${contentType}, judgmentType=${judgmentType}, uiMode=${uiMode}, purpose=${input.purpose}, depth=${input.depth}`);
+    console.log(`[ContentJudgment] type=${contentType}, judgmentType=${judgmentType}, uiMode=${uiMode}, workflow=audit, purpose=${input.purpose}, depth=${input.depth}`);
 
     const contentResult = await callGeminiContentJudgment(
       apiKey,
@@ -592,6 +603,7 @@ export async function registerRoutes(
     try {
       const { sessionId, message, uiMode, workflow: bodyWorkflow } = parsed.data;
       const effectiveMode: UIMode = uiMode && ["boss", "buyer", "creative"].includes(uiMode) ? (uiMode as UIMode) : "creative";
+      const publishedMain = await getPublishedPrompt(effectiveMode);
       const effectiveWorkflow: Workflow = bodyWorkflow && ["clarify", "create", "audit", "strategy", "task"].includes(bodyWorkflow) ? bodyWorkflow : inferWorkflow(message.content);
 
       if (effectiveWorkflow === "audit" && !isInputSufficientForAudit(message)) {
@@ -617,7 +629,6 @@ export async function registerRoutes(
         return res.json({ session, userMessage, assistantMessage: session.messages[session.messages.length - 1], needMoreInput: true, workflow: "audit" });
       }
 
-      const publishedMain = await getPublishedPrompt(effectiveMode);
       const systemPrompt = getAssembledSystemPrompt({
         uiMode: effectiveMode,
         customMainPrompt: publishedMain,
@@ -3079,13 +3090,33 @@ export async function registerRoutes(
   app.post("/api/workbench/prompts/:mode/draft", requireAuth, async (req, res) => {
     const mode = req.params.mode as string;
     const body = req.body as { content: string };
-    await saveDraftPrompt(mode, body.content ?? "");
+    const content = body.content ?? "";
+    const validation = validateOverlayContent(content);
+    if (!validation.ok) {
+      return res.status(400).json({
+        message: validation.reason ?? "此區僅能填寫視角補充，不可填寫人格級內容",
+        errorCode: "OVERLAY_PERSONA_BLOCKED",
+        matchedLabel: validation.matchedLabel,
+      });
+    }
+    await saveDraftPrompt(mode, content);
     const draft = await getDraftPrompt(mode);
     res.json({ draft: draft ?? "" });
   });
 
   app.post("/api/workbench/prompts/:mode/publish", requireAuth, async (req, res) => {
     const mode = req.params.mode as string;
+    const draftContent = await getDraftPrompt(mode);
+    if (draftContent != null && draftContent.trim()) {
+      const validation = validateOverlayContent(draftContent);
+      if (!validation.ok) {
+        return res.status(400).json({
+          message: validation.reason ?? "草稿含人格級內容，無法發布。請改為視角補充與輸出偏向。",
+          errorCode: "OVERLAY_PERSONA_BLOCKED",
+          matchedLabel: validation.matchedLabel,
+        });
+      }
+    }
     const ok = await publishPrompt(mode, req.session.userId ?? undefined);
     if (!ok) return res.status(400).json({ message: "無 draft 可發布" });
     const published = await getPublishedPrompt(mode);

@@ -1495,7 +1495,7 @@ export default function JudgmentPage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    支援圖片、PDF、影片 (最高 200MB)；可貼網址，總監會參考頁面內容。判讀依「Prompt 設定」該模式已發布主 prompt ＋ 系統校準。
+                    支援圖片、PDF、影片 (最高 200MB)；可貼網址，總監會參考頁面內容。判讀依「角色視角 Overlay」該視角已發布補充 ＋ 系統校準。
                   </p>
                 </div>
               </div>
