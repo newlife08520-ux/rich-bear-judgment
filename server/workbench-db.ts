@@ -3,6 +3,7 @@
  * 多人同時編輯依賴 updatedAt + 樂觀更新
  */
 import { prisma } from "./db";
+import { assembleOverlayText } from "./overlay-structured";
 import type { WorkbenchProductOwners, WorkbenchTask, WorkbenchAuditEntry } from "@shared/workbench-types";
 
 const ENTITY_CAMPAIGN = "campaign";
@@ -443,7 +444,8 @@ export async function getPublishedPrompt(mode: string): Promise<string | null> {
     where: { mode, status: "published" },
     orderBy: { publishedAt: "desc" },
   });
-  return row?.content ?? null;
+  if (!row) return null;
+  return assembleOverlayText(mode, row.structuredOverlay, row.content);
 }
 
 /** 已發布 prompt 含摘要與時間，供設定頁已發布區顯示 */
@@ -451,18 +453,21 @@ export async function getPublishedPromptWithMeta(mode: string): Promise<{
   content: string | null;
   publishedAt: string | null;
   summary: string;
+  publishedStructured: string | null;
 } | null> {
   const row = await prisma.promptVersion.findFirst({
     where: { mode, status: "published" },
     orderBy: { publishedAt: "desc" },
   });
   if (!row) return null;
-  const lines = (row.content || "").trim().split(/\r?\n/).filter(Boolean);
+  const assembled = assembleOverlayText(mode, row.structuredOverlay, row.content);
+  const lines = assembled.trim().split(/\r?\n/).filter(Boolean);
   const summary = lines.slice(0, 3).join("\n") || "（無內容摘要）";
   return {
     content: row.content,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     summary,
+    publishedStructured: row.structuredOverlay,
   };
 }
 
@@ -474,18 +479,37 @@ export async function getDraftPrompt(mode: string): Promise<string | null> {
   return row?.content ?? null;
 }
 
-export async function saveDraftPrompt(mode: string, content: string): Promise<void> {
+/** 取得草稿內容與結構化欄位（供設定頁編輯） */
+export async function getDraftPromptWithStructured(mode: string): Promise<{
+  content: string | null;
+  structuredOverlay: string | null;
+}> {
+  const row = await prisma.promptVersion.findFirst({
+    where: { mode, status: "draft" },
+    orderBy: { updatedAt: "desc" },
+  });
+  return {
+    content: row?.content ?? null,
+    structuredOverlay: row?.structuredOverlay ?? null,
+  };
+}
+
+export async function saveDraftPrompt(
+  mode: string,
+  content: string,
+  structuredOverlay?: string | null
+): Promise<void> {
   const existing = await prisma.promptVersion.findFirst({
     where: { mode, status: "draft" },
   });
   if (existing) {
     await prisma.promptVersion.update({
       where: { id: existing.id },
-      data: { content },
+      data: { content, structuredOverlay: structuredOverlay ?? undefined },
     });
   } else {
     await prisma.promptVersion.create({
-      data: { mode, content, status: "draft" },
+      data: { mode, content, status: "draft", structuredOverlay: structuredOverlay ?? undefined },
     });
   }
 }

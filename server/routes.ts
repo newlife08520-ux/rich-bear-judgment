@@ -65,6 +65,7 @@ import {
   getPublishedPrompt,
   getPublishedPromptWithMeta,
   getDraftPrompt,
+  getDraftPromptWithStructured,
   saveDraftPrompt,
   publishPrompt,
   rollbackPrompt,
@@ -3078,30 +3079,33 @@ export async function registerRoutes(
   app.get("/api/workbench/prompts/:mode", requireAuth, async (req, res) => {
     const mode = req.params.mode as string;
     const meta = await getPublishedPromptWithMeta(mode);
-    const draft = await getDraftPrompt(mode);
+    const draftRow = await getDraftPromptWithStructured(mode);
     res.json({
       published: meta?.content ?? "",
-      draft: draft ?? "",
-      publishedAt: meta?.publishedAt ?? null,
       publishedSummary: meta?.summary ?? "",
+      publishedStructured: meta?.publishedStructured ?? null,
+      draft: draftRow.content ?? "",
+      draftStructured: draftRow.structuredOverlay ?? null,
+      publishedAt: meta?.publishedAt ?? null,
     });
   });
 
   app.post("/api/workbench/prompts/:mode/draft", requireAuth, async (req, res) => {
     const mode = req.params.mode as string;
-    const body = req.body as { content: string };
+    const body = req.body as { content: string; structuredOverlay?: string | null };
     const content = body.content ?? "";
+    const structuredOverlay = body.structuredOverlay ?? null;
     const validation = validateOverlayContent(content);
     if (!validation.ok) {
       return res.status(400).json({
-        message: validation.reason ?? "此區僅能填寫視角補充，不可填寫人格級內容",
+        message: validation.reason ?? "這裡是視角補充區，不是人格重寫喔。請改成這個視角下你想先看到什麼、怎麼排優先順序就好。",
         errorCode: "OVERLAY_PERSONA_BLOCKED",
         matchedLabel: validation.matchedLabel,
       });
     }
-    await saveDraftPrompt(mode, content);
-    const draft = await getDraftPrompt(mode);
-    res.json({ draft: draft ?? "" });
+    await saveDraftPrompt(mode, content, structuredOverlay);
+    const draftRow = await getDraftPromptWithStructured(mode);
+    res.json({ draft: draftRow.content ?? "", draftStructured: draftRow.structuredOverlay ?? null });
   });
 
   app.post("/api/workbench/prompts/:mode/publish", requireAuth, async (req, res) => {
@@ -3111,7 +3115,7 @@ export async function registerRoutes(
       const validation = validateOverlayContent(draftContent);
       if (!validation.ok) {
         return res.status(400).json({
-          message: validation.reason ?? "草稿含人格級內容，無法發布。請改為視角補充與輸出偏向。",
+          message: validation.reason ?? "這裡是視角補充區，不是人格重寫喔。請改成這個視角下你想先看到什麼、怎麼排優先順序就好。",
           errorCode: "OVERLAY_PERSONA_BLOCKED",
           matchedLabel: validation.matchedLabel,
         });

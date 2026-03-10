@@ -40,7 +40,7 @@ export function validateOverlayContent(content: string): OverlayValidationResult
     if (pattern.test(trimmed)) {
       return {
         ok: false,
-        reason: `此區僅能填寫「視角補充」與「輸出偏向」，不可重寫人格或校準層。偵測到不當內容：${label}。請移除人格級描述，改寫為該視角下的補充偏好、呈現優先順序或輸出規則即可。`,
+        reason: `這裡是視角補充區，不是人格重寫喔。你剛寫的像在改我的角色設定（偵測到：${label}），請改成這個視角下你想先看到什麼、怎麼排優先順序就好。`,
         matchedLabel: label,
       };
     }

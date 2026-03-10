@@ -71,11 +71,12 @@ model ThresholdVersion {
 }
 
 model PromptVersion {
-  id          String    @id @default(uuid())
-  mode        String    // boss | buyer | creative
-  content     String    @default("")
-  status      String    @default("draft")
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  mode              String    // boss | buyer | creative
+  content           String    @default("")
+  structuredOverlay String?   // JSON: 視角結構化欄位（Boss/投手/創意各 3-4 欄）
+  status            String    @default("draft")
+  publishedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
