@@ -565,6 +565,7 @@ function PillToggleGroup({
 export default function SettingsPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("api");
+  const [showPostSaveGuide, setShowPostSaveGuide] = useState(false);
   const [showFbToken, setShowFbToken] = useState(false);
   const [showAiKey, setShowAiKey] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -621,6 +622,7 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       toast({ title: "儲存成功", description: "所有設定已更新" });
+      setShowPostSaveGuide(true);
     },
     onError: () => {
       toast({ title: "儲存失敗", description: "請稍後再試", variant: "destructive" });
@@ -980,7 +982,7 @@ export default function SettingsPage() {
                       </div>
                       <ApiConnectionSection type="ai" label="AI Model" getValue={() => form.getValues("aiApiKey") || ""} showModel initialResult={buildInitialResultFromSettings("ai", settings)} />
                     </div>
-                    <div className="border-t pt-4 mt-4">
+                    <div className="border-t pt-4 mt-4" id="sync-account-block">
                       <p className="text-xs font-medium text-muted-foreground mb-2">資料同步狀態</p>
                       <SyncStatusBlock />
                     </div>
@@ -1039,6 +1041,43 @@ export default function SettingsPage() {
                   {saveMutation.isPending ? "儲存中..." : "儲存所有設定"}
                 </Button>
               </div>
+              {showPostSaveGuide && (
+                <Card className="mt-4 border-primary/30 bg-primary/5" data-testid="card-post-save-guide">
+                  <CardContent className="pt-4 pb-4">
+                    <p className="font-medium text-sm mb-2">設定已儲存。下一步：</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      請先「立即同步帳號」取得帳號列表，再至首頁點「更新資料」產生決策數據。
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          setActiveTab("api");
+                          setTimeout(() => {
+                            document.getElementById("sync-account-block")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
+                        }}
+                        data-testid="button-guide-sync"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        立即同步帳號
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <Link href="/" data-testid="button-guide-dashboard">
+                          <BarChart3 className="w-3.5 h-3.5" />
+                          前往首頁更新資料
+                        </Link>
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setShowPostSaveGuide(false)} data-testid="button-guide-dismiss">
+                        知道了
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </Tabs>
           </form>
         </div>
