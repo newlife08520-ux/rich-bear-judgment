@@ -69,7 +69,7 @@ import {
   publishPrompt,
   rollbackPrompt,
 } from "./workbench-db";
-import { getAssembledSystemPrompt, suggestUIModeFromJudgmentType, STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
+import { getAssembledSystemPrompt, buildDataContextSection, suggestUIModeFromJudgmentType, STRUCTURED_JUDGMENT_OUTPUT_INSTRUCTION, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
 import { parseStructuredJudgmentFromResponse } from "./parse-structured-judgment";
 import { CALIBRATION_MODULE_NAMES } from "./rich-bear-calibration";
 import {
@@ -83,6 +83,8 @@ import { SCORE_DEFINITIONS } from "@shared/score-definitions";
 import { breakEvenRoas, targetRoas } from "@shared/schema";
 import { computeScaleReadiness, getBudgetRecommendation as getScaleBudgetRecommendation, getTrendABC, creativeEdge } from "@shared/scale-score-engine";
 import { getProductProfitRules, getProductProfitRule, setProductProfitRule } from "./profit-rules-store";
+import { getInitialVerdict, setInitialVerdict } from "./initial-verdicts-store";
+import { getCampaignDecision, setCampaignDecision, type DecisionAction } from "./campaign-decisions-store";
 import {
   computeRoiFunnel,
   computeBaselineFromRows,
@@ -1669,6 +1671,12 @@ export async function registerRoutes(
         ? "漏斗健康，可考慮延伸主視覺與 CTA 結構"
         : "建議先觀察轉換與 ATC 再延伸";
 
+      const initialVerdict = getInitialVerdict(row.campaignId);
+      const firstReviewVerdictStr = initialVerdict
+        ? `初審 ${initialVerdict.score} 分：${initialVerdict.summary}；${initialVerdict.recommendTest ? "建議進測試池" : "不建議進測試池"}。${initialVerdict.reason}`
+        : "—";
+      const savedDecision = getCampaignDecision(row.campaignId);
+
       const item = {
         id: row.campaignId,
         campaignId: row.campaignId,
@@ -1693,10 +1701,13 @@ export async function registerRoutes(
         suggestedAction: rec.action,
         suggestedPct: rec.suggestedPct,
         whyNotMore: rec.whyNotMore,
-        firstReviewVerdict: "—",
+        firstReviewVerdict: firstReviewVerdictStr,
+        firstReviewScore: initialVerdict?.score ?? null,
+        firstReviewRecommendTest: initialVerdict?.recommendTest ?? null,
         battleVerdict: reason,
         forBuyer,
         forDesign,
+        savedDecision: savedDecision?.decision ?? null,
       };
       if (labelFilter && result.label !== labelFilter) continue;
       if (stageFilter && stage !== stageFilter) continue;
@@ -1752,6 +1763,43 @@ export async function registerRoutes(
       })
       .sort((a, b) => b.creativeEdge - a.creativeEdge);
 
+    const userId = req.session.userId!;
+    const settings = storage.getSettings(userId);
+    const apiKey = settings?.aiApiKey?.trim();
+    if (apiKey) {
+      for (let i = 0; i < Math.min(3, inspirationPool.length); i++) {
+        try {
+          const ctx = inspirationPool[i];
+          const dataCtx = buildDataContextSection({
+            productName: ctx.productName,
+            spend: ctx.spend,
+            revenue: ctx.revenue,
+            scaleReadinessScore: undefined,
+            suggestedAction: undefined,
+            reason: `創意 ${ctx.materialStrategy}，ROAS ${ctx.roas.toFixed(2)}，Creative Edge ${ctx.creativeEdge.toFixed(2)}`,
+          });
+          const sysPrompt = getAssembledSystemPrompt({
+            uiMode: "creative",
+            judgmentType: "extension_ideas",
+            dataContext: dataCtx,
+          });
+          const userMsg = "請針對以上資料輸出此素材的：1. 贏在哪 2. 建議延伸方向 3. 設計可借什麼。請只用 JSON 回覆，格式：{\"winReason\":\"...\",\"extendDirection\":\"...\",\"designTakeaway\":\"...\"}";
+          const text = await callGeminiChat(apiKey, sysPrompt, [], userMsg, undefined);
+          if (text) {
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]) as { winReason?: string; extendDirection?: string; designTakeaway?: string };
+              if (typeof parsed.winReason === "string") inspirationPool[i].winReason = parsed.winReason;
+              if (typeof parsed.extendDirection === "string") inspirationPool[i].extendDirection = parsed.extendDirection;
+              if (typeof parsed.designTakeaway === "string") inspirationPool[i].designTakeaway = parsed.designTakeaway;
+            }
+          }
+        } catch (_) {
+          /* 保留模板 */
+        }
+      }
+    }
+
     res.json({
       items,
       success,
@@ -1762,6 +1810,34 @@ export async function registerRoutes(
       firstDecisionSpendMin: FIRST_DECISION_SPEND_MIN,
       firstDecisionSpendMax: FIRST_DECISION_SPEND_MAX,
     });
+  });
+
+  /** 存為初審判決（審判完成後由前端呼叫，帶 campaignId 與判決內容） */
+  app.post("/api/judgment/save-initial-verdict", requireAuth, (req, res) => {
+    const body = req.body as { campaignId?: string; score?: number; summary?: string; recommendTest?: boolean; reason?: string };
+    const campaignId = body.campaignId?.trim();
+    if (!campaignId) {
+      return res.status(400).json({ message: "請提供 campaignId" });
+    }
+    const score = typeof body.score === "number" ? body.score : 0;
+    const summary = typeof body.summary === "string" ? body.summary.trim() : "";
+    const recommendTest = !!body.recommendTest;
+    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+    setInitialVerdict(campaignId, { score, summary, recommendTest, reason });
+    res.json({ success: true, campaignId });
+  });
+
+  /** 第一次決策點寫回狀態（開/拉高/維持/關閉/進延伸池），供成功率頁與團隊追蹤讀取 */
+  app.post("/api/dashboard/creative-lifecycle/decision", requireAuth, (req, res) => {
+    const body = req.body as { campaignId?: string; decision?: string };
+    const campaignId = body.campaignId?.trim();
+    const raw = body.decision?.trim();
+    const allowed: DecisionAction[] = ["開", "拉高", "維持", "關閉", "進延伸池"];
+    if (!campaignId || !raw || !allowed.includes(raw as DecisionAction)) {
+      return res.status(400).json({ message: "請提供 campaignId 與 decision（開/拉高/維持/關閉/進延伸池）" });
+    }
+    setCampaignDecision(campaignId, raw as DecisionAction);
+    res.json({ success: true, campaignId, decision: raw });
   });
 
   /** P4-1 新品/素材成功率成績單：按人、按商品；含 luckyRate、funnelPassRate、avgQualityScore */

@@ -20,6 +20,7 @@ type LifecycleItem = { id: string; name: string; roas: number; spend: number; re
 
 type LifecycleLabel = "Lucky" | "Winner" | "Underfunded" | "FunnelWeak" | "Retired" | "NEEDS_MORE_DATA" | "STABLE";
 type LifecycleCardItem = LifecycleItem & {
+  campaignId?: string;
   atc: number;
   purchase: number;
   atc_rate: number;
@@ -37,6 +38,9 @@ type LifecycleCardItem = LifecycleItem & {
   suggestedPct?: number | "關閉";
   whyNotMore?: string;
   firstReviewVerdict?: string;
+  firstReviewScore?: number | null;
+  firstReviewRecommendTest?: boolean | null;
+  savedDecision?: string | null;
   battleVerdict?: string;
   forBuyer?: string;
   forDesign?: string;
@@ -139,6 +143,73 @@ function LabelBadge({ label }: { label: LifecycleLabel }) {
     display === "Lucky" ? "destructive" :
     "outline";
   return <Badge variant={variant as "default" | "secondary" | "destructive" | "outline"}>{display}</Badge>;
+}
+
+const DECISION_ACTIONS = ["開", "拉高", "維持", "關閉", "進延伸池"] as const;
+
+/** 第一次決策點：五選一寫回系統狀態，供成功率頁與團隊追蹤讀取 */
+function FirstDecisionBlock({
+  campaignId,
+  suggestedAction,
+  suggestedPct,
+  savedDecision,
+  firstDecisionMin,
+  firstDecisionMax,
+  onDecisionSaved,
+}: {
+  campaignId: string;
+  name?: string;
+  suggestedAction?: string;
+  suggestedPct?: number | "關閉";
+  savedDecision?: string | null;
+  firstDecisionMin: number;
+  firstDecisionMax: number;
+  onDecisionSaved: () => void;
+}) {
+  const [saving, setSaving] = useState<string | null>(null);
+  const { toast } = useToast();
+  const handleDecision = async (decision: string) => {
+    setSaving(decision);
+    try {
+      const res = await fetch("/api/dashboard/creative-lifecycle/decision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ campaignId, decision }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || "寫回失敗");
+      }
+      toast({ title: `已決策：${decision}`, duration: 2000 });
+      onDecisionSaved();
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : "寫回失敗", variant: "destructive" });
+    } finally {
+      setSaving(null);
+    }
+  };
+  return (
+    <div className="rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-2 text-xs">
+      <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）</p>
+      <p>建議：<strong>{suggestedAction ?? "—"}</strong> {suggestedPct === "關閉" ? "關閉" : typeof suggestedPct === "number" ? (suggestedPct > 0 ? `+${suggestedPct}%` : `${suggestedPct}%`) : ""}</p>
+      {savedDecision && <p className="text-muted-foreground mt-0.5 mb-1.5">已決策：<strong>{savedDecision}</strong></p>}
+      <div className="flex flex-wrap gap-1 mt-1">
+        {DECISION_ACTIONS.map((d) => (
+          <Button
+            key={d}
+            size="sm"
+            variant={savedDecision === d ? "default" : "outline"}
+            className="h-7 text-[11px]"
+            onClick={() => handleDecision(d)}
+            disabled={saving !== null}
+          >
+            {saving === d ? "…" : d}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /** 從 location 解析 ?creativeId= 或 ?campaignId=（統一主鍵，見 docs/creative-identity.md） */
@@ -330,11 +401,16 @@ export default function CreativeLifecyclePage() {
                         </div>
                       </div>
                       {i.stage === "第一次決策點" && (
-                        <div className="rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-2 text-xs">
-                          <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）</p>
-                          <p>建議：<strong>{i.suggestedAction}</strong> {i.suggestedPct === "關閉" ? "關閉" : typeof i.suggestedPct === "number" ? (i.suggestedPct > 0 ? `+${i.suggestedPct}%` : `${i.suggestedPct}%`) : ""}</p>
-                          <p className="text-muted-foreground mt-0.5">可選：開 / 拉高 / 維持 / 關閉 / 進延伸池</p>
-                        </div>
+                        <FirstDecisionBlock
+                          campaignId={i.campaignId ?? i.id}
+                          name={i.name}
+                          suggestedAction={i.suggestedAction}
+                          suggestedPct={i.suggestedPct}
+                          savedDecision={i.savedDecision}
+                          firstDecisionMin={firstDecisionMin}
+                          firstDecisionMax={firstDecisionMax}
+                          onDecisionSaved={() => queryClient.invalidateQueries({ queryKey: ["/api/dashboard/creative-lifecycle"] })}
+                        />
                       )}
                       <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                         <span>ROAS {i.roas.toFixed(2)}</span>

@@ -288,6 +288,76 @@ function buildTaskPayloadFromParsed(
   };
 }
 
+/** 存為此活動初審：輸入 campaignId 後寫入 initial-verdicts-store，供生命週期中心顯示。 */
+function SaveAsInitialVerdictBlock({
+  parsed,
+  hasScore,
+  passed,
+}: {
+  parsed: ParsedJudgment;
+  hasScore: boolean;
+  passed: boolean;
+}) {
+  const [campaignIdInput, setCampaignIdInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  const handleSave = async () => {
+    const campaignId = campaignIdInput.trim();
+    if (!campaignId) {
+      toast({ title: "請輸入活動／素材 ID (campaignId)", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/judgment/save-initial-verdict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          campaignId,
+          score: parsed.score ?? 0,
+          summary: parsed.verdict || "",
+          recommendTest: parsed.suggestTask ?? (hasScore && passed),
+          reason: (parsed.actionFirst || parsed.reason || "").slice(0, 500),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.message || "儲存失敗");
+      }
+      toast({ title: "已存為此活動初審判決", duration: 2000 });
+      setCampaignIdInput("");
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : "儲存失敗", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Input
+        placeholder="活動/素材 ID (campaignId)"
+        value={campaignIdInput}
+        onChange={(e) => setCampaignIdInput(e.target.value)}
+        className="h-8 w-44 text-xs"
+        data-testid="input-save-initial-verdict-campaign-id"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-1.5 h-8"
+        onClick={handleSave}
+        disabled={saving}
+        data-testid="button-save-initial-verdict"
+      >
+        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+        存為初審
+      </Button>
+    </div>
+  );
+}
+
 /** 裁決工作台：固定骨架卡片；頂部三主動作（匯出報告、轉為任務、審核結果）、審核區塊、收斂轉任務。 */
 function JudgmentWorkbenchBubble({
   message,
@@ -345,6 +415,7 @@ function JudgmentWorkbenchBubble({
                   轉為任務
                 </Button>
               )}
+              <SaveAsInitialVerdictBlock parsed={parsed} hasScore={hasScore} passed={passed} />
               {auditBlockId ? (
                 hasScore ? (
                   <Button
