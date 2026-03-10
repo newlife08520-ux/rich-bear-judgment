@@ -1121,6 +1121,66 @@ export async function registerRoutes(
     }
   });
 
+  /** GET /api/meta/pages-by-account?accountId=xxx — 依廣告帳號動態載入可用的粉專與 IG（供投放中心必填身分） */
+  app.get("/api/meta/pages-by-account", requireAuth, async (req, res) => {
+    const userId = req.session.userId!;
+    const accountId = (req.query.accountId as string)?.trim();
+    if (!accountId) {
+      return res.status(400).json({ message: "請提供 accountId", pages: [], igAccounts: [] });
+    }
+    const settings = storage.getSettings(userId);
+    const token = settings.fbAccessToken?.trim();
+    if (!token) {
+      return res.json({ pages: [], igAccounts: [], message: "尚未設定 Facebook Access Token" });
+    }
+    const actId = accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+    try {
+      const promoteRes = await fetch(
+        `https://graph.facebook.com/v19.0/${actId}/promote_pages?access_token=${encodeURIComponent(token)}`
+      );
+      const promoteData = await promoteRes.json();
+      if (!promoteRes.ok) {
+        const errMsg = (promoteData as { error?: { message?: string; code?: number } }).error?.message || "Meta API 錯誤";
+        const code = (promoteData as { error?: { code?: number } }).error?.code;
+        if (code === 200 || code === 190 || promoteRes.status === 403) {
+          const fallbackRes = await fetch(
+            `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(token)}`
+          );
+          const fallbackData = await fallbackRes.json();
+          if (!fallbackRes.ok) {
+            return res.status(400).json({ message: errMsg, pages: [], igAccounts: [] });
+          }
+          const raw = (fallbackData as { data?: any[] }).data || [];
+          const pages: { id: string; name: string }[] = raw.map((p: any) => ({ id: p.id, name: p.name || p.id }));
+          const igAccounts: { id: string; username: string; pageId: string }[] = [];
+          for (const p of raw) {
+            const ig = p.instagram_business_account;
+            if (ig?.id) igAccounts.push({ id: ig.id, username: ig.username || ig.id, pageId: p.id });
+          }
+          return res.json({ pages, igAccounts, noFilterByAccount: true, message: "無法依廣告帳號過濾粉專，顯示 Token 下全部粉專／IG，請自行確認對應關係" });
+        }
+        return res.status(400).json({ message: errMsg, pages: [], igAccounts: [] });
+      }
+      const rawPages = (promoteData as { data?: any[] }).data || [];
+      const pages: { id: string; name: string }[] = rawPages.map((p: any) => ({ id: p.id, name: p.name || p.id }));
+      const igAccounts: { id: string; username: string; pageId: string }[] = [];
+      for (const p of rawPages) {
+        const pageId = p.id;
+        const pageDetailRes = await fetch(
+          `https://graph.facebook.com/v19.0/${pageId}?fields=instagram_business_account{id,username}&access_token=${encodeURIComponent(token)}`
+        );
+        const pageDetail = await pageDetailRes.json();
+        const ig = (pageDetail as { instagram_business_account?: { id: string; username?: string } }).instagram_business_account;
+        if (ig?.id) {
+          igAccounts.push({ id: ig.id, username: ig.username || ig.id, pageId });
+        }
+      }
+      return res.json({ pages, igAccounts });
+    } catch (err: any) {
+      return res.status(500).json({ message: `Meta API 連線失敗: ${(err.message || "").slice(0, 200)}`, pages: [], igAccounts: [] });
+    }
+  });
+
   app.post("/api/accounts/sync-selected", requireAuth, async (req, res) => {
     const userId = req.session.userId!;
     const { platform, accountIds } = req.body;

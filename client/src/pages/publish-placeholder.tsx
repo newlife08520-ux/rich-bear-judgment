@@ -349,16 +349,34 @@ export default function PublishPlaceholderPage() {
   });
   const accounts = syncedData?.accounts ?? [];
 
-  const { data: metaPagesData } = useQuery<{ pages: { id: string; name: string }[]; igAccounts: { id: string; username: string; pageId: string }[] }>({
-    queryKey: ["/api/meta/pages"],
+  const { data: metaPagesData, isFetched: metaPagesByAccountFetched } = useQuery<{
+    pages: { id: string; name: string }[];
+    igAccounts: { id: string; username: string; pageId: string }[];
+    noFilterByAccount?: boolean;
+    message?: string;
+  }>({
+    queryKey: ["/api/meta/pages-by-account", form.accountId],
     queryFn: async () => {
-      const res = await fetch("/api/meta/pages", { credentials: "include" });
-      if (!res.ok) return { pages: [], igAccounts: [] };
+      if (!form.accountId.trim()) return { pages: [], igAccounts: [] };
+      const res = await fetch(`/api/meta/pages-by-account?accountId=${encodeURIComponent(form.accountId)}`, { credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { pages: [], igAccounts: [], message: (data as { message?: string }).message };
+      }
       return res.json();
     },
+    enabled: !!form.accountId.trim(),
   });
   const metaPages = metaPagesData?.pages ?? [];
   const metaIgAccounts = metaPagesData?.igAccounts ?? [];
+  const metaPagesNoFilter = metaPagesData?.noFilterByAccount ?? false;
+  /** IG 帳號依所選粉專過濾（僅顯示該粉專綁定的 IG） */
+  const igAccountsForSelectedPage = useMemo(() => {
+    if (!form.pageId) return metaIgAccounts;
+    return metaIgAccounts.filter((ig) => ig.pageId === form.pageId);
+  }, [form.pageId, metaIgAccounts]);
+  const placementIncludesIg = form.placementStrategy === "reels_stories" || form.placementStrategy === "auto";
+  const selectedPageHasNoIg = placementIncludesIg && !!form.pageId && igAccountsForSelectedPage.length === 0 && metaPages.length > 0;
 
   const { data: templates = [] } = useQuery<PublishTemplate[]>({
     queryKey: ["/api/publish/templates"],
@@ -458,6 +476,9 @@ export default function PublishPlaceholderPage() {
   const effectiveCtaForCheck = (form.cta ?? "").trim() || (selectedPackage?.cta ?? "").trim() || "來去逛逛";
   const preflight = useMemo(() => {
     const hasAccount = !!(form.accountId ?? "").trim();
+    const hasPage = !!(form.pageId ?? "").trim();
+    const placementIncIg = form.placementStrategy === "reels_stories" || form.placementStrategy === "auto";
+    const hasIgWhenRequired = !placementIncIg || !!(form.igAccountId ?? "").trim();
     const ctaValid = !effectiveCtaForCheck || META_CTA_OPTIONS.includes(effectiveCtaForCheck) || effectiveCtaForCheck === "來去逛逛";
     const hasVersions = form.selectedVersionIds.length > 0;
     const selectedVersions = form.selectedVersionIds
@@ -474,6 +495,8 @@ export default function PublishPlaceholderPage() {
     const landingPageExists = !!((form.landingPageUrl ?? "").trim() || (selectedPackage?.landingPageUrl ?? "").trim());
     return {
       hasAccount,
+      hasPage,
+      hasIgWhenRequired,
       ctaValid: ctaValid && (effectiveCtaForCheck ? true : true),
       hasVersions,
       allHaveTypeAndRatio,
@@ -481,9 +504,9 @@ export default function PublishPlaceholderPage() {
       hasFallbackInSelection,
       singleSizeWarning,
       landingPageExists,
-      canSubmit: hasAccount && hasVersions && allHaveTypeAndRatio,
+      canSubmit: hasAccount && hasPage && hasIgWhenRequired && hasVersions && allHaveTypeAndRatio,
     };
-  }, [form.accountId, form.selectedVersionIds, form.landingPageUrl, selectedPackage?.landingPageUrl, effectiveCtaForCheck, versions, batchGroups]);
+  }, [form.accountId, form.pageId, form.igAccountId, form.placementStrategy, form.selectedVersionIds, form.landingPageUrl, selectedPackage?.landingPageUrl, effectiveCtaForCheck, versions, batchGroups]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -556,6 +579,18 @@ export default function PublishPlaceholderPage() {
       setSubmitError("請先選擇素材包並至少勾選一筆素材版本");
       return;
     }
+    if (!(form.pageId ?? "").trim()) {
+      setSubmitError("請選擇 Facebook 粉專");
+      return;
+    }
+    if (placementIncludesIg && !(form.igAccountId ?? "").trim()) {
+      setSubmitError("Placement 含 Instagram 時請選擇 IG 帳號");
+      return;
+    }
+    if (selectedPageHasNoIg) {
+      setSubmitError("此粉專未綁定 IG，無法投放 Reels/Stories；請改選「僅動態牆」或先綁定 IG");
+      return;
+    }
     const body = formToBody(form);
     const b = body as { budgetDaily?: number; budgetTotal?: number; selectedVersionIds?: string[] };
     if (b.budgetDaily == null && b.budgetTotal == null) {
@@ -624,6 +659,18 @@ export default function PublishPlaceholderPage() {
     }
     if (!form.assetPackageId || !form.accountId) {
       setSubmitError("請先選擇素材包與廣告帳號");
+      return;
+    }
+    if (!(form.pageId ?? "").trim()) {
+      setSubmitError("請選擇 Facebook 粉專");
+      return;
+    }
+    if (placementIncludesIg && !(form.igAccountId ?? "").trim()) {
+      setSubmitError("Placement 含 Instagram 時請選擇 IG 帳號");
+      return;
+    }
+    if (selectedPageHasNoIg) {
+      setSubmitError("此粉專未綁定 IG，無法投放 Reels/Stories；請改選「僅動態牆」或先綁定 IG");
       return;
     }
     const bodyBase = formToBody(form) as Record<string, unknown>;
@@ -886,7 +933,7 @@ export default function PublishPlaceholderPage() {
                                     key={a.id}
                                     value={`${a.accountName} ${a.accountId}`}
                                     onSelect={() => {
-                                      setForm((f) => ({ ...f, accountId: a.accountId }));
+                                      setForm((f) => ({ ...f, accountId: a.accountId, pageId: "", igAccountId: "" }));
                                       setAccountPopoverOpen(false);
                                     }}
                                   >
@@ -902,6 +949,94 @@ export default function PublishPlaceholderPage() {
                       <Input value={form.accountId} onChange={(e) => setForm((f) => ({ ...f, accountId: e.target.value }))} placeholder="請輸入廣告帳號 ID（可先至設定同步帳號）" />
                     )}
                   </div>
+                  {form.accountId && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Facebook 粉專 *</Label>
+                          {metaPages.length > 0 ? (
+                            <Popover open={pagePopoverOpen} onOpenChange={setPagePopoverOpen}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                                  {form.pageId ? (metaPages.find((p) => p.id === form.pageId)?.name ?? form.pageId) : "請選擇粉專"}
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder="搜尋粉專..." />
+                                  <CommandList>
+                                    <CommandEmpty>找不到粉專</CommandEmpty>
+                                    <CommandGroup>
+                                      {metaPages.map((p) => (
+                                        <CommandItem
+                                          key={p.id}
+                                          value={`${p.name} ${p.id}`}
+                                          onSelect={() => {
+                                            const pageIgIds = metaIgAccounts.filter((ig) => ig.pageId === p.id).map((ig) => ig.id);
+                                            setForm((f) => ({
+                                              ...f,
+                                              pageId: p.id,
+                                              igAccountId: pageIgIds.includes(f.igAccountId) ? f.igAccountId : "",
+                                            }));
+                                            setPagePopoverOpen(false);
+                                          }}
+                                        >
+                                          {p.name} ({p.id})
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Input value={form.pageId} onChange={(e) => setForm((f) => ({ ...f, pageId: e.target.value }))} placeholder="載入中或無可用粉專" disabled={metaPages.length === 0} />
+                          )}
+                          {form.accountId && metaPagesByAccountFetched && metaPages.length === 0 && (
+                            <p className="text-xs text-amber-600">
+                              {metaPagesData?.message || "此廣告帳號無可用粉專，請至 Meta 商業管理員綁定粉專後重試，或確認 Token 具 pages_show_list / pages_manage_ads 權限。"}
+                            </p>
+                          )}
+                          {metaPagesNoFilter && metaPages.length > 0 && (
+                            <p className="text-xs text-amber-600">無法依廣告帳號過濾，顯示 Token 下全部粉專，請自行確認對應關係。</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Instagram 帳號 {placementIncludesIg ? "*" : "（選填，placement 含 IG 時必填）"}</Label>
+                          {igAccountsForSelectedPage.length > 0 ? (
+                            <Popover open={igPopoverOpen} onOpenChange={setIgPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                                  {form.igAccountId ? (igAccountsForSelectedPage.find((i) => i.id === form.igAccountId)?.username ?? form.igAccountId) : placementIncludesIg ? "請選擇 IG" : "— 不選 —"}
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder="搜尋 IG..." />
+                                  <CommandList>
+                                    <CommandEmpty>找不到 IG</CommandEmpty>
+                                    <CommandGroup>
+                                      <CommandItem value="_clear" onSelect={() => { setForm((f) => ({ ...f, igAccountId: "" })); setIgPopoverOpen(false); }}>— 不選 —</CommandItem>
+                                      {igAccountsForSelectedPage.map((ig) => (
+                                        <CommandItem key={ig.id} value={`${ig.username} ${ig.id}`} onSelect={() => { setForm((f) => ({ ...f, igAccountId: ig.id })); setIgPopoverOpen(false); }}>@{ig.username} ({ig.id})</CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Input value={form.igAccountId} onChange={(e) => setForm((f) => ({ ...f, igAccountId: e.target.value }))} placeholder={form.pageId ? "此粉專未綁定 IG" : "請先選擇粉專"} disabled={!form.pageId} />
+                          )}
+                          {selectedPageHasNoIg && (
+                            <p className="text-xs text-destructive">此粉專未綁定 IG，無法投放 Reels/Stories。請改選「僅動態牆」或先至 Meta 綁定 IG。</p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                     <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Campaign 目標</Label>
@@ -1265,70 +1400,20 @@ export default function PublishPlaceholderPage() {
             <>
             <Card>
               <CardContent className="pt-4">
-                <h3 className="font-medium mb-2">粉專／IG、CTA、落地頁</h3>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-              <div className="space-y-2">
-                <Label>粉專（選填）</Label>
-                {metaPages.length > 0 ? (
-                  <Popover open={pagePopoverOpen} onOpenChange={setPagePopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                        {form.pageId ? (metaPages.find((p) => p.id === form.pageId)?.name ?? form.pageId) : "請選擇粉專"}
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="搜尋粉專..." />
-                        <CommandList>
-                          <CommandEmpty>找不到粉專</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="_clear" onSelect={() => { setForm((f) => ({ ...f, pageId: "" })); setPagePopoverOpen(false); }}>— 不選 —</CommandItem>
-                            {metaPages.map((p) => (
-                              <CommandItem key={p.id} value={`${p.name} ${p.id}`} onSelect={() => { setForm((f) => ({ ...f, pageId: p.id })); setPagePopoverOpen(false); }}>{p.name} ({p.id})</CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <Input value={form.pageId} onChange={(e) => setForm((f) => ({ ...f, pageId: e.target.value }))} placeholder="選填；請至設定綁定 Meta 以取得粉專清單" />
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>IG 帳號（選填）</Label>
-                {metaIgAccounts.length > 0 ? (
-                  <Popover open={igPopoverOpen} onOpenChange={setIgPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                        {form.igAccountId ? (metaIgAccounts.find((i) => i.id === form.igAccountId)?.username ?? form.igAccountId) : "請選擇 IG"}
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="搜尋 IG..." />
-                        <CommandList>
-                          <CommandEmpty>找不到 IG 帳號</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="_clear" onSelect={() => { setForm((f) => ({ ...f, igAccountId: "" })); setIgPopoverOpen(false); }}>— 不選 —</CommandItem>
-                            {metaIgAccounts.map((ig) => (
-                              <CommandItem key={ig.id} value={`${ig.username} ${ig.id}`} onSelect={() => { setForm((f) => ({ ...f, igAccountId: ig.id })); setIgPopoverOpen(false); }}>@{ig.username} ({ig.id})</CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <Input value={form.igAccountId} onChange={(e) => setForm((f) => ({ ...f, igAccountId: e.target.value }))} placeholder="選填；請至設定綁定 Meta 以取得 IG 清單" />
-                )}
-              </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">目前粉專／IG 清單為該 Token 下所有可用項目，尚未依所選廣告帳號精準過濾。</p>
-                {form.accountId && (
-                  <p className="text-xs text-amber-600 mt-1">提醒：目前尚未依所選廣告帳號精準綁定粉專／IG，請自行確認對應關係。</p>
+                <h3 className="font-medium mb-2">投放身分摘要（粉專／IG）</h3>
+                <p className="text-xs text-muted-foreground mb-2">粉專與 IG 請於「基本設定」選擇；預覽與送出將使用此身分。</p>
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Facebook 粉專</dt>
+                    <dd className="font-medium">{form.pageId ? (metaPages.find((p) => p.id === form.pageId)?.name ?? form.pageId) : "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Instagram</dt>
+                    <dd className="font-medium">{form.igAccountId ? (igAccountsForSelectedPage.find((i) => i.id === form.igAccountId)?.username ? `@${igAccountsForSelectedPage.find((i) => i.id === form.igAccountId)!.username}` : form.igAccountId) : "—"}</dd>
+                  </div>
+                </dl>
+                {metaPagesNoFilter && metaPages.length > 0 && (
+                  <p className="text-xs text-amber-600 mt-2">目前為 Token 下全部粉專，未依廣告帳號過濾，請自行確認對應關係。</p>
                 )}
               </CardContent>
             </Card>
@@ -1341,6 +1426,20 @@ export default function PublishPlaceholderPage() {
                     {preflight.hasAccount ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
                     已選廣告帳號
                   </li>
+                  <li className={cn("flex items-center gap-2", preflight.hasPage ? "text-foreground" : "text-destructive")}>
+                    {preflight.hasPage ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    已選 Facebook 粉專
+                  </li>
+                  <li className={cn("flex items-center gap-2", preflight.hasIgWhenRequired ? "text-foreground" : "text-destructive")}>
+                    {preflight.hasIgWhenRequired ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {placementIncludesIg ? "已選 IG 帳號（placement 含 IG 必填）" : "IG 選填"}
+                  </li>
+                  {selectedPageHasNoIg && (
+                    <li className="flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      此粉專未綁定 IG，無法投放 Reels/Stories；請回基本設定改選「僅動態牆」或綁定 IG
+                    </li>
+                  )}
                   <li className={cn("flex items-center gap-2", preflight.ctaValid ? "text-foreground" : "text-amber-600")}>
                     {preflight.ctaValid ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
                     CTA 有效（未填時預設「來去逛逛」）
@@ -1360,10 +1459,6 @@ export default function PublishPlaceholderPage() {
                   <li className={cn("flex items-center gap-2", preflight.singleSizeWarning ? "text-amber-600" : "text-foreground")}>
                     {preflight.singleSizeWarning ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4 text-green-600" />}
                     {preflight.singleSizeWarning ? "僅單一尺寸，建議補齊多比例（不阻擋）" : "多尺寸或未選版本"}
-                  </li>
-                  <li className="text-foreground flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600 shrink-0" />
-                    粉專／IG 已選或可之後綁定（見下方說明）
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.landingPageExists ? "text-foreground" : "text-amber-600")}>
                     {preflight.landingPageExists ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
@@ -1386,6 +1481,8 @@ export default function PublishPlaceholderPage() {
                 <div className="rounded-lg border bg-muted/40 p-3 mb-4 space-y-2">
                   <p className="text-sm font-medium text-foreground">送出時將使用：</p>
                   <dl className="text-xs space-y-1">
+                    <div><dt className="text-muted-foreground inline">粉專：</dt><dd className="inline break-words">{form.pageId ? (metaPages.find((p) => p.id === form.pageId)?.name ?? form.pageId) : "—"}</dd></div>
+                    <div><dt className="text-muted-foreground inline">IG：</dt><dd className="inline break-words">{form.igAccountId ? (igAccountsForSelectedPage.find((i) => i.id === form.igAccountId)?.username ? `@${igAccountsForSelectedPage.find((i) => i.id === form.igAccountId)!.username}` : form.igAccountId) : "—"}</dd></div>
                     <div><dt className="text-muted-foreground inline">主文案：</dt><dd className="inline break-words">{effectivePrimaryCopy || "—"}</dd></div>
                     <div><dt className="text-muted-foreground inline">標題：</dt><dd className="inline break-words">{effectiveHeadline || "—"}</dd></div>
                     <div><dt className="text-muted-foreground inline">CTA：</dt><dd className="inline break-words">{(effectiveCta || "來去逛逛")}</dd></div>
@@ -1521,11 +1618,17 @@ export default function PublishPlaceholderPage() {
               <Button variant="outline" onClick={() => setWizardStep((s) => (s - 1) as 1 | 2 | 3)} disabled={isSubmitting}>上一步</Button>
             )}
             {wizardStep < 3 ? (
-              <Button onClick={() => setWizardStep((s) => (s + 1) as 1 | 2 | 3)}>
+              <Button
+                onClick={() => setWizardStep((s) => (s + 1) as 1 | 2 | 3)}
+                disabled={
+                  wizardStep === 1 &&
+                  (!preflight.hasPage || !preflight.hasIgWhenRequired || selectedPageHasNoIg)
+                }
+              >
                 下一步
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={isSubmitting || packages.length === 0 || !form.assetPackageId || form.selectedVersionIds.length === 0 || !preflight.canSubmit}>
+              <Button onClick={handleSubmit} disabled={isSubmitting || packages.length === 0 || !form.assetPackageId || form.selectedVersionIds.length === 0 || !preflight.canSubmit || selectedPageHasNoIg}>
                 {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {editingId ? "儲存" : "建立"}
               </Button>

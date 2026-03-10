@@ -208,6 +208,16 @@ export function updateDraft(userId: string, id: string, input: unknown): DraftRe
       return { ok: false, message: "請填寫每日預算或總預算" };
     }
   }
+  const nextPageId = (parsed.data.pageId ?? existing.pageId ?? "").trim();
+  const nextIgId = (parsed.data.igAccountId ?? existing.igAccountId ?? "").trim();
+  const nextPlacement = parsed.data.placementStrategy ?? existing.placementStrategy;
+  const placementIncludesIg = nextPlacement === "reels_stories" || nextPlacement === "auto";
+  if (!nextPageId) {
+    return { ok: false, message: "請選擇 Facebook 粉專" };
+  }
+  if (placementIncludesIg && !nextIgId) {
+    return { ok: false, message: "Placement 含 Instagram 時請選擇 IG 帳號" };
+  }
   const now = new Date().toISOString();
   const patch = {
     ...parsed.data,

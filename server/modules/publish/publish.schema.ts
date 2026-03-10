@@ -47,8 +47,21 @@ const atLeastOneAssetSource = (data: {
   (!!data.assetPackageId && (data.selectedVersionIds?.length ?? 0) >= 1) ||
   (data.assetIds?.length ?? 0) >= 1;
 
+/** placement 含 IG（Reels/Stories 或自動）時須填 IG 帳號 */
+const placementIncludesIg = (placementStrategy: string) =>
+  placementStrategy === "reels_stories" || placementStrategy === "auto";
+
 /** 建立投放草稿的 Zod 驗證 */
 export const publishDraftCreateSchema = publishDraftBaseSchema
+  .refine((data) => (data.pageId ?? "").trim().length > 0, {
+    message: "請選擇 Facebook 粉專",
+    path: ["pageId"],
+  })
+  .refine(
+    (data) =>
+      !placementIncludesIg(data.placementStrategy) || ((data.igAccountId ?? "").trim().length > 0),
+    { message: "Placement 含 Instagram 時請選擇 IG 帳號", path: ["igAccountId"] }
+  )
   .refine(
     (data) => data.budgetDaily != null || data.budgetTotal != null,
     { message: "請填寫每日預算或總預算", path: ["budgetDaily"] }
