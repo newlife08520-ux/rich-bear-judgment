@@ -30,14 +30,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, ListPlus } from "lucide-react";
+import { Package, ListPlus, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { AccountExceptionsBlock } from "@/components/account-exceptions-block";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 function formatCurrency(value: number) {
   return `NT$ ${value.toLocaleString()}`;
@@ -150,16 +151,21 @@ export default function ProductsPage() {
   });
 
   const productLevel = actionData?.productLevel ?? [];
+  /** 核心排行用：僅花費>0 且非未分類；無則退回 productLevel */
+  const productLevelMain = actionData?.productLevelMain ?? productLevel;
+  const productLevelNoDelivery = actionData?.productLevelNoDelivery ?? [];
+  const productLevelUnmapped = actionData?.productLevelUnmapped ?? [];
+  const unmappedCount = actionData?.unmappedCount ?? 0;
   const creativeLeaderboard = actionData?.creativeLeaderboard ?? [];
   const failureRatesByTag = actionData?.failureRatesByTag ?? {};
 
   useEffect(() => {
-    if (!productNameFromUrl || productLevel.length === 0) return;
-    const exists = productLevel.some((p: { productName?: string }) => p.productName === productNameFromUrl);
+    if (!productNameFromUrl || productLevelMain.length === 0) return;
+    const exists = productLevelMain.some((p: { productName?: string }) => p.productName === productNameFromUrl);
     if (exists && (filter.productIds.length !== 1 || filter.productIds[0] !== productNameFromUrl)) {
       setProductFilter([productNameFromUrl]);
     }
-  }, [productNameFromUrl, productLevel, setProductFilter]);
+  }, [productNameFromUrl, productLevelMain, setProductFilter]);
 
   const { data: confidenceData } = useQuery<{ products: Array<{ productName: string; unmappedSpend: number; conflictCount: number; overrideHitRate: number; data_confidence: "high" | "medium" | "low" }>; batchUnmappedSpend: number }>({
     queryKey: ["/api/dashboard/data-confidence"],
@@ -172,21 +178,23 @@ export default function ProductsPage() {
   const confidenceByProduct = new Map((confidenceData?.products ?? []).map((p) => [p.productName, p]));
   const batchUnmappedSpend = confidenceData?.batchUnmappedSpend ?? 0;
 
-  const rows = productLevel.map((p) => {
+  const rows = productLevelMain.map((p: { productName: string; spend: number; revenue: number; roas: number; impressions?: number; clicks?: number; conversions?: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string }) => {
     const derived = deriveProductRow({
       productName: p.productName,
       spend: p.spend,
       revenue: p.revenue,
       roas: p.roas,
-      impressions: p.impressions,
-      clicks: p.clicks,
-      conversions: p.conversions,
+      impressions: p.impressions ?? 0,
+      clicks: p.clicks ?? 0,
+      conversions: p.conversions ?? 0,
       campaignCount: p.campaignCount,
     });
     const creatives = creativeLeaderboard.filter((c) => c.productName === p.productName);
     const winnerCount = creatives.filter((c) => c.roas >= 2).length;
     const fatigueCount = creatives.filter((c) => (failureRatesByTag[c.materialStrategy] ?? 0) > 0.8).length;
     const conf = confidenceByProduct.get(p.productName);
+    const hasRule = (p as { hasRule?: boolean }).hasRule;
+    const costRuleStatus = (p as { costRuleStatus?: string }).costRuleStatus ?? (hasRule ? "已設定" : "待補成本規則");
     return {
       ...p,
       ...derived,
@@ -197,6 +205,8 @@ export default function ProductsPage() {
       unmappedSpend: conf?.unmappedSpend ?? 0,
       conflictCount: conf?.conflictCount ?? 0,
       overrideHitRate: conf?.overrideHitRate ?? 0,
+      hasRule,
+      costRuleStatus,
     };
   });
 
@@ -251,7 +261,7 @@ export default function ProductsPage() {
       <div className="min-h-full p-4 md:p-6 space-y-4 page-container-fluid">
         <AccountExceptionsBlock scopeAccountIds={scopeAccountIds} scopeProducts={scopeProducts} compact />
         <FilterBar
-          productOptions={productLevel.map((p) => p.productName)}
+          productOptions={productLevelMain.map((p) => p.productName)}
           ownerOptions={employees.map((e) => ({ id: e.id, name: e.name }))}
           showSavedViews
           showStatusFilter
@@ -277,6 +287,7 @@ export default function ProductsPage() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="text-left p-2 sticky left-0 bg-muted/50 z-10">商品</th>
+                    <th className="text-left p-2">成本規則</th>
                     <th className="text-left p-2">商品 owner</th>
                     <th className="text-left p-2">投手 owner</th>
                     <th className="text-left p-2">素材 owner</th>
@@ -307,6 +318,17 @@ export default function ProductsPage() {
                     return (
                       <tr key={r.productName} className="border-b hover:bg-muted/30">
                         <td className="p-2 sticky left-0 bg-background z-10 font-medium">{r.productName}</td>
+                        <td className="p-2">
+                          {r.costRuleStatus === "待補成本規則" ? (
+                            <Link href="/settings/profit-rules">
+                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[10px] cursor-pointer hover:bg-amber-50">
+                                未設定 · 點此設定
+                              </Badge>
+                            </Link>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px] text-muted-foreground">已設定</Badge>
+                          )}
+                        </td>
                         <td className="p-2">
                           <Select value={owners.productOwnerId || "_"} onValueChange={(v) => updateOwner(r.productName, "productOwnerId", v === "_" ? "" : v)}>
                             <SelectTrigger className="h-8 w-[100px] text-xs"><SelectValue placeholder="—" /></SelectTrigger>
@@ -381,6 +403,33 @@ export default function ProductsPage() {
             )}
           </CardContent>
         </Card>
+
+        {(unmappedCount > 0 || productLevelNoDelivery.length > 0) && (
+          <Collapsible>
+            <Card className="border-amber-200 dark:border-amber-800">
+              <CollapsibleTrigger asChild>
+                <button type="button" className="w-full text-left p-4 flex items-center justify-between hover:bg-muted/30 rounded-t-lg">
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    未投遞／未映射：{productLevelNoDelivery.length} 商品無花費 · {unmappedCount} 活動未映射
+                  </span>
+                  <ChevronRight className="w-4 h-4 shrink-0" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 pb-4 px-4 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">建議修正活動命名或至「獲利規則中心」建立商品映射。</p>
+                  {productLevelUnmapped.length > 0 && (
+                    <div className="text-xs">
+                      <span className="font-medium">未映射活動：</span>
+                      {productLevelUnmapped.slice(0, 10).map((p) => p.productName).join("、")}
+                      {productLevelUnmapped.length > 10 && ` …共 ${productLevelUnmapped.length} 筆`}
+                    </div>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
 
         <Dialog open={!!createTaskRow} onOpenChange={(open) => !open && setCreateTaskRow(null)}>
           <DialogContent>

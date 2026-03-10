@@ -1689,6 +1689,12 @@ export default function DashboardPage() {
                           <th className="text-left p-2">活動／商品</th>
                           <th className="text-right p-2">花費</th>
                           <th className="text-right p-2">ROAS</th>
+                          <th className="text-right p-2 hidden lg:table-cell">1d/3d/7d</th>
+                          <th className="text-right p-2 hidden lg:table-cell">保本</th>
+                          <th className="text-right p-2 hidden lg:table-cell">目標</th>
+                          <th className="text-right p-2 hidden lg:table-cell">Headroom</th>
+                          <th className="text-right p-2 hidden lg:table-cell">ATC/Purchase</th>
+                          <th className="text-center p-2">樣本</th>
                           <th className="text-center p-2">建議幅度</th>
                           <th className="text-left p-2 max-w-[220px]">原因</th>
                           <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
@@ -1697,9 +1703,22 @@ export default function DashboardPage() {
                       <tbody>
                         {actionData.tableRescue.map((r) => (
                           <tr key={r.campaignId} className="border-b border-muted/50">
-                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
+                              {r.productName} · {r.campaignName}
+                              {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                            </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground text-xs">
+                              {r.roas1d != null || r.roas3d != null || r.roas7d != null
+                                ? [r.roas1d, r.roas3d, r.roas7d].map((x) => (x != null ? x.toFixed(2) : "—")).join(" / ")
+                                : "—"}
+                            </td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground">{r.breakEvenRoas != null ? r.breakEvenRoas.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground">{r.targetRoas != null ? r.targetRoas.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell">{r.profitHeadroom != null ? r.profitHeadroom.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground text-xs">{r.addToCart ?? "—"} / {r.conversions ?? "—"}</td>
+                            <td className="text-center p-2 text-muted-foreground text-xs">{r.sampleStatus}</td>
                             <td className="text-center p-2 font-medium">{r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}</td>
                             <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.reason}>{r.reason}</td>
                             <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.whyNotMore ?? ""}>{r.whyNotMore ?? "—"}</td>
@@ -1725,6 +1744,12 @@ export default function DashboardPage() {
                           <th className="text-left p-2">活動／商品</th>
                           <th className="text-right p-2">花費</th>
                           <th className="text-right p-2">ROAS</th>
+                          <th className="text-right p-2 hidden lg:table-cell">1d/3d/7d</th>
+                          <th className="text-right p-2 hidden lg:table-cell">保本</th>
+                          <th className="text-right p-2 hidden lg:table-cell">目標</th>
+                          <th className="text-right p-2 hidden lg:table-cell">Headroom</th>
+                          <th className="text-right p-2 hidden lg:table-cell">ATC/Purchase</th>
+                          <th className="text-center p-2">樣本</th>
                           <th className="text-center p-2">建議幅度</th>
                           <th className="text-left p-2 max-w-[220px]">原因</th>
                           <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
@@ -1733,9 +1758,22 @@ export default function DashboardPage() {
                       <tbody>
                         {actionData.tableScaleUp.map((r) => (
                           <tr key={r.campaignId} className="border-b border-muted/50">
-                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
+                              {r.productName} · {r.campaignName}
+                              {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                            </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground text-xs">
+                              {r.roas1d != null || r.roas3d != null || r.roas7d != null
+                                ? [r.roas1d, r.roas3d, r.roas7d].map((x) => (x != null ? x.toFixed(2) : "—")).join(" / ")
+                                : "—"}
+                            </td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground">{r.breakEvenRoas != null ? r.breakEvenRoas.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground">{r.targetRoas != null ? r.targetRoas.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell">{r.profitHeadroom != null ? r.profitHeadroom.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground text-xs">{r.addToCart ?? "—"} / {r.conversions ?? "—"}</td>
+                            <td className="text-center p-2 text-muted-foreground text-xs">{r.sampleStatus}</td>
                             <td className="text-center p-2 font-medium">
                               {r.suggestedPct === "關閉" ? "關閉" : (r.suggestedPct as number) > 0 ? `+${r.suggestedPct}%` : `${r.suggestedPct}%`}
                             </td>
@@ -1763,6 +1801,10 @@ export default function DashboardPage() {
                           <th className="text-left p-2">活動／商品</th>
                           <th className="text-right p-2">花費</th>
                           <th className="text-right p-2">ROAS</th>
+                          <th className="text-right p-2 hidden lg:table-cell">1d/3d/7d</th>
+                          <th className="text-right p-2 hidden lg:table-cell">保本</th>
+                          <th className="text-right p-2 hidden lg:table-cell">Headroom</th>
+                          <th className="text-center p-2">樣本</th>
                           <th className="text-left p-2 max-w-[220px]">原因</th>
                           <th className="text-left p-2 max-w-[220px]">為什麼不是更大或更小</th>
                         </tr>
@@ -1770,9 +1812,20 @@ export default function DashboardPage() {
                       <tbody>
                         {actionData.tableNoMisjudge.map((r) => (
                           <tr key={r.campaignId} className="border-b border-muted/50">
-                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>{r.productName} · {r.campaignName}</td>
+                            <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
+                              {r.productName} · {r.campaignName}
+                              {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                            </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground text-xs">
+                              {r.roas1d != null || r.roas3d != null || r.roas7d != null
+                                ? [r.roas1d, r.roas3d, r.roas7d].map((x) => (x != null ? x.toFixed(2) : "—")).join(" / ")
+                                : "—"}
+                            </td>
+                            <td className="text-right p-2 hidden lg:table-cell text-muted-foreground">{r.breakEvenRoas != null ? r.breakEvenRoas.toFixed(2) : "—"}</td>
+                            <td className="text-right p-2 hidden lg:table-cell">{r.profitHeadroom != null ? r.profitHeadroom.toFixed(2) : "—"}</td>
+                            <td className="text-center p-2 text-muted-foreground text-xs">{r.sampleStatus}</td>
                             <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.reason}>{r.reason}</td>
                             <td className="p-2 text-muted-foreground text-xs max-w-[220px]" title={r.whyNotMore ?? ""}>{r.whyNotMore ?? "—"}</td>
                           </tr>

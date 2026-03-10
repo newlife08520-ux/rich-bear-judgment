@@ -89,13 +89,26 @@ const UI_MODE_LABELS: Record<UIMode, string> = {
   creative: "創意模式",
 };
 
-/** 空狀態四大入口；點擊時切換 workflow + uiMode 再帶入預設 prompt */
-const EMPTY_ENTRIES: { id: string; label: string; short: string; icon: string; mode: UIMode; workflow: Workflow; prompt?: string }[] = [
-  { id: "material", label: "素材審判", short: "圖片／影片／文案", icon: "👁️", mode: "creative", workflow: "audit", prompt: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？" },
-  { id: "landing", label: "商品頁架構", short: "銷售頁架構與轉換", icon: "🛍️", mode: "boss", workflow: "create", prompt: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。" },
-  { id: "ads", label: "廣告數據審判", short: "廣告投放與成效", icon: "📊", mode: "buyer", workflow: "audit", prompt: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？" },
-  { id: "ga4", label: "GA4 漏斗審判", short: "漏斗斷點與優化", icon: "📈", mode: "buyer", workflow: "audit", prompt: "請從漏斗數據幫我找出斷點與優化建議。" },
+/** 空狀態四大入口；點擊時切換 workflow + uiMode 再帶入預設 prompt（第二層子類型） */
+const EMPTY_ENTRIES: { id: string; label: string; short: string; icon: string; mode: UIMode; workflow: Workflow; prompt?: string; placeholder?: string; emptyTitle?: string; emptySubtitle?: string }[] = [
+  { id: "material", label: "素材審判", short: "圖片／影片／文案", icon: "👁️", mode: "creative", workflow: "audit", prompt: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？", placeholder: "貼上素材連結或上傳圖片／影片，描述想審的重點…", emptyTitle: "素材審判", emptySubtitle: "上傳素材或貼連結，總監會給出可執行的裁決與改版建議" },
+  { id: "landing", label: "商品頁審判", short: "銷售頁架構與轉換", icon: "🛍️", mode: "boss", workflow: "create", prompt: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。", placeholder: "貼上商品頁網址或描述產品，產出銷售頁架構…", emptyTitle: "商品頁架構", emptySubtitle: "針對產品產出高轉換的銷售頁架構與各屏重點" },
+  { id: "ads", label: "廣告數據審判", short: "廣告投放與成效", icon: "📊", mode: "buyer", workflow: "audit", prompt: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？", placeholder: "貼上廣告文案或數據，找出盲點與優化建議…", emptyTitle: "廣告數據審判", emptySubtitle: "從廣告數據找出騙點擊、不轉換的盲點與建議" },
+  { id: "ga4", label: "GA4 漏斗審判", short: "漏斗斷點與優化", icon: "📈", mode: "buyer", workflow: "audit", prompt: "請從漏斗數據幫我找出斷點與優化建議。", placeholder: "描述漏斗現況或貼數據，找出斷點與優化…", emptyTitle: "GA4 漏斗審判", emptySubtitle: "從漏斗數據找出斷點與優化建議" },
 ];
+
+/** 第一層：我要做什麼（審判 / 產出 / 策略 / 任務）→ 對應 workflow */
+const WORKFLOW_LAYER_1: { workflow: Workflow; label: string }[] = [
+  { workflow: "audit", label: "審判" },
+  { workflow: "create", label: "產出" },
+  { workflow: "strategy", label: "策略" },
+  { workflow: "task", label: "任務" },
+];
+
+/** 依 workflow 篩選第二層子類型 */
+function getSubtypesForWorkflow(w: Workflow) {
+  return EMPTY_ENTRIES.filter((e) => e.workflow === w);
+}
 
 type PendingAttachment = {
   id: string;
@@ -778,6 +791,8 @@ export default function JudgmentPage() {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [uiMode, setUiMode] = useState<UIMode>("creative");
   const [workflow, setWorkflow] = useState<Workflow>("clarify");
+  /** 第二層選中的子類型 id（驅動標題、副標、輸入提示） */
+  const [selectedSubtype, setSelectedSubtype] = useState<string | null>(null);
 
   const scope = useAppScope();
   const decisionCardsParams = new URLSearchParams();
@@ -1292,28 +1307,61 @@ export default function JudgmentPage() {
 
                   {messages.length === 0 && !isSubmitting && (
                     <div className="py-8">
-                      <p className="text-lg font-semibold text-center text-gray-900 mb-1">裁決入口 — 拿判決，不是純聊天</p>
-                      <p className="text-sm text-center text-gray-600 mb-4">選擇審判類型或輸入你的問題，總監會給出可執行的裁決與建議</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-                        {EMPTY_ENTRIES.map((e) => (
-                          <Card
-                            key={e.id}
-                            className="cursor-pointer hover:bg-muted/60 transition-colors"
-                            onClick={() => {
-                              setWorkflow(e.workflow);
-                              setUiMode(e.mode);
-                              if (e.prompt) handleQuickPrompt(e.prompt);
-                            }}
-                          >
-                            <CardContent className="p-4 flex items-center gap-3">
-                              <span className="text-2xl">{e.icon}</span>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm">{e.label}</p>
-                                <p className="text-xs text-muted-foreground">{e.short}</p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                      <p className="text-lg font-semibold text-center text-gray-900 mb-1">
+                        {selectedSubtype ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.emptyTitle ?? "裁決入口") : "裁決入口 — 拿判決，不是純聊天"}
+                      </p>
+                      <p className="text-sm text-center text-gray-600 mb-4">
+                        {selectedSubtype ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.emptySubtitle ?? "選擇類型或輸入問題") : "選擇「我要做什麼」與類型，總監會給出可執行的裁決與建議"}
+                      </p>
+                      <div className="max-w-2xl mx-auto space-y-4">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2 text-center">1. 我要做什麼</p>
+                          <div className="flex flex-wrap justify-center gap-2">
+                            {WORKFLOW_LAYER_1.map(({ workflow: w, label }) => (
+                              <Button
+                                key={w}
+                                type="button"
+                                variant={workflow === w ? "default" : "outline"}
+                                size="sm"
+                                className="rounded-full text-xs"
+                                onClick={() => {
+                                  setWorkflow(w);
+                                  setSelectedSubtype(null);
+                                }}
+                              >
+                                {label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2 text-center">2. 選擇類型</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {getSubtypesForWorkflow(workflow).map((e) => (
+                              <Card
+                                key={e.id}
+                                className="cursor-pointer hover:bg-muted/60 transition-colors"
+                                onClick={() => {
+                                  setWorkflow(e.workflow);
+                                  setUiMode(e.mode);
+                                  setSelectedSubtype(e.id);
+                                  if (e.prompt) handleQuickPrompt(e.prompt);
+                                }}
+                              >
+                                <CardContent className="p-4 flex items-center gap-3">
+                                  <span className="text-2xl">{e.icon}</span>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-sm">{e.label}</p>
+                                    <p className="text-xs text-muted-foreground">{e.short}</p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                          {getSubtypesForWorkflow(workflow).length === 0 && (
+                            <p className="text-xs text-center text-muted-foreground">此工作流暫無子類型，可直接在下方輸入</p>
+                          )}
+                        </div>
                       </div>
                       <p className="text-xs text-center text-muted-foreground mt-4">可貼網址、上傳圖片／影片／PDF，總監會一併參考。</p>
                     </div>
@@ -1449,7 +1497,7 @@ export default function JudgmentPage() {
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)"
+                      placeholder={selectedSubtype ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.placeholder ?? "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)") : "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)"}
                       rows={1}
                       className="min-h-[44px] max-h-[200px] resize-y"
                       data-testid="textarea-chat-input"
