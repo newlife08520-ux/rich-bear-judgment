@@ -82,9 +82,9 @@ import {
 import { buildDecisionCards, type CreativeLeaderboardRow } from "@shared/decision-cards-engine";
 import { classifyMaterialTier } from "@shared/material-tier";
 import { SCORE_DEFINITIONS } from "@shared/score-definitions";
-import { breakEvenRoas, targetRoas } from "@shared/schema";
+import { breakEvenRoas, targetRoas, DATA_STATUS_NO_DELIVERY, DATA_STATUS_UNDER_SAMPLE, DATA_STATUS_DECISION_READY } from "@shared/schema";
 import { computeScaleReadiness, getBudgetRecommendation as getScaleBudgetRecommendation, getTrendABC, creativeEdge } from "@shared/scale-score-engine";
-import { getProductProfitRules, getProductProfitRule, setProductProfitRule } from "./profit-rules-store";
+import { getProductProfitRules, getProductProfitRule, getProductProfitRuleExplicit, setProductProfitRule } from "./profit-rules-store";
 import { getInitialVerdict, setInitialVerdict } from "./initial-verdicts-store";
 import { getCampaignDecision, setCampaignDecision, type DecisionAction } from "./campaign-decisions-store";
 import {
@@ -2447,9 +2447,23 @@ export async function registerRoutes(
     const campaignList = accountIdSet
       ? (batch.campaignMetrics as CampaignMetrics[]).filter((c) => accountIdSet.has(normalizeAccountId(c.accountId)))
       : (batch.campaignMetrics as CampaignMetrics[]);
+
+    /** 資料狀態：未投遞 / 樣本不足 / 可判讀（與 lifecycle 對齊，核心表只顯示 decision_ready） */
+    const getDataStatus = (
+      spend: number,
+      impressions: number,
+      confidenceScore: number
+    ): "no_delivery" | "under_sample" | "decision_ready" => {
+      if (spend === 0 || (impressions ?? 0) === 0) return DATA_STATUS_NO_DELIVERY as "no_delivery";
+      if (confidenceScore < 40) return DATA_STATUS_UNDER_SAMPLE as "under_sample";
+      return DATA_STATUS_DECISION_READY as "decision_ready";
+    };
+
     const budgetActionTable = campaignList.map((c) => {
       const productName = resolveProduct(c) ?? "未分類";
       const rule = getProductProfitRule(productName);
+      const explicitRule = getProductProfitRuleExplicit(productName);
+      const hasRule = explicitRule != null;
       const input = {
         spend: c.spend,
         revenue: c.revenue,
@@ -2467,18 +2481,32 @@ export async function registerRoutes(
       const rec = getScaleBudgetRecommendation(input);
       const trendABC = getTrendABC(c.multiWindow ?? undefined, breakEvenRoas(rule.costRatio));
       const impactAmount = c.revenue - c.spend;
-      const sampleStatus = breakdown.confidenceScore >= 70 ? "足" : breakdown.confidenceScore >= 40 ? "勉強" : "不足";
+      const confidenceScore = breakdown.confidenceScore;
+      const sampleStatusLabel = confidenceScore >= 70 ? "足" : confidenceScore >= 40 ? "勉強" : "不足";
+      const dataStatus = getDataStatus(c.spend, c.impressions ?? 0, confidenceScore);
+      const beRoas = breakEvenRoas(rule.costRatio);
+      const tgtRoas = targetRoas(rule.costRatio, rule.targetNetMargin);
+      const mw = c.multiWindow;
       return {
         campaignId: c.campaignId,
         campaignName: c.campaignName,
         accountId: c.accountId,
         productName,
         spend: c.spend,
+        revenue: c.revenue,
         roas: c.roas,
+        addToCart: c.addToCart ?? 0,
+        conversions: c.conversions,
         impactAmount,
-        sampleStatus,
+        sampleStatus: sampleStatusLabel,
+        dataStatus,
         scaleReadinessScore: score,
         profitHeadroom: breakdown.profitHeadroom,
+        breakEvenRoas: beRoas < 1e6 ? beRoas : null,
+        targetRoas: tgtRoas < 1e6 ? tgtRoas : null,
+        roas1d: mw?.window1d?.roas ?? null,
+        roas3d: mw?.window3d?.roas ?? null,
+        roas7d: mw?.window7d?.roas ?? null,
         trendABC,
         trendCore: trendSignals.trendCore,
         momentum: trendSignals.momentum,
@@ -2486,6 +2514,8 @@ export async function registerRoutes(
         suggestedPct: rec.suggestedPct,
         reason: rec.reason,
         whyNotMore: rec.whyNotMore,
+        hasRule,
+        costRuleStatus: hasRule ? "已設定" : "待補成本規則",
       };
     });
 
@@ -2493,7 +2523,9 @@ export async function registerRoutes(
     for (const p of productLevel) {
       productAvgRoasByProduct.set(p.productName, p.spend > 0 ? p.revenue / p.spend : 0);
     }
-    const creativeLeaderboard = creativeRaw.map((c) => {
+    /** 創意榜核心只含花費 > 0（金榜/黑榜不混入未投遞） */
+    const creativeRawDecisionReady = creativeRaw.filter((c) => c.spend > 0);
+    const creativeLeaderboard = creativeRawDecisionReady.map((c) => {
       const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
       const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
       const budgetSuggestion = getBudgetRecommendation(c.spend, c.roas) ?? undefined;
@@ -2573,7 +2605,7 @@ export async function registerRoutes(
     if (batch.riskyCampaigns && batch.riskyCampaigns.length > 0) {
       const filteredIds = new Set(rows.map((r: { campaignId: string }) => r.campaignId));
       riskyCampaigns = batch.riskyCampaigns
-        .filter((r) => filteredIds.has(r.campaignId))
+        .filter((r) => r.spend > 0 && filteredIds.has(r.campaignId))
         .map((r) => ({
           campaignId: r.campaignId,
           campaignName: r.campaignName,
@@ -2600,19 +2632,32 @@ export async function registerRoutes(
       fbRows[0].clicks = 500;
     }
     const funnelRows = stitchFunnelData(fbRows, ga4Mock);
-    const funnelWarnings = runFunnelDiagnostics(funnelRows);
+    /** 目前使用 Mock GA4，無真實漏斗資料 → 僅廣告層推測，不作漏斗定罪 */
+    const funnelEvidence = false;
+    const funnelWarnings = runFunnelDiagnostics(funnelRows, { funnelEvidence });
 
     const tierMain = productLevel.filter((p) => {
       const revShare = totalRevenue > 0 ? p.revenue / totalRevenue : 0;
       return revShare >= 0.15 && p.roas >= 1;
     }).sort((a, b) => b.revenue - a.revenue);
 
-    const tableRescue = budgetActionTable
+    /** 核心決策表只含花費 > 0（排除 no_delivery）；可加碼表僅含已設定成本規則者 */
+    const budgetActionDecisionReady = budgetActionTable.filter(
+      (r) => (r as { spend: number }).spend > 0 && (r as { dataStatus: string }).dataStatus !== DATA_STATUS_NO_DELIVERY
+    );
+    const tableRescue = budgetActionDecisionReady
       .filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉")
       .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }))
       .sort((a, b) => b.spend - a.spend);
-    const tableScaleUp = budgetActionTable.filter((r) => r.suggestedAction === "可加碼" || r.suggestedAction === "高潛延伸").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
-    const tableNoMisjudge = budgetActionTable.filter((r) => r.suggestedAction === "維持").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const tableScaleUp = budgetActionDecisionReady
+      .filter(
+        (r) =>
+          (r.suggestedAction === "可加碼" || r.suggestedAction === "高潛延伸") && (r as { hasRule: boolean }).hasRule === true
+      )
+      .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const tableNoMisjudge = budgetActionDecisionReady
+      .filter((r) => r.suggestedAction === "維持")
+      .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
     const creativeWithEdge = creativeLeaderboard as Array<{ productName: string; spend: number; revenue: number; roas: number; conversions: number; scaleReadinessScore?: number; funnelReadiness?: number; creativeEdge?: number; [k: string]: unknown }>;
     const spendThreshold = totalAccountSpend * 0.2;
     const tableExtend = creativeWithEdge.filter((c) => {
@@ -2626,8 +2671,22 @@ export async function registerRoutes(
     const tierNoise = tableRescue.map((r) => ({ campaignId: r.campaignId, campaignName: r.campaignName, productName: r.productName, spend: r.spend, reason: r.reason }));
     const tierHighPotential = tableExtend.slice(0, 10).map((c) => ({ ...c, revenue: c.revenue }));
 
+    /** 商品層：補 hasRule / costRuleStatus；拆成核心排行 vs 未投遞 vs 未映射 */
+    const productLevelWithRule = productLevel.map((p) => ({
+      ...p,
+      hasRule: getProductProfitRuleExplicit(p.productName) != null,
+      costRuleStatus: getProductProfitRuleExplicit(p.productName) != null ? "已設定" : "待補成本規則",
+    }));
+    const productLevelMain = productLevelWithRule.filter((p) => p.spend > 0 && p.productName !== "未分類");
+    const productLevelNoDelivery = productLevelWithRule.filter((p) => p.spend === 0);
+    const productLevelUnmapped = productLevelWithRule.filter((p) => p.productName === "未分類");
+
     res.json({
-      productLevel,
+      productLevel: productLevelWithRule,
+      productLevelMain,
+      productLevelNoDelivery,
+      productLevelUnmapped,
+      unmappedCount: productLevelUnmapped.length,
       creativeLeaderboard,
       hiddenGems,
       urgentStop,
@@ -2642,6 +2701,7 @@ export async function registerRoutes(
       tierMainAccount: tierMain,
       tierHighPotentialCreatives: tierHighPotential,
       tierNoise: tierNoise.slice(0, 20),
+      funnelEvidence,
     });
   });
 
@@ -2727,7 +2787,9 @@ export async function registerRoutes(
       conversions: p.conversions,
     }));
     const funnelRows = stitchFunnelData(fbRows, ga4Mock);
-    const funnelWarnings = runFunnelDiagnostics(funnelRows);
+    /** 目前使用 Mock GA4，無真實漏斗資料 → 僅廣告層推測，不作漏斗定罪 */
+    const funnelEvidence = false;
+    const funnelWarnings = runFunnelDiagnostics(funnelRows, { funnelEvidence });
 
     const thresholdConfig = await getPublishedThresholdConfig();
     const cards = buildDecisionCards(

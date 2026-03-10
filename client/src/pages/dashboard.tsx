@@ -1249,28 +1249,43 @@ function ScoreDefinitionsTrigger() {
   );
 }
 
-/** 預算動作列（活動維度） */
+/** 預算動作列（活動維度）；含證據欄位供決策表顯示 */
 interface BudgetActionRow {
   campaignId: string;
   campaignName: string;
   accountId: string;
   productName: string;
   spend: number;
+  revenue?: number;
   roas: number;
   impactAmount: number;
   sampleStatus: string;
+  dataStatus?: "no_delivery" | "under_sample" | "decision_ready";
   scaleReadinessScore?: number;
   profitHeadroom?: number;
+  breakEvenRoas?: number | null;
+  targetRoas?: number | null;
+  roas1d?: number | null;
+  roas3d?: number | null;
+  roas7d?: number | null;
+  addToCart?: number;
+  conversions?: number;
   trendABC: string | null;
   suggestedAction: string;
   suggestedPct: number | "關閉";
   reason: string;
   whyNotMore?: string;
+  hasRule?: boolean;
+  costRuleStatus?: string;
 }
 
 /** Action Center API 回傳格式 */
 interface ActionCenterData {
-  productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount: number }>;
+  productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string }>;
+  productLevelMain?: Array<{ productName: string; spend: number; revenue: number; roas: number; hasRule?: boolean; costRuleStatus?: string }>;
+  productLevelNoDelivery?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
+  productLevelUnmapped?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
+  unmappedCount?: number;
   creativeLeaderboard: Array<{
     productName: string;
     materialStrategy: string;
@@ -1302,6 +1317,7 @@ interface ActionCenterData {
   tierMainAccount?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
   tierHighPotentialCreatives?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number }>;
   tierNoise?: Array<{ campaignId: string; campaignName: string; productName: string; spend: number; reason: string }>;
+  funnelEvidence?: boolean;
 }
 
 export default function DashboardPage() {
@@ -1509,34 +1525,78 @@ export default function DashboardPage() {
               <CardContent className="pt-3 pb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> 1. 今天誰在賺錢</h4>
                 <ul className="space-y-1">
-                  {[...actionData.productLevel].filter((p) => p.roas >= 1).sort((a, b) => b.roas - a.roas).slice(0, 3).map((p) => (
-                    <li key={p.productName} className="flex justify-between text-sm">
-                      <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
-                      <span className="text-emerald-600">ROAS {p.roas.toFixed(2)}</span>
-                    </li>
-                  ))}
+                  {(actionData.productLevelMain ?? actionData.productLevel)
+                    .filter((p) => p.spend > 0 && (p as { hasRule?: boolean }).hasRule && p.roas >= 1)
+                    .sort((a, b) => b.roas - a.roas)
+                    .slice(0, 3)
+                    .map((p) => (
+                      <li key={p.productName} className="flex justify-between text-sm">
+                        <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
+                        <span className="text-emerald-600">ROAS {p.roas.toFixed(2)}</span>
+                      </li>
+                    ))}
                 </ul>
-                {actionData.productLevel.filter((p) => p.roas >= 1).length === 0 && <p className="text-xs text-muted-foreground">尚無</p>}
+                {actionData.productLevel.filter((p) => (p as { hasRule?: boolean }).hasRule && p.roas >= 1).length === 0 && (
+                  <p className="text-xs text-muted-foreground">尚無（或尚未設定成本規則）</p>
+                )}
               </CardContent>
             </Card>
             <Card className="border-red-200 dark:border-red-800">
               <CardContent className="pt-3 pb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5" /> 2. 今天誰最危險</h4>
-                <ul className="space-y-1">
-                  {[...actionData.productLevel].filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).sort((a, b) => b.spend - a.spend).slice(0, 3).map((p) => (
-                    <li key={p.productName} className="flex justify-between text-sm">
-                      <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
-                      <span className="text-red-600">花費 {formatCurrency(p.spend)}</span>
-                    </li>
-                  ))}
-                </ul>
-                {actionData.productLevel.filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).length === 0 && <p className="text-xs text-muted-foreground">尚無</p>}
+                {actionData.tableRescue && actionData.tableRescue.length > 0 ? (
+                  <ul className="space-y-2 text-sm">
+                    {actionData.tableRescue.slice(0, 3).map((r) => (
+                      <li key={r.campaignId} className="flex flex-col gap-0.5">
+                        <span className="font-medium truncate">{r.productName} · {r.campaignName}</span>
+                        <span className="text-red-600">花費 {formatCurrency(r.spend)} · ROAS {r.roas.toFixed(2)}</span>
+                        {r.breakEvenRoas != null && <span className="text-muted-foreground text-xs">保本 ROAS {r.breakEvenRoas.toFixed(2)} · Headroom {r.profitHeadroom != null ? r.profitHeadroom.toFixed(2) : "—"}</span>}
+                        <span className="text-muted-foreground text-xs">{r.suggestedAction} {r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="space-y-1">
+                    {(actionData.productLevelMain ?? actionData.productLevel)
+                      .filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1))
+                      .sort((a, b) => b.spend - a.spend)
+                      .slice(0, 3)
+                      .map((p) => (
+                        <li key={p.productName} className="flex justify-between text-sm">
+                          <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
+                          <span className="text-red-600">花費 {formatCurrency(p.spend)} · ROAS {p.roas.toFixed(2)}</span>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+                {(!actionData.tableRescue?.length && actionData.productLevel.filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).length === 0) && (
+                  <p className="text-xs text-muted-foreground">尚無</p>
+                )}
               </CardContent>
             </Card>
             <Card className="border-amber-200 dark:border-amber-800">
               <CardContent className="pt-3 pb-3">
                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" /> 3. 今天誰最值得放大</h4>
-                {actionData.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 ? (
+                {actionData.tableScaleUp && actionData.tableScaleUp.length > 0 ? (
+                  <ul className="space-y-2 text-sm">
+                    {actionData.tableScaleUp.slice(0, 5).map((r) => (
+                      <li key={r.campaignId} className="flex flex-col gap-0.5">
+                        <span className="font-medium truncate">{r.productName} · {r.campaignName}</span>
+                        <span className="text-emerald-600">ROAS {r.roas.toFixed(2)}</span>
+                        {(r.breakEvenRoas != null || r.targetRoas != null) && (
+                          <span className="text-muted-foreground text-xs">
+                            保本 {r.breakEvenRoas != null ? r.breakEvenRoas.toFixed(2) : "—"} · 目標 {r.targetRoas != null ? r.targetRoas.toFixed(2) : "—"}
+                            {r.profitHeadroom != null && ` · Headroom ${r.profitHeadroom.toFixed(2)}`}
+                          </span>
+                        )}
+                        {(r.roas1d != null || r.roas3d != null || r.roas7d != null) && (
+                          <span className="text-muted-foreground text-xs">1d/3d/7d: {[r.roas1d, r.roas3d, r.roas7d].map((x) => x != null ? x.toFixed(2) : "—").join(" / ")}</span>
+                        )}
+                        <span className="text-muted-foreground text-xs">{r.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : actionData.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 ? (
                   <ul className="space-y-1">
                     {[...actionData.creativeLeaderboard]
                       .filter((c) => (c as { materialTier?: string }).materialTier === "Winner" || (c as { materialTier?: string }).materialTier === "Potential")
@@ -1549,7 +1609,7 @@ export default function DashboardPage() {
                       ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-muted-foreground">尚無達標贏家/潛力股</p>
+                  <p className="text-xs text-muted-foreground">尚無達標贏家/潛力股（需已設定成本規則）</p>
                 )}
               </CardContent>
             </Card>

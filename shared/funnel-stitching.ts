@@ -117,15 +117,22 @@ export function stitchFunnelData(
  * 診斷規則引擎：產出漏斗紅綠燈警告。
  * - 騙點擊/落地頁破口：CTR > 2.5% 且 bounceRate > 75%
  * - 結帳阻力：加購率合理但結帳流失率 > 85%（addToCart 多但 purchases 極少）
+ * @param funnelEvidence 若為 false，僅輸出廣告層推測語氣，不作「已確診」結論
  */
-export function runFunnelDiagnostics(rows: ProductFunnelRow[]): FunnelWarning[] {
+export function runFunnelDiagnostics(
+  rows: ProductFunnelRow[],
+  options?: { funnelEvidence?: boolean }
+): FunnelWarning[] {
+  const funnelEvidence = options?.funnelEvidence ?? false;
   const warnings: FunnelWarning[] = [];
   for (const row of rows) {
     if (row.ctr > 2.5 && row.bounceRate > 0.75) {
       warnings.push({
         productName: row.productName,
         type: "landing_page_break",
-        message: `【${row.productName}】素材點擊率佳，但進站後流失嚴重！請立即檢查 Landing Page 第一屏是否與廣告承諾不符，或網頁載入過慢。`,
+        message: funnelEvidence
+          ? `【${row.productName}】素材點擊率佳，但進站後流失嚴重！請立即檢查 Landing Page 第一屏是否與廣告承諾不符，或網頁載入過慢。`
+          : `【${row.productName}】廣告層推測：點擊率與跳出率組合可能表示落地頁有破口，建議人工確認後再下定論。目前無漏斗資料，不作漏斗定罪。`,
       });
     }
     const addToCartNum = row.addToCart;
@@ -136,7 +143,9 @@ export function runFunnelDiagnostics(rows: ProductFunnelRow[]): FunnelWarning[] 
         warnings.push({
           productName: row.productName,
           type: "checkout_resistance",
-          message: `【${row.productName}】加入購物車意願高，但結帳失敗流失！請檢查免運門檻、結帳表單是否有 Bug，或缺少促銷誘因。`,
+          message: funnelEvidence
+            ? `【${row.productName}】加入購物車意願高，但結帳失敗流失！請檢查免運門檻、結帳表單是否有 Bug，或缺少促銷誘因。`
+            : `【${row.productName}】廣告層推測：加購與結帳比例偏懸殊，可能需檢查結帳流程。目前無漏斗資料，不作結帳定罪。`,
         });
       }
     }

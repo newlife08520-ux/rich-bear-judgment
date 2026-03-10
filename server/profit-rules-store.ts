@@ -31,6 +31,12 @@ export function getProductProfitRule(productName: string): ProductProfitRule {
   return map[productName] ?? { ...DEFAULT_PROFIT_RULE };
 }
 
+/** 僅回傳「已寫入」的規則；未設定則回傳 null，供前端區分「待補成本規則」與「使用預設」 */
+export function getProductProfitRuleExplicit(productName: string): ProductProfitRule | null {
+  const map = getProductProfitRules();
+  return map[productName] ?? null;
+}
+
 export function saveProductProfitRules(map: ProductProfitRulesMap): void {
   try {
     ensureDir();

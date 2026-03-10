@@ -1851,3 +1851,12 @@ export function targetRoas(costRatio: number, targetNetMargin: number): number {
   if (margin <= 0) return Infinity;
   return 1 / margin;
 }
+
+// ========== 資料狀態（決策潔淨：no_delivery / under_sample / decision_ready）==========
+/** 花費 0 或曝光 0 ＝ 未投遞，不得進核心決策榜單 */
+export const DATA_STATUS_NO_DELIVERY = "no_delivery";
+/** 有花費但未達最小樣本門檻 ＝ 樣本不足，不得進黑榜/先救 */
+export const DATA_STATUS_UNDER_SAMPLE = "under_sample";
+/** 已達可判讀門檻 */
+export const DATA_STATUS_DECISION_READY = "decision_ready";
+export type DataStatus = typeof DATA_STATUS_NO_DELIVERY | typeof DATA_STATUS_UNDER_SAMPLE | typeof DATA_STATUS_DECISION_READY;
