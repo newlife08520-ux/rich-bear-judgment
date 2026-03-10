@@ -483,7 +483,7 @@ export async function registerRoutes(
     const inputSufficient = hasUrl || textLen >= 30;
     if (!inputSufficient) {
       return res.status(400).json({
-        message: "請提供 URL 或至少 30 字以上內容再審。單次審判與對話審判一致，需有足夠素材或文案才進行 audit。",
+        message: "總監需要一點素材才能下判：請貼上連結、或至少 30 字以上的文案／說明，我再幫你審。",
         errorCode: "INPUT_INSUFFICIENT_FOR_AUDIT",
       });
     }
