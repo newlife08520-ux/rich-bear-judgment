@@ -1645,6 +1645,11 @@ export default function DashboardPage() {
         {(employee.department === "ADMIN" || employee.department === "MARKETING") && actionData?.funnelWarnings && actionData.funnelWarnings.length > 0 && (
           <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30">
             <CardContent className="pt-4">
+              {actionData.funnelEvidence === false && (
+                <p className="text-sm text-amber-700 dark:text-amber-400 mb-3 rounded-md bg-amber-50 dark:bg-amber-950/50 px-3 py-2 border border-amber-200 dark:border-amber-800">
+                  目前無漏斗資料，以下僅為廣告層推測，不作漏斗定罪。
+                </p>
+              )}
               <h3 className="font-semibold mb-3 flex items-center gap-2 text-red-700 dark:text-red-400">
                 <AlertTriangle className="w-4 h-4" />
                 漏斗診斷
