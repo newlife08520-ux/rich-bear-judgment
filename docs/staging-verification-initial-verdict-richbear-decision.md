@@ -4,7 +4,7 @@
 
 - **功能基準**：**633d215**。本輪要驗的功能（初審落地、靈感池前 3 筆華麗熊、第一次決策點寫回）都在此 commit。
 - **驗收輔助基準**：**c903a5e**。此 commit 新增 `GET /api/version` 與本驗收文件，用於在 staging 確認「目前跑的是哪一版」。
-- **Staging 真正驗收時**：以**目前實際部署版本**為準。先對 staging 打 `GET https://您的staging網址/api/version`，確認回應中的 `commit` 前 7 碼是否為 **c903a5e** 或之後（例如 **ff56e8d**，為本清單格式修正）。若為 c903a5e 或更新，則已含驗收輔助與本文件，功能必含 633d215，可依下方「最終 staging 驗收清單」執行 A/B/C。若回傳更早，請先至 Railway 後台確認部署或重新 deploy 後再驗收。
+- **Staging 真正驗收時**：以**目前實際部署版本**為準。先對 staging 打 `GET https://您的staging網址/api/version`，確認回應中的 `commit` 前 7 碼是否為 **c903a5e** 或之後（含本清單格式修正）。若為 c903a5e 或更新，則已含驗收輔助與本文件，功能必含 633d215，可依下方「最終 staging 驗收清單」執行 A/B/C。若回傳更早，請先至 Railway 後台確認部署或重新 deploy 後再驗收。
 
 ---
 
