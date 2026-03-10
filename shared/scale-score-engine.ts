@@ -2,6 +2,7 @@
  * 第一層：數據判斷引擎（高手操作模擬引擎 1.0）。創意解讀由第二層華麗熊人格負責。
  * 獲利能力 × 趨勢感 × 漏斗穩定度 × 影響力 × 信心
  * Scale Readiness Score 1–100 + 預算建議（BaseChange × Confidence × Impact × Trend）
+ * 架構定版（75850e9）；產品仍未完成，勿宣稱完成。
  */
 export const SCALE_ENGINE_VERSION = "1.0";
 import type { MultiWindowMetrics } from "@shared/schema";
