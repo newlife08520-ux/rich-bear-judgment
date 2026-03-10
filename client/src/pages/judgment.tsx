@@ -76,6 +76,13 @@ const DEFAULT_REVIEW_THRESHOLD = 85;
 /** 外層三模式，對應後端片段組裝 */
 type UIMode = "boss" | "buyer" | "creative";
 
+/** 側欄「常用審判模式」：點擊時同時切換 uiMode 與對應工作流（真 workflow 切換） */
+const UI_MODE_TO_WORKFLOW: Record<UIMode, Workflow> = {
+  boss: "audit",
+  buyer: "strategy",
+  creative: "create",
+};
+
 const UI_MODE_LABELS: Record<UIMode, string> = {
   boss: "Boss 模式",
   buyer: "投手模式",
@@ -100,11 +107,11 @@ type PendingAttachment = {
   preview?: string;
 };
 
-const QUICK_PROMPTS: { id: string; icon: string; label: string; text: string }[] = [
-  { id: "material", icon: "👁️", label: "幫我看素材", text: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？" },
-  { id: "salespage", icon: "🛍️", label: "產出銷售頁架構", text: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。" },
-  { id: "shortform", icon: "✍️", label: "發想痛點短影音", text: "幫我想 3 個最狠、最能引起共鳴的情緒痛點與短影音主標腳本。" },
-  { id: "blindspot", icon: "📊", label: "找出文案盲點", text: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？" },
+const QUICK_PROMPTS: { id: string; icon: string; label: string; text: string; workflow: Workflow }[] = [
+  { id: "material", icon: "👁️", label: "幫我看素材", text: "總監，幫我用最嚴格的標準看這張圖/影片，前三秒會被滑掉嗎？該怎麼改？", workflow: "audit" },
+  { id: "salespage", icon: "🛍️", label: "產出銷售頁架構", text: "幫我針對這個產品，產出一個高轉換的銷售頁架構與各屏重點。", workflow: "create" },
+  { id: "shortform", icon: "✍️", label: "發想痛點短影音", text: "幫我想 3 個最狠、最能引起共鳴的情緒痛點與短影音主標腳本。", workflow: "create" },
+  { id: "blindspot", icon: "📊", label: "找出文案盲點", text: "幫我抓出這篇文案的盲點，為什麼會騙點擊卻不轉換？", workflow: "audit" },
 ];
 
 /** 問題類型 */
@@ -1061,7 +1068,8 @@ export default function JudgmentPage() {
     }
   };
 
-  const handleQuickPrompt = (text: string) => {
+  const handleQuickPrompt = (text: string, workflowOverride?: Workflow) => {
+    if (workflowOverride) setWorkflow(workflowOverride);
     setInputText(text);
     setSubmitError(null);
     setTimeout(() => textareaRef.current?.focus(), 50);
@@ -1176,7 +1184,10 @@ export default function JudgmentPage() {
                         <button
                           key={m}
                           type="button"
-                          onClick={() => setUiMode(m)}
+                          onClick={() => {
+                            setUiMode(m);
+                            setWorkflow(UI_MODE_TO_WORKFLOW[m]);
+                          }}
                           className={`text-xs px-2 py-1 rounded shrink-0 ${uiMode === m ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"}`}
                         >
                           {UI_MODE_LABELS[m]}
@@ -1191,7 +1202,7 @@ export default function JudgmentPage() {
                         <button
                           key={q.id}
                           type="button"
-                          onClick={() => handleQuickPrompt(q.text)}
+                          onClick={() => handleQuickPrompt(q.text, q.workflow)}
                           className="text-xs text-left px-2 py-1.5 rounded hover:bg-muted truncate"
                         >
                           {q.icon} {q.label}
@@ -1390,7 +1401,7 @@ export default function JudgmentPage() {
                         variant="outline"
                         size="sm"
                         className="shrink-0 rounded-full text-xs gap-1"
-                        onClick={() => handleQuickPrompt(q.text)}
+                        onClick={() => handleQuickPrompt(q.text, q.workflow)}
                         data-testid={`quick-prompt-${q.id}`}
                       >
                         <span>{q.icon}</span>
