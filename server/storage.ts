@@ -38,6 +38,46 @@ import type { WorkbenchProductOwners, WorkbenchTask, WorkbenchAuditEntry } from 
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
+
+/** 用於比對「欄位值是否變更」的指紋，不存實際密文 */
+function valueFingerprint(value: string): string {
+  const s = (value ?? "").trim();
+  if (!s) return "";
+  return `${s.length}:${s.slice(0, 2)}:${s.slice(-2)}`;
+}
+
+const DEFAULT_VERIFICATION = {
+  fbStatus: "idle" as const,
+  gaStatus: "idle" as const,
+  aiStatus: "idle" as const,
+  fbVerifiedAt: null as string | null,
+  gaVerifiedAt: null as string | null,
+  aiVerifiedAt: null as string | null,
+  fbLastError: null as string | null,
+  gaLastError: null as string | null,
+  aiLastError: null as string | null,
+  fbValidatedValueHash: null as string | null,
+  gaValidatedValueHash: null as string | null,
+  aiValidatedValueHash: null as string | null,
+};
+
+function withVerificationDefaults(s: Partial<UserSettings> & { userId: string }): UserSettings {
+  return {
+    ...s,
+    fbStatus: s.fbStatus ?? DEFAULT_VERIFICATION.fbStatus,
+    gaStatus: s.gaStatus ?? DEFAULT_VERIFICATION.gaStatus,
+    aiStatus: s.aiStatus ?? DEFAULT_VERIFICATION.aiStatus,
+    fbVerifiedAt: s.fbVerifiedAt ?? DEFAULT_VERIFICATION.fbVerifiedAt,
+    gaVerifiedAt: s.gaVerifiedAt ?? DEFAULT_VERIFICATION.gaVerifiedAt,
+    aiVerifiedAt: s.aiVerifiedAt ?? DEFAULT_VERIFICATION.aiVerifiedAt,
+    fbLastError: s.fbLastError ?? DEFAULT_VERIFICATION.fbLastError,
+    gaLastError: s.gaLastError ?? DEFAULT_VERIFICATION.gaLastError,
+    aiLastError: s.aiLastError ?? DEFAULT_VERIFICATION.aiLastError,
+    fbValidatedValueHash: s.fbValidatedValueHash ?? DEFAULT_VERIFICATION.fbValidatedValueHash,
+    gaValidatedValueHash: s.gaValidatedValueHash ?? DEFAULT_VERIFICATION.gaValidatedValueHash,
+    aiValidatedValueHash: s.aiValidatedValueHash ?? DEFAULT_VERIFICATION.aiValidatedValueHash,
+  } as UserSettings;
+}
 const SYNCED_ACCOUNTS_FILE = path.join(DATA_DIR, "synced-accounts.json");
 const FAVORITES_FILE = path.join(DATA_DIR, "favorites.json");
 const BATCH_FILE = path.join(DATA_DIR, "latest-batch.json");
@@ -204,6 +244,7 @@ export interface IStorage {
   getJudgmentReport(id: string): JudgmentReport | undefined;
   getSettings(userId: string): UserSettings;
   saveSettings(userId: string, settings: SettingsInput): UserSettings;
+  patchVerificationStatus(userId: string, type: "fb" | "ga4" | "ai", payload: { status: "success" | "error"; verifiedAt: string; lastError?: string | null }, value: string): UserSettings;
   getReviewSessions(userId: string): ReviewSession[];
   getReviewSession(id: string): ReviewSession | undefined;
   saveReviewSession(session: ReviewSession): ReviewSession;
@@ -263,7 +304,7 @@ export class MemStorage implements IStorage {
     const settings = loadJsonFile<Record<string, UserSettings>>(SETTINGS_FILE, {});
     for (const [userId, s] of Object.entries(settings)) {
       const withSystemPrompt = { ...s, systemPrompt: (s as any).systemPrompt ?? "" };
-      this.settingsStore.set(userId, withSystemPrompt as UserSettings);
+      this.settingsStore.set(userId, withVerificationDefaults({ ...withSystemPrompt, userId }) as UserSettings);
     }
 
     const reviewSessions = loadJsonFile<ReviewSession[]>(REVIEW_SESSIONS_FILE, []);
@@ -389,7 +430,7 @@ export class MemStorage implements IStorage {
   getSettings(userId: string): UserSettings {
     const existing = this.settingsStore.get(userId);
     if (existing) return existing;
-    return {
+    return withVerificationDefaults({
       userId,
       ga4PropertyId: "",
       fbAccessToken: "",
@@ -404,16 +445,25 @@ export class MemStorage implements IStorage {
       outputLength: "standard",
       brandTone: "professional",
       analysisBias: "conversion",
-    };
+    });
   }
 
   saveSettings(userId: string, input: SettingsInput): UserSettings {
     const existing = this.settingsStore.get(userId);
-    const settings: UserSettings = {
+    const nextFb = input.fbAccessToken ?? existing?.fbAccessToken ?? "";
+    const nextGa = input.ga4PropertyId ?? existing?.ga4PropertyId ?? "";
+    const nextAi = input.aiApiKey ?? existing?.aiApiKey ?? "";
+    const fbFp = valueFingerprint(nextFb);
+    const gaFp = valueFingerprint(nextGa);
+    const aiFp = valueFingerprint(nextAi);
+    const clearFbVerification = existing && fbFp && existing.fbValidatedValueHash !== fbFp;
+    const clearGaVerification = existing && gaFp && existing.gaValidatedValueHash !== gaFp;
+    const clearAiVerification = existing && aiFp && existing.aiValidatedValueHash !== aiFp;
+    const settings: UserSettings = withVerificationDefaults({
       userId,
-      ga4PropertyId: input.ga4PropertyId ?? existing?.ga4PropertyId ?? "",
-      fbAccessToken: input.fbAccessToken ?? existing?.fbAccessToken ?? "",
-      aiApiKey: input.aiApiKey ?? existing?.aiApiKey ?? "",
+      ga4PropertyId: nextGa,
+      fbAccessToken: nextFb,
+      aiApiKey: nextAi,
       systemPrompt: input.systemPrompt ?? existing?.systemPrompt ?? "",
       coreMasterPrompt: input.coreMasterPrompt ?? existing?.coreMasterPrompt ?? "",
       modeAPrompt: input.modeAPrompt ?? existing?.modeAPrompt ?? "",
@@ -424,10 +474,53 @@ export class MemStorage implements IStorage {
       outputLength: input.outputLength ?? existing?.outputLength ?? "standard",
       brandTone: input.brandTone ?? existing?.brandTone ?? "professional",
       analysisBias: input.analysisBias ?? existing?.analysisBias ?? "conversion",
-    };
+      fbStatus: clearFbVerification ? "idle" : (existing?.fbStatus ?? "idle"),
+      gaStatus: clearGaVerification ? "idle" : (existing?.gaStatus ?? "idle"),
+      aiStatus: clearAiVerification ? "idle" : (existing?.aiStatus ?? "idle"),
+      fbVerifiedAt: clearFbVerification ? null : (existing?.fbVerifiedAt ?? null),
+      gaVerifiedAt: clearGaVerification ? null : (existing?.gaVerifiedAt ?? null),
+      aiVerifiedAt: clearAiVerification ? null : (existing?.aiVerifiedAt ?? null),
+      fbLastError: clearFbVerification ? null : (existing?.fbLastError ?? null),
+      gaLastError: clearGaVerification ? null : (existing?.gaLastError ?? null),
+      aiLastError: clearAiVerification ? null : (existing?.aiLastError ?? null),
+      fbValidatedValueHash: clearFbVerification ? null : (existing?.fbValidatedValueHash ?? null),
+      gaValidatedValueHash: clearGaVerification ? null : (existing?.gaValidatedValueHash ?? null),
+      aiValidatedValueHash: clearAiVerification ? null : (existing?.aiValidatedValueHash ?? null),
+    });
     this.settingsStore.set(userId, settings);
     this.persistSettings();
     return settings;
+  }
+
+  /** 更新單一連線類型的驗證狀態（由 test-connection 呼叫後寫入）；value 用於計算 fingerprint，欄位變更時 saveSettings 會失效 */
+  patchVerificationStatus(
+    userId: string,
+    type: "fb" | "ga4" | "ai",
+    payload: { status: "success" | "error"; verifiedAt: string; lastError?: string | null },
+    value: string
+  ): UserSettings {
+    const existing = this.getSettings(userId);
+    const next: UserSettings = { ...existing };
+    const valueHash = valueFingerprint(value);
+    if (type === "fb") {
+      next.fbStatus = payload.status;
+      next.fbVerifiedAt = payload.verifiedAt;
+      next.fbLastError = payload.lastError ?? null;
+      next.fbValidatedValueHash = payload.status === "success" ? valueHash : null;
+    } else if (type === "ga4") {
+      next.gaStatus = payload.status;
+      next.gaVerifiedAt = payload.verifiedAt;
+      next.gaLastError = payload.lastError ?? null;
+      next.gaValidatedValueHash = payload.status === "success" ? valueHash : null;
+    } else {
+      next.aiStatus = payload.status;
+      next.aiVerifiedAt = payload.verifiedAt;
+      next.aiLastError = payload.lastError ?? null;
+      next.aiValidatedValueHash = payload.status === "success" ? valueHash : null;
+    }
+    this.settingsStore.set(userId, next);
+    this.persistSettings();
+    return next;
   }
 
   getReviewSessions(userId: string): ReviewSession[] {

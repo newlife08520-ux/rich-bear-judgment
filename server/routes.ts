@@ -221,12 +221,19 @@ export async function registerRoutes(
   });
 
   app.post("/api/settings/test-connection", requireAuth, async (req, res) => {
+    const userId = req.session.userId!;
     const type = req.body?.type;
     const valueRaw = req.body?.value;
     const value = typeof valueRaw === "string" ? valueRaw : String(valueRaw ?? "");
     const checkedAt = new Date().toISOString();
+    const storageType = type === "ga4" || type === "fb" || type === "ai" ? type : undefined;
+
+    const persistVerification = (success: boolean, lastError?: string | null) => {
+      if (storageType) storage.patchVerificationStatus(userId, storageType, { status: success ? "success" : "error", verifiedAt: checkedAt, lastError: success ? null : (lastError ?? null) }, value);
+    };
 
     const sendError = (payload: { message: string; errorCode: string; statusCode?: number; testedModel?: string; productionModel?: string; providerErrorMessage?: string; [k: string]: unknown }) => {
+      if (storageType) persistVerification(false, payload.message);
       const statusCode = payload.statusCode && payload.statusCode >= 400 ? payload.statusCode : 200;
       res.status(statusCode).json({
         success: false,
@@ -261,6 +268,7 @@ export async function registerRoutes(
           const result = await Promise.race([model.generateContent("hi"), timeoutPromise]);
           const text = result.response.text();
           if (text && text.length > 0) {
+            persistVerification(true);
             return res.json({ success: true, status: "success", message: `API Key 驗證成功，可正常存取 Gemini API。正式審判將使用模型 ${productionModel}`, testedModel: testModel, productionModel, checkedAt });
           }
           return sendError({ message: "模型回應為空，請確認 API Key 是否正常", errorCode: "EMPTY_RESPONSE", testedModel: testModel, productionModel });
@@ -307,6 +315,7 @@ export async function registerRoutes(
                 };
               }
             } catch {}
+            persistVerification(true);
             const acctMsg = accountPreview
               ? `，可用廣告帳號: ${accountPreview.totalCount} 個${accountPreview.topNames.length > 0 ? ` (${accountPreview.topNames.join("、")}${accountPreview.totalCount > 3 ? "..." : ""})` : ""}`
               : "";
@@ -317,22 +326,29 @@ export async function registerRoutes(
             if (fbError.code === 190) {
               const subcode = fbError.error_subcode;
               if (subcode === 463 || subcode === 467) {
+                persistVerification(false, "Facebook Access Token 已過期，請重新取得新的 Token");
                 return res.json({ success: false, status: "error", message: "Facebook Access Token 已過期，請重新取得新的 Token", errorCode: "FB_TOKEN_EXPIRED", checkedAt });
               }
+              persistVerification(false, `Facebook Access Token 無效: ${fbError.message}`);
               return res.json({ success: false, status: "error", message: `Facebook Access Token 無效: ${fbError.message}`, errorCode: "FB_TOKEN_INVALID", checkedAt });
             }
             if (fbError.code === 10 || fbError.code === 200) {
+              persistVerification(false, `Facebook Token 權限不足: ${fbError.message}`);
               return res.json({ success: false, status: "error", message: `Facebook Token 權限不足: ${fbError.message}`, errorCode: "FB_PERMISSION_DENIED", checkedAt });
             }
+            persistVerification(false, `Facebook API 錯誤: ${fbError.message}`);
             return res.json({ success: false, status: "error", message: `Facebook API 錯誤: ${fbError.message}`, errorCode: "FB_API_ERROR", checkedAt });
           }
+          persistVerification(false, "Facebook API 回傳未預期的格式");
           return res.json({ success: false, status: "error", message: "Facebook API 回傳未預期的格式", errorCode: "FB_UNKNOWN", checkedAt });
         } catch (err: any) {
           const errMsg = err?.message ?? String(err);
           const providerErrorMessage = errMsg.slice(0, 500);
           if (err.code === "ENOTFOUND" || err.code === "ECONNREFUSED" || err.message?.includes("fetch")) {
+            persistVerification(false, "無法連線至 Facebook API，請檢查網路連線");
             return res.json({ success: false, status: "error", message: "無法連線至 Facebook API，請檢查網路連線", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
           }
+          persistVerification(false, `Facebook 連線失敗: ${errMsg.slice(0, 200)}`);
           return res.json({ success: false, status: "error", message: `Facebook 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "FB_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
         }
       }
@@ -340,10 +356,12 @@ export async function registerRoutes(
       if (type === "ga4") {
         const trimmed = value.trim();
         if (!/^\d+$/.test(trimmed)) {
+          persistVerification(false, "GA4 Property ID 格式錯誤，應為純數字 (例如: 123456789)");
           return res.json({ success: false, status: "error", message: "GA4 Property ID 格式錯誤，應為純數字 (例如: 123456789)", errorCode: "GA4_FORMAT_INVALID", checkedAt });
         }
         const saKeyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
         if (!saKeyJson) {
+          persistVerification(false, "系統尚未設定 Service Account 憑證");
           return res.json({
             success: false,
             status: "error",
@@ -357,6 +375,7 @@ export async function registerRoutes(
         try {
           credentials = JSON.parse(saKeyJson);
         } catch {
+          persistVerification(false, "Service Account 憑證載入失敗，JSON 格式無效");
           return res.json({ success: false, status: "error", message: "Service Account 憑證載入失敗，JSON 格式無效。請確認 GOOGLE_SERVICE_ACCOUNT_KEY 的內容是完整的 JSON", errorCode: "GA4_CRED_PARSE_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: false }, checkedAt });
         }
         try {
@@ -369,6 +388,7 @@ export async function registerRoutes(
           const tokenRes = await client.getAccessToken();
           const accessToken = typeof tokenRes === "string" ? tokenRes : tokenRes?.token;
           if (!accessToken) {
+            persistVerification(false, "無法取得 Access Token");
             return res.json({ success: false, status: "error", message: "Service Account 憑證有效，但無法取得 Access Token。請確認憑證權限設定", errorCode: "GA4_TOKEN_FAILED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
           }
           const ga4Res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${trimmed}:runReport`, {
@@ -385,6 +405,7 @@ export async function registerRoutes(
           });
           const ga4Data = await ga4Res.json();
           if (ga4Res.ok) {
+            persistVerification(true);
             const activeUsers = ga4Data.rows?.[0]?.metricValues?.[0]?.value || "0";
             return res.json({
               success: true,
@@ -397,33 +418,43 @@ export async function registerRoutes(
           const ga4Error = ga4Data.error;
           if (ga4Error) {
             if (ga4Error.status === "UNAUTHENTICATED" || ga4Error.code === 401) {
+              persistVerification(false, "Service Account 授權失敗，憑證可能已過期或被撤銷");
               return res.json({ success: false, status: "error", message: "Service Account 授權失敗，憑證可能已過期或被撤銷", errorCode: "GA4_UNAUTHENTICATED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
             }
             if (ga4Error.status === "PERMISSION_DENIED" || ga4Error.code === 403) {
               const msg = (ga4Error.message || "").toLowerCase();
               if (msg.includes("api not enabled") || msg.includes("has not been used") || msg.includes("analyticsdata")) {
+                persistVerification(false, "Google Analytics Data API 尚未啟用");
                 return res.json({ success: false, status: "error", message: `Google Analytics Data API 尚未啟用。請到 Google Cloud Console 啟用 "Google Analytics Data API" (專案: ${credentials.project_id})`, errorCode: "GA4_API_NOT_ENABLED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
               }
+              persistVerification(false, `Service Account 沒有 GA4 Property ${trimmed} 的讀取權限`);
               return res.json({ success: false, status: "error", message: `Service Account (${credentials.client_email}) 沒有 GA4 Property ${trimmed} 的讀取權限。請到 GA4 管理介面 > Property Access Management 新增此 Service Account 並授予 Viewer 角色`, errorCode: "GA4_PERMISSION_DENIED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
             }
             if (ga4Error.status === "NOT_FOUND" || ga4Error.code === 404) {
+              persistVerification(false, `GA4 Property ID ${trimmed} 不存在`);
               return res.json({ success: false, status: "error", message: `GA4 Property ID ${trimmed} 不存在，請確認 Property ID 是否正確`, errorCode: "GA4_NOT_FOUND", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
             }
             if (ga4Error.status === "INVALID_ARGUMENT" || ga4Error.code === 400) {
+              persistVerification(false, `GA4 API 參數錯誤: ${ga4Error.message}`);
               return res.json({ success: false, status: "error", message: `GA4 API 參數錯誤: ${ga4Error.message}`, errorCode: "GA4_INVALID_ARGUMENT", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
             }
+            persistVerification(false, `GA4 API 錯誤: ${ga4Error.message || ga4Error.status}`);
             return res.json({ success: false, status: "error", message: `GA4 API 錯誤: ${ga4Error.message || ga4Error.status}`, errorCode: "GA4_API_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
           }
+          persistVerification(false, "GA4 API 回傳未預期的格式");
           return res.json({ success: false, status: "error", message: "GA4 API 回傳未預期的格式", errorCode: "GA4_UNKNOWN", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
         } catch (err: any) {
           const errMsg = err?.message ?? String(err);
           const providerErrorMessage = errMsg.slice(0, 500);
           if (errMsg.includes("ENOTFOUND") || errMsg.includes("ECONNREFUSED") || errMsg.includes("network")) {
+            persistVerification(false, "無法連線至 Google Analytics API，請檢查網路連線");
             return res.json({ success: false, status: "error", message: "無法連線至 Google Analytics API，請檢查網路連線", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
           }
           if (errMsg.includes("invalid_grant") || errMsg.includes("Invalid JWT")) {
+            persistVerification(false, "Service Account 憑證無效或已過期，請重新產生金鑰");
             return res.json({ success: false, status: "error", message: "Service Account 憑證無效或已過期，請重新產生金鑰", errorCode: "GA4_INVALID_CRED", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
           }
+          persistVerification(false, `GA4 連線失敗: ${errMsg.slice(0, 200)}`);
           return res.json({ success: false, status: "error", message: `GA4 連線失敗: ${errMsg.slice(0, 200)}`, errorCode: "GA4_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
         }
       }
@@ -1643,14 +1674,24 @@ export async function registerRoutes(
   });
 
   app.get("/api/dashboard/cross-account-summary", requireAuth, (req, res) => {
+    const userId = req.session.userId!;
+    const syncedAccounts = storage.getSyncedAccounts(userId);
     const batch = getBatchFromRequest(req);
+    const metaCount = syncedAccounts.filter((a: SyncedAccount) => a.platform === "meta").length;
+    const ga4Count = syncedAccounts.filter((a: SyncedAccount) => a.platform === "ga4").length;
+    const hasSynced = metaCount > 0 || ga4Count > 0;
     if (!batch || !batch.summary) {
+      const dataStatus = !hasSynced ? "no_sync" : "synced_no_data";
+      const message = !hasSynced
+        ? "尚未同步帳號。請到設定頁綁定 FB/GA4、測試連線成功後點「立即同步帳號」，再回到此頁點「更新資料」。"
+        : "已同步帳號但尚未擷取數據。請點上方「更新資料」按鈕。";
       return res.json({
         hasSummary: false,
-        message: "尚未執行數據分析，請先點擊「更新資料」按鈕",
+        dataStatus,
+        message,
       });
     }
-    res.json({ hasSummary: true, summary: batch.summary });
+    res.json({ hasSummary: true, summary: batch.summary, dataStatus: "has_data" });
   });
 
   app.get("/api/dashboard/account-ranking", requireAuth, (req, res) => {

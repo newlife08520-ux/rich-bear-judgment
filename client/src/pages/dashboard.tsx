@@ -1077,7 +1077,25 @@ function CreativeBlacklistSection({
   );
 }
 
-function EmptyStateCard() {
+function EmptyStateCard({
+  dataStatus,
+  message,
+}: {
+  dataStatus?: "no_sync" | "synced_no_data" | "has_data";
+  message?: string;
+}) {
+  const title =
+    dataStatus === "no_sync"
+      ? "尚未同步帳號"
+      : dataStatus === "synced_no_data"
+        ? "尚未擷取數據"
+        : "尚未執行數據分析";
+  const defaultMessage =
+    dataStatus === "no_sync"
+      ? "請到設定頁綁定 Facebook / GA4、測試連線成功後點「立即同步帳號」，再回到此頁點「更新資料」。"
+      : dataStatus === "synced_no_data"
+        ? "已同步帳號但尚未擷取數據。請點上方「更新資料」按鈕。"
+        : "請先在設定頁面綁定 Facebook 和/或 GA4，然後點擊上方「更新資料」按鈕。";
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <Card className="border-dashed" data-testid="card-empty-state">
@@ -1085,12 +1103,12 @@ function EmptyStateCard() {
           <div className="w-14 h-14 rounded-full bg-muted/60 flex items-center justify-center mx-auto mb-4">
             <BarChart3 className="w-7 h-7 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">尚未執行數據分析</h3>
-          <p className="text-sm text-muted-foreground mb-1">
-            請先在設定頁面綁定 Facebook 和/或 GA4，然後點擊上方「更新資料」按鈕。
-          </p>
+          <h3 className="text-lg font-semibold mb-2">{title}</h3>
+          <p className="text-sm text-muted-foreground mb-1">{message ?? defaultMessage}</p>
           <p className="text-sm text-muted-foreground">
-            系統會自動擷取所有帳號的廣告數據與漏斗數據，執行異常檢測，並產生 AI 戰略摘要。
+            {dataStatus === "no_sync"
+              ? "同步後系統會擷取廣告與漏斗數據、執行異常檢測並產生 AI 戰略摘要。"
+              : "系統會自動擷取所有帳號的廣告數據與漏斗數據，執行異常檢測，並產生 AI 戰略摘要。"}
           </p>
         </CardContent>
       </Card>
@@ -1316,7 +1334,7 @@ export default function DashboardPage() {
   });
   const unassignedTaskCount = workbenchTasks.filter((t: { status: string }) => t.status === "unassigned" || t.status === "assigned").length;
 
-  const { data: summaryData, isLoading: summaryLoading } = useQuery<{ hasSummary: boolean; summary?: CrossAccountSummary }>({
+  const { data: summaryData, isLoading: summaryLoading } = useQuery<{ hasSummary: boolean; summary?: CrossAccountSummary; dataStatus?: "no_sync" | "synced_no_data" | "has_data"; message?: string }>({
     queryKey: ["/api/dashboard/cross-account-summary"],
   });
 
@@ -1952,7 +1970,9 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {!hasSummary && employee.department === "ADMIN" && <EmptyStateCard />}
+        {!hasSummary && employee.department === "ADMIN" && (
+          <EmptyStateCard dataStatus={summaryData?.dataStatus} message={summaryData?.message} />
+        )}
         {(employee.department === "AD" || employee.department === "MARKETING" || employee.department === "DESIGN") &&
           (!actionData || (actionData.productLevel.length === 0 && actionData.creativeLeaderboard.length === 0)) && (
           <Card>

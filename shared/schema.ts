@@ -1495,6 +1495,9 @@ export const promptModeLabels: Record<"A" | "B" | "C" | "D", string> = {
 };
 
 // ========== Settings ==========
+/** 連線驗證狀態：idle=尚未驗證 / success=驗證成功 / error=驗證失敗 */
+export type ConnectionVerificationStatus = "idle" | "success" | "error";
+
 export interface UserSettings {
   userId: string;
   ga4PropertyId: string;
@@ -1511,6 +1514,20 @@ export interface UserSettings {
   outputLength: "summary" | "standard" | "detailed";
   brandTone: "professional" | "direct" | "friendly" | "aggressive";
   analysisBias: "commercial" | "creative" | "conversion" | "brand";
+  // --- 驗證狀態持久化（測試連線後寫入；欄位值變更時應失效）---
+  fbStatus: ConnectionVerificationStatus;
+  gaStatus: ConnectionVerificationStatus;
+  aiStatus: ConnectionVerificationStatus;
+  fbVerifiedAt: string | null;
+  gaVerifiedAt: string | null;
+  aiVerifiedAt: string | null;
+  fbLastError: string | null;
+  gaLastError: string | null;
+  aiLastError: string | null;
+  /** 驗證成功時用的 value fingerprint，用於偵測欄位變更後失效 */
+  fbValidatedValueHash: string | null;
+  gaValidatedValueHash: string | null;
+  aiValidatedValueHash: string | null;
 }
 
 export const settingsSchema = z.object({

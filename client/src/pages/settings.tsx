@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +35,7 @@ import {
   Clock,
   Building2,
   Gauge,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -108,23 +109,40 @@ function StatusLamp({ status }: { status: ConnectionStatus }) {
   );
 }
 
+function buildInitialResultFromSettings(type: "fb" | "ga4" | "ai", settings: UserSettings | undefined): ConnectionResult {
+  if (!settings) return { status: "idle", message: "", checkedAt: null };
+  const statusKey = `${type}Status` as keyof UserSettings;
+  const atKey = `${type}VerifiedAt` as keyof UserSettings;
+  const errKey = `${type}LastError` as keyof UserSettings;
+  const status = (settings[statusKey] as ConnectionStatus) || "idle";
+  const checkedAt = (settings[atKey] as string | null) ?? null;
+  const message = (settings[errKey] as string | null) ?? (status === "success" ? "上次驗證成功" : "");
+  return { status, message: message || "", checkedAt };
+}
+
 function ApiConnectionSection({
   type,
   label,
   getValue,
   showModel,
+  initialResult,
 }: {
   type: string;
   label: string;
   getValue: () => string;
   showModel?: boolean;
+  /** 從後端 settings 載入的驗證狀態（儲存後 refetch 會更新） */
+  initialResult?: ConnectionResult;
 }) {
   const { toast } = useToast();
-  const [result, setResult] = useState<ConnectionResult>({
-    status: "idle",
-    message: "",
-    checkedAt: null,
-  });
+  const [result, setResult] = useState<ConnectionResult>(initialResult ?? { status: "idle", message: "", checkedAt: null });
+
+  // 同步後端持久化的驗證狀態（例如儲存後 refetch、或離開再進來）
+  useEffect(() => {
+    if (initialResult != null && (initialResult.status !== "idle" || initialResult.checkedAt || initialResult.message)) {
+      setResult(initialResult);
+    }
+  }, [initialResult?.status, initialResult?.checkedAt, initialResult?.message]);
 
   const handleTest = async () => {
     const value = getValue();
@@ -375,6 +393,50 @@ function CollapsiblePromptBlock({
         </div>
       )}
     </Card>
+  );
+}
+
+function SyncStatusBlock() {
+  const { data: syncedData } = useQuery<{ accounts: SyncedAccount[] }>({
+    queryKey: ["/api/accounts/synced"],
+  });
+  const { toast } = useToast();
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/accounts/sync", {});
+      return res.json();
+    },
+    onSuccess: (data: { syncedAccounts?: SyncedAccount[] }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/synced"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      const count = data.syncedAccounts?.length ?? 0;
+      toast({ title: "帳號同步完成", description: count > 0 ? `已同步 ${count} 個帳號` : "未設定 FB/GA4 或同步無資料" });
+    },
+    onError: () => toast({ title: "帳號同步失敗", variant: "destructive" }),
+  });
+  const accounts = syncedData?.accounts ?? [];
+  const metaAccounts = accounts.filter((a: SyncedAccount) => a.platform === "meta");
+  const ga4Accounts = accounts.filter((a: SyncedAccount) => a.platform === "ga4");
+  const metaLast = metaAccounts.length > 0 ? metaAccounts.reduce((latest: string, a: SyncedAccount) => (a.lastSyncedAt && a.lastSyncedAt > latest ? a.lastSyncedAt : latest), "") : null;
+  const ga4Last = ga4Accounts.length > 0 ? ga4Accounts.reduce((latest: string, a: SyncedAccount) => (a.lastSyncedAt && a.lastSyncedAt > latest ? a.lastSyncedAt : latest), "") : null;
+  const fmt = (ts: string | null) => ts ? new Date(ts).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "尚未同步";
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex flex-wrap items-center gap-4">
+        <span className="text-muted-foreground">
+          Facebook：已同步 <span className="font-medium text-foreground">{metaAccounts.length}</span> 個廣告帳號
+          {metaLast != null && <span className="ml-1 text-muted-foreground">· 最後同步 {fmt(metaLast)}</span>}
+        </span>
+        <span className="text-muted-foreground">
+          GA4：已同步 <span className="font-medium text-foreground">{ga4Accounts.length}</span> 個 Property
+          {ga4Last != null && <span className="ml-1 text-muted-foreground">· 最後同步 {fmt(ga4Last)}</span>}
+        </span>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={() => syncMutation.mutate()} disabled={syncMutation.isPending} className="gap-1.5">
+        {syncMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+        {syncMutation.isPending ? "同步中..." : "立即同步帳號"}
+      </Button>
+    </div>
   );
 }
 
@@ -890,7 +952,7 @@ export default function SettingsPage() {
                     <div className="space-y-2.5">
                       <Label htmlFor="ga4PropertyId">GA4 Property ID</Label>
                       <Input id="ga4PropertyId" placeholder="例如：123456789" {...form.register("ga4PropertyId")} data-testid="input-ga4-property-id" />
-                      <ApiConnectionSection type="ga4" label="GA4" getValue={() => form.getValues("ga4PropertyId") || ""} />
+                      <ApiConnectionSection type="ga4" label="GA4" getValue={() => form.getValues("ga4PropertyId") || ""} initialResult={buildInitialResultFromSettings("ga4", settings)} />
                     </div>
                     <div className="border-t" />
                     <div className="space-y-2.5">
@@ -901,7 +963,7 @@ export default function SettingsPage() {
                           {showFbToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
                       </div>
-                      <ApiConnectionSection type="fb" label="Facebook" getValue={() => form.getValues("fbAccessToken") || ""} />
+                      <ApiConnectionSection type="fb" label="Facebook" getValue={() => form.getValues("fbAccessToken") || ""} initialResult={buildInitialResultFromSettings("fb", settings)} />
                     </div>
                     <div className="border-t" />
                     <div className="space-y-2.5">
@@ -916,7 +978,11 @@ export default function SettingsPage() {
                         <Cpu className="w-3 h-3" />
                         <span>目前指定模型: <span className="font-semibold text-foreground">{CURRENT_AI_MODEL}</span></span>
                       </div>
-                      <ApiConnectionSection type="ai" label="AI Model" getValue={() => form.getValues("aiApiKey") || ""} showModel />
+                      <ApiConnectionSection type="ai" label="AI Model" getValue={() => form.getValues("aiApiKey") || ""} showModel initialResult={buildInitialResultFromSettings("ai", settings)} />
+                    </div>
+                    <div className="border-t pt-4 mt-4">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">資料同步狀態</p>
+                      <SyncStatusBlock />
                     </div>
                   </CardContent>
                 </Card>
