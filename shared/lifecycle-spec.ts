@@ -47,5 +47,31 @@ export const ROI_LABEL_TO_STAGE: Record<string, LifecycleStage> = {
   FunnelWeak: "死亡池",
   Retired: "死亡池",
   STABLE: "存活池",
-  Winner: "存活池", // 可再細分：存活池 vs 拉升池（依 Scale Readiness / headroom）
+  Winner: "存活池",
 };
+
+/** 待初審：花費極低、尚無足夠資料 */
+export const PENDING_REVIEW_SPEND_MAX = 100;
+
+/**
+ * 依花費、ROI 標籤、Profit Headroom 計算生命週期階段（活動維度）。
+ * 第一次決策點：花費在 [750, 1000] 區間。
+ */
+export function computeLifecycleStage(
+  spend: number,
+  roiLabel: string,
+  profitHeadroom?: number
+): LifecycleStage {
+  if (spend >= FIRST_DECISION_SPEND_MIN && spend <= FIRST_DECISION_SPEND_MAX) return "第一次決策點";
+  if (roiLabel === "Lucky" || roiLabel === "FunnelWeak" || roiLabel === "Retired") return "死亡池";
+  if (roiLabel === "Winner") {
+    if (profitHeadroom != null && profitHeadroom > 1 && spend > FIRST_DECISION_SPEND_MAX) return "拉升池";
+    return "存活池";
+  }
+  if (roiLabel === "STABLE") return "存活池";
+  if (roiLabel === "Underfunded" || roiLabel === "NEEDS_MORE_DATA") {
+    if (spend < PENDING_REVIEW_SPEND_MAX) return "待初審";
+    return "待驗證";
+  }
+  return "待驗證";
+}

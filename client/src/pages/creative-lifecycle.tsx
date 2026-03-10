@@ -10,7 +10,7 @@ import { useLocation } from "wouter";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Wallet, Archive, ListPlus, Filter } from "lucide-react";
+import { TrendingUp, Wallet, Archive, ListPlus, Filter, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,6 +31,28 @@ type LifecycleCardItem = LifecycleItem & {
   qualityScore: number;
   priority?: number;
   baseline_scope?: string;
+  stage?: string;
+  scaleReadinessScore?: number;
+  suggestedAction?: string;
+  suggestedPct?: number | "關閉";
+  whyNotMore?: string;
+  firstReviewVerdict?: string;
+  battleVerdict?: string;
+  forBuyer?: string;
+  forDesign?: string;
+};
+
+type InspirationItem = {
+  productName: string;
+  materialStrategy: string;
+  headlineSnippet: string;
+  spend: number;
+  revenue: number;
+  roas: number;
+  creativeEdge: number;
+  winReason: string;
+  extendDirection: string;
+  designTakeaway: string;
 };
 
 function Column({
@@ -74,6 +96,16 @@ function Column({
     </Card>
   );
 }
+
+const STAGE_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "全部階段" },
+  { value: "待初審", label: "待初審" },
+  { value: "待驗證", label: "待驗證" },
+  { value: "第一次決策點", label: "第一次決策點" },
+  { value: "存活池", label: "存活池" },
+  { value: "拉升池", label: "拉升池" },
+  { value: "死亡池", label: "死亡池" },
+];
 
 const LABEL_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "全部" },
@@ -119,6 +151,7 @@ function getCreativeKeyFromUrl(loc: string): string | null {
 export default function CreativeLifecyclePage() {
   const [location] = useLocation();
   const creativeKeyFromUrl = getCreativeKeyFromUrl(location);
+  const [stageFilter, setStageFilter] = useState("");
   const [labelFilter, setLabelFilter] = useState("");
   const highlightCardRef = useRef<HTMLDivElement | null>(null);
   const { data, isLoading } = useQuery<{
@@ -126,12 +159,20 @@ export default function CreativeLifecyclePage() {
     success: LifecycleItem[];
     underfunded: LifecycleItem[];
     retired: LifecycleItem[];
+    inspirationPool: InspirationItem[];
+    stages: string[];
+    firstDecisionSpendMin?: number;
+    firstDecisionSpendMax?: number;
   }>({
-    queryKey: ["/api/dashboard/creative-lifecycle", labelFilter],
+    queryKey: ["/api/dashboard/creative-lifecycle", stageFilter, labelFilter],
     queryFn: async () => {
-      const url = labelFilter ? `/api/dashboard/creative-lifecycle?label=${encodeURIComponent(labelFilter)}` : "/api/dashboard/creative-lifecycle";
+      const params = new URLSearchParams();
+      if (stageFilter) params.set("stage", stageFilter);
+      if (labelFilter) params.set("label", labelFilter);
+      const qs = params.toString();
+      const url = qs ? `/api/dashboard/creative-lifecycle?${qs}` : "/api/dashboard/creative-lifecycle";
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) return { items: [], success: [], underfunded: [], retired: [] };
+      if (!res.ok) return { items: [], success: [], underfunded: [], retired: [], inspirationPool: [], stages: [] };
       return res.json();
     },
   });
@@ -140,6 +181,9 @@ export default function CreativeLifecyclePage() {
   const success = data?.success ?? [];
   const underfunded = data?.underfunded ?? [];
   const retired = data?.retired ?? [];
+  const inspirationPool = data?.inspirationPool ?? [];
+  const firstDecisionMin = data?.firstDecisionSpendMin ?? 750;
+  const firstDecisionMax = data?.firstDecisionSpendMax ?? 1000;
 
   const displayItems =
     creativeKeyFromUrl && items.length > 0
@@ -208,25 +252,35 @@ export default function CreativeLifecyclePage() {
       <header className="flex flex-wrap items-center gap-3 p-4 border-b shrink-0">
         <SidebarTrigger />
         <div>
-          <h1 className="page-title">素材／新品生命週期看板</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">此頁依 ROI + Funnel Health + Confidence 判斷，標籤含 Winner、Underfunded、Lucky、NeedsMoreData、Stable、FunnelWeak、Retired。</p>
+          <h1 className="page-title">素材生命週期中心 1.0</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">7 階段：待初審 → 待驗證 → 第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）→ 存活池 → 拉升池 → 死亡池 → 靈感池。</p>
         </div>
       </header>
       <div className="flex-1 p-4 md:p-6 space-y-6">
         {/* 全部素材卡片：ROAS、Spend、ATC、Purchase、rate、baseline、confidence、label */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
-            <CardTitle className="text-base">素材清單（ROI 漏斗，依 priority 排序）</CardTitle>
-            <div className="flex items-center gap-2">
+            <CardTitle className="text-base">素材清單（7 階段 + 完整判決欄位）</CardTitle>
+            <div className="flex items-center gap-2 flex-wrap">
               {luckyCount > 0 && (
                 <Button size="sm" variant="secondary" onClick={() => createLuckyTasksMutation.mutate()} disabled={createLuckyTasksMutation.isPending}>
                   Lucky 一鍵生成補量任務 ({luckyCount})
                 </Button>
               )}
-              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Select value={stageFilter || "all"} onValueChange={(v) => setStageFilter(v === "all" ? "" : v)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="依階段" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAGE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value || "all"} value={o.value || "all"}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={labelFilter || "all"} onValueChange={(v) => setLabelFilter(v === "all" ? "" : v)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="依 label 篩選" />
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="依 ROI label" />
                 </SelectTrigger>
                 <SelectContent>
                   {LABEL_OPTIONS.map((o) => (
@@ -267,25 +321,35 @@ export default function CreativeLifecyclePage() {
                       ref={i.id === highlightId ? highlightCardRef : undefined}
                       className={cn("border bg-card", i.id === highlightId && "ring-2 ring-primary bg-primary/5")}
                     >
-                    <CardContent className="p-3 text-sm">
+                    <CardContent className="p-3 text-sm space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-medium truncate" title={i.name}>{i.name}</span>
-                        <LabelBadge label={i.label} />
+                        <div className="flex items-center gap-1 shrink-0">
+                          {i.stage && <Badge variant="outline" className="text-[10px]">{i.stage}</Badge>}
+                          <LabelBadge label={i.label} />
+                        </div>
                       </div>
-                      <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                      {i.stage === "第一次決策點" && (
+                        <div className="rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-2 text-xs">
+                          <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）</p>
+                          <p>建議：<strong>{i.suggestedAction}</strong> {i.suggestedPct === "關閉" ? "關閉" : typeof i.suggestedPct === "number" ? (i.suggestedPct > 0 ? `+${i.suggestedPct}%` : `${i.suggestedPct}%`) : ""}</p>
+                          <p className="text-muted-foreground mt-0.5">可選：開 / 拉高 / 維持 / 關閉 / 進延伸池</p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                         <span>ROAS {i.roas.toFixed(2)}</span>
                         <span>Spend NT${i.spend.toLocaleString()}</span>
+                        {i.scaleReadinessScore != null && <span className="col-span-2">Scale Readiness {i.scaleReadinessScore}</span>}
+                        {i.suggestedAction != null && <span className="col-span-2">建議動作 {i.suggestedAction} {i.suggestedPct != null && i.suggestedPct !== "關閉" ? `${i.suggestedPct}%` : i.suggestedPct === "關閉" ? "關閉" : ""}</span>}
                         <span>ATC {i.atc}</span>
                         <span>Purchase {i.purchase}</span>
-                        <span>atc_rate {(i.atc_rate * 100).toFixed(2)}%</span>
-                        <span>purchase_rate {(i.purchase_rate * 100).toFixed(2)}%</span>
-                        <span>baseline ATC {(i.atcRateBaseline * 100).toFixed(2)}%</span>
-                        <span>baseline 購買 {(i.purchaseRateBaseline * 100).toFixed(2)}%</span>
-                        <span className="col-span-2">confidence {i.confidenceLevel} · qualityScore {i.qualityScore}</span>
-                        {i.baseline_scope && <span className="col-span-2">baseline_scope {i.baseline_scope}</span>}
-                        {i.priority != null && <span className="col-span-2">priority {i.priority.toFixed(0)}</span>}
                       </div>
-                      {i.reason && <p className="mt-1.5 text-xs border-t pt-1.5 text-muted-foreground">{i.reason}</p>}
+                      {i.whyNotMore && <p className="text-xs border-t pt-1.5 text-muted-foreground"><span className="font-medium">為什麼不是更大或更小：</span>{i.whyNotMore}</p>}
+                      {i.forBuyer && <p className="text-xs border-t pt-1.5 text-muted-foreground"><span className="font-medium">給投手：</span>{i.forBuyer}</p>}
+                      {i.forDesign && <p className="text-xs border-t pt-1.5 text-muted-foreground"><span className="font-medium">給設計：</span>{i.forDesign}</p>}
+                      {i.firstReviewVerdict && i.firstReviewVerdict !== "—" && <p className="text-xs text-muted-foreground">初審判決：{i.firstReviewVerdict}</p>}
+                      {i.battleVerdict && <p className="text-xs text-muted-foreground">實戰判決：{i.battleVerdict}</p>}
+                      {i.reason && <p className="text-xs border-t pt-1.5 text-muted-foreground">{i.reason}</p>}
                     </CardContent>
                   </Card>
                   ))}
@@ -294,6 +358,32 @@ export default function CreativeLifecyclePage() {
             )}
           </CardContent>
         </Card>
+
+        {!isLoading && inspirationPool.length > 0 && (
+          <Card className="border-violet-200 dark:border-violet-800">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-violet-600" />
+                靈感池（設計可用的延伸素材）
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">高 Creative Edge、漏斗不差、花費仍低，供設計與投手優先延伸。</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4">
+                {inspirationPool.slice(0, 15).map((c, idx) => (
+                  <li key={idx} className="rounded-lg border p-3 text-sm space-y-1.5">
+                    <div className="font-medium">{c.productName} · {c.materialStrategy}</div>
+                    <div className="text-xs text-muted-foreground">Spend NT${c.spend.toLocaleString()} · ROAS {c.roas.toFixed(2)} · Edge {c.creativeEdge.toFixed(2)}</div>
+                    <p className="text-xs"><span className="font-medium">贏在哪：</span>{c.winReason}</p>
+                    <p className="text-xs"><span className="font-medium">建議延伸：</span>{c.extendDirection}</p>
+                    <p className="text-xs"><span className="font-medium">設計可借：</span>{c.designTakeaway}</p>
+                  </li>
+                ))}
+                {inspirationPool.length > 15 && <li className="text-muted-foreground text-sm">…共 {inspirationPool.length} 筆</li>}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -93,6 +93,7 @@ import {
   type RoiFunnelThresholds,
   type LifecycleLabel,
 } from "@shared/roi-funnel-engine";
+import { computeLifecycleStage, FIRST_DECISION_SPEND_MIN, FIRST_DECISION_SPEND_MAX } from "@shared/lifecycle-spec";
 
 declare module "express-session" {
   interface SessionData {
@@ -1557,18 +1558,33 @@ export async function registerRoutes(
     res.json({ anomalies: batch.summary.anomalies, categories });
   });
 
-  /** P3-3 素材/新品生命週期看板：ROI-first + Funnel Health + Confidence；回傳 label / qualityScore / confidenceLevel / evidence */
+  /** P3-3 素材生命週期中心 1.0：7 階段、第一次決策點 750–1000、完整判決欄位、靈感池 */
   app.get("/api/dashboard/creative-lifecycle", requireAuth, async (req, res) => {
     const batch = getBatchFromRequest(req);
     const labelFilter = typeof req.query.label === "string" ? req.query.label : undefined;
+    const stageFilter = typeof req.query.stage === "string" ? req.query.stage : undefined;
     if (!batch || !batch.campaignMetrics?.length) {
-      return res.json({ items: [], success: [], underfunded: [], retired: [] });
+      return res.json({
+        items: [],
+        success: [],
+        underfunded: [],
+        retired: [],
+        inspirationPool: [],
+        stages: ["待初審", "待驗證", "第一次決策點", "存活池", "拉升池", "死亡池", "靈感池"],
+        firstDecisionSpendMin: FIRST_DECISION_SPEND_MIN,
+        firstDecisionSpendMax: FIRST_DECISION_SPEND_MAX,
+      });
     }
     const overrides = await getWorkbenchMappingOverrides();
     const resolveProduct = (row: { campaignId: string; campaignName: string }) =>
       resolveProductWithOverrides(row, overrides, (name) => parseCampaignNameToTags(name)?.productName ?? null);
 
-    const campaigns = (batch.campaignMetrics as CampaignMetrics[]).map((c) => ({
+    const campaignMetrics = batch.campaignMetrics as CampaignMetrics[];
+    const campaignById = new Map(campaignMetrics.map((c) => [c.campaignId, c]));
+    const totalAccountSpend = campaignMetrics.reduce((s, c) => s + c.spend, 0);
+    const totalAccountRevenue = campaignMetrics.reduce((s, c) => s + c.revenue, 0);
+
+    const campaigns = campaignMetrics.map((c) => ({
       campaignId: c.campaignId,
       campaignName: c.campaignName,
       accountId: c.accountId,
@@ -1610,15 +1626,48 @@ export async function registerRoutes(
       reason: string;
       priority: number;
       baseline_scope?: string;
+      stage: string;
+      scaleReadinessScore: number;
+      suggestedAction: string;
+      suggestedPct: number | "關閉";
+      whyNotMore: string;
+      firstReviewVerdict: string;
+      battleVerdict: string;
+      forBuyer: string;
+      forDesign: string;
     }> = [];
 
     for (const { row, productName } of pairs) {
+      const fullCampaign = campaignById.get(row.campaignId);
       const { baseline, scope } = getBaselineFor(productName, row.accountId, baselineResult);
       const result = computeRoiFunnel(row, baseline, thresholds, { baselineScope: scope });
       const action = getSuggestedAction(result.label, result.evidence, thresholds);
       const reason = [result.evidence.funnelPass ? "漏斗健康" : "漏斗未達標", result.evidence.gateClicks ? "clicks 達門檻" : "clicks 不足", action].filter(Boolean).join("；");
       const impactTwd = row.revenue || row.spend;
       const priority = impactTwd * confidenceMultiplier(result.confidenceLevel) * (result.qualityScore / 100);
+
+      const rule = getProductProfitRule(productName ?? "") ?? undefined;
+      const input = {
+        spend: row.spend,
+        revenue: row.revenue ?? 0,
+        roas: row.roas,
+        addToCart: row.addToCart ?? 0,
+        conversions: row.purchases,
+        clicks: row.clicks ?? 0,
+        impressions: 0,
+        multiWindow: fullCampaign?.multiWindow ?? undefined,
+        totalAccountSpend,
+        totalAccountRevenue,
+        rule,
+      };
+      const { score, breakdown } = computeScaleReadiness(input);
+      const rec = getScaleBudgetRecommendation(input);
+      const stage = computeLifecycleStage(row.spend, result.label, breakdown.profitHeadroom);
+
+      const forBuyer = [rec.reason, rec.whyNotMore].filter(Boolean).join("；");
+      const forDesign = breakdown.funnelReadiness >= 60
+        ? "漏斗健康，可考慮延伸主視覺與 CTA 結構"
+        : "建議先觀察轉換與 ATC 再延伸";
 
       const item = {
         id: row.campaignId,
@@ -1639,8 +1688,18 @@ export async function registerRoutes(
         reason,
         priority,
         baseline_scope: scope,
+        stage,
+        scaleReadinessScore: score,
+        suggestedAction: rec.action,
+        suggestedPct: rec.suggestedPct,
+        whyNotMore: rec.whyNotMore,
+        firstReviewVerdict: "—",
+        battleVerdict: reason,
+        forBuyer,
+        forDesign,
       };
       if (labelFilter && result.label !== labelFilter) continue;
+      if (stageFilter && stage !== stageFilter) continue;
       items.push(item);
 
       if (result.label === "Winner") success.push({ id: item.id, name: item.name, roas: item.roas, spend: item.spend, reason: item.reason });
@@ -1649,7 +1708,60 @@ export async function registerRoutes(
     }
 
     items.sort((a, b) => b.priority - a.priority);
-    res.json({ items, success, underfunded, retired });
+
+    const rowsForCreative = campaignMetrics.map((c) => ({
+      campaignId: c.campaignId,
+      campaignName: c.campaignName,
+      accountId: c.accountId,
+      spend: c.spend,
+      revenue: c.revenue,
+      roas: c.roas,
+      conversions: c.conversions,
+      clicks: c.clicks ?? 0,
+      impressions: c.impressions ?? 0,
+    }));
+    const productLevel = aggregateByProductWithResolver(rowsForCreative, resolveProduct, undefined);
+    const creativeRaw = aggregateByCreativeTagsWithResolver(rowsForCreative, resolveProduct, undefined);
+    const productAvgRoas = new Map<string, number>();
+    for (const p of productLevel) productAvgRoas.set(p.productName, p.spend > 0 ? p.revenue / p.spend : 0);
+    const spendThreshold = totalAccountSpend * 0.2;
+    const inspirationPool = creativeRaw
+      .filter((c) => {
+        const avgRoas = productAvgRoas.get(c.productName) ?? 0;
+        const edge = creativeEdge(c.roas, avgRoas);
+        return edge >= 1.2 && c.conversions > 0 && c.spend >= 10 && (c.spend <= spendThreshold || c.spend < 500);
+      })
+      .map((c) => {
+        const avgRoas = productAvgRoas.get(c.productName) ?? 0;
+        const edge = creativeEdge(c.roas, avgRoas);
+        const winReason = `Creative Edge ${edge.toFixed(2)}，ROAS ${c.roas.toFixed(2)} 高於商品平均，轉換 ${c.conversions}。`;
+        const extendDirection = "建議延伸相似版位與受眾，可小幅加預算驗證。";
+        const designTakeaway = "可借：主視覺結構與 CTA 節奏，可複製到同商品其他素材。";
+        return {
+          productName: c.productName,
+          materialStrategy: c.materialStrategy,
+          headlineSnippet: c.headlineSnippet,
+          spend: c.spend,
+          revenue: c.revenue,
+          roas: c.roas,
+          creativeEdge: edge,
+          winReason,
+          extendDirection,
+          designTakeaway,
+        };
+      })
+      .sort((a, b) => b.creativeEdge - a.creativeEdge);
+
+    res.json({
+      items,
+      success,
+      underfunded,
+      retired,
+      inspirationPool,
+      stages: ["待初審", "待驗證", "第一次決策點", "存活池", "拉升池", "死亡池", "靈感池"],
+      firstDecisionSpendMin: FIRST_DECISION_SPEND_MIN,
+      firstDecisionSpendMax: FIRST_DECISION_SPEND_MAX,
+    });
   });
 
   /** P4-1 新品/素材成功率成績單：按人、按商品；含 luckyRate、funnelPassRate、avgQualityScore */
@@ -2262,7 +2374,10 @@ export async function registerRoutes(
       return revShare >= 0.15 && p.roas >= 1;
     }).sort((a, b) => b.revenue - a.revenue);
 
-    const tableRescue = budgetActionTable.filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
+    const tableRescue = budgetActionTable
+      .filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉")
+      .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }))
+      .sort((a, b) => b.spend - a.spend);
     const tableScaleUp = budgetActionTable.filter((r) => r.suggestedAction === "可加碼" || r.suggestedAction === "高潛延伸").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
     const tableNoMisjudge = budgetActionTable.filter((r) => r.suggestedAction === "維持").map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
     const creativeWithEdge = creativeLeaderboard as Array<{ productName: string; spend: number; revenue: number; roas: number; conversions: number; scaleReadinessScore?: number; funnelReadiness?: number; creativeEdge?: number; [k: string]: unknown }>;
