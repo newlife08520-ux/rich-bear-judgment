@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,25 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { settingsSchema, type SettingsInput, type UserSettings, type RefreshStatus, type SyncedAccount } from "@shared/schema";
 
 const TOKEN_WARNING_THRESHOLD = 8000;
+
+/** 送出前補齊 enum 預設值，避免 undefined 導致後端 schema 或舊資料造成 400 */
+function normalizeSettingsPayload(data: Partial<SettingsInput>): SettingsInput {
+  return {
+    ga4PropertyId: data.ga4PropertyId ?? "",
+    fbAccessToken: data.fbAccessToken ?? "",
+    aiApiKey: data.aiApiKey ?? "",
+    systemPrompt: data.systemPrompt ?? "",
+    coreMasterPrompt: data.coreMasterPrompt ?? "",
+    modeAPrompt: data.modeAPrompt ?? "",
+    modeBPrompt: data.modeBPrompt ?? "",
+    modeCPrompt: data.modeCPrompt ?? "",
+    modeDPrompt: data.modeDPrompt ?? "",
+    severity: (data.severity && ["strict", "moderate", "lenient"].includes(data.severity)) ? data.severity : "moderate",
+    outputLength: (data.outputLength && ["summary", "standard", "detailed"].includes(data.outputLength)) ? data.outputLength : "standard",
+    brandTone: (data.brandTone && ["professional", "direct", "friendly", "aggressive"].includes(data.brandTone)) ? data.brandTone : "professional",
+    analysisBias: (data.analysisBias && ["commercial", "creative", "conversion", "brand"].includes(data.analysisBias)) ? data.analysisBias : "conversion",
+  };
+}
 
 function estimateTokens(text: string): number {
   if (!text) return 0;
@@ -616,7 +635,8 @@ export default function SettingsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: SettingsInput) => {
-      const res = await apiRequest("PUT", "/api/settings", data);
+      const payload = normalizeSettingsPayload(data);
+      const res = await apiRequest("PUT", "/api/settings", payload);
       return res.json();
     },
     onSuccess: () => {
@@ -624,14 +644,25 @@ export default function SettingsPage() {
       toast({ title: "儲存成功", description: "所有設定已更新" });
       setShowPostSaveGuide(true);
     },
-    onError: () => {
-      toast({ title: "儲存失敗", description: "請稍後再試", variant: "destructive" });
+    onError: (err: Error) => {
+      const msg = err?.message ?? "請稍後再試";
+      toast({ title: "儲存失敗", description: msg, variant: "destructive" });
     },
   });
 
   const onSave = (data: SettingsInput) => {
     saveMutation.mutate(data);
   };
+
+  const apiAutoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleApiFieldBlur = useCallback(() => {
+    if (apiAutoSaveTimerRef.current) clearTimeout(apiAutoSaveTimerRef.current);
+    apiAutoSaveTimerRef.current = setTimeout(() => {
+      apiAutoSaveTimerRef.current = null;
+      const values = form.getValues();
+      saveMutation.mutate(values);
+    }, 400);
+  }, [form, saveMutation]);
 
   const systemPromptFileRef = useRef<HTMLInputElement>(null);
   const handleSystemPromptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -949,18 +980,19 @@ export default function SettingsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">API 綁定設定</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">變更後離開欄位會自動儲存，無需手動按「儲存所有設定」</p>
                   </CardHeader>
                   <CardContent className="space-y-6" data-testid="form-api-settings">
                     <div className="space-y-2.5">
                       <Label htmlFor="ga4PropertyId">GA4 Property ID</Label>
-                      <Input id="ga4PropertyId" placeholder="例如：123456789" {...form.register("ga4PropertyId")} data-testid="input-ga4-property-id" />
+                      <Input id="ga4PropertyId" placeholder="例如：123456789" {...form.register("ga4PropertyId", { onBlur: handleApiFieldBlur })} data-testid="input-ga4-property-id" />
                       <ApiConnectionSection type="ga4" label="GA4" getValue={() => form.getValues("ga4PropertyId") || ""} initialResult={buildInitialResultFromSettings("ga4", settings)} />
                     </div>
                     <div className="border-t" />
                     <div className="space-y-2.5">
                       <Label htmlFor="fbAccessToken">FB Access Token</Label>
                       <div className="relative">
-                        <Input id="fbAccessToken" type={showFbToken ? "text" : "password"} placeholder="輸入 Facebook API 存取權杖" {...form.register("fbAccessToken")} data-testid="input-fb-access-token" />
+                        <Input id="fbAccessToken" type={showFbToken ? "text" : "password"} placeholder="輸入 Facebook API 存取權杖" {...form.register("fbAccessToken", { onBlur: handleApiFieldBlur })} data-testid="input-fb-access-token" />
                         <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0" onClick={() => setShowFbToken(!showFbToken)} data-testid="button-toggle-fb-token">
                           {showFbToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
@@ -971,7 +1003,7 @@ export default function SettingsPage() {
                     <div className="space-y-2.5">
                       <Label htmlFor="aiApiKey">AI Model API Key</Label>
                       <div className="relative">
-                        <Input id="aiApiKey" type={showAiKey ? "text" : "password"} placeholder="輸入 AI 模型 API 金鑰" {...form.register("aiApiKey")} data-testid="input-ai-api-key" />
+                        <Input id="aiApiKey" type={showAiKey ? "text" : "password"} placeholder="輸入 AI 模型 API 金鑰" {...form.register("aiApiKey", { onBlur: handleApiFieldBlur })} data-testid="input-ai-api-key" />
                         <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0" onClick={() => setShowAiKey(!showAiKey)} data-testid="button-toggle-ai-key">
                           {showAiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>

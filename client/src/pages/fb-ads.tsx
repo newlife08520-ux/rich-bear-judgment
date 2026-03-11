@@ -2056,6 +2056,21 @@ export default function FbAdsPage() {
       <main className="min-h-full p-4 md:p-6 space-y-6 page-container-fluid">
         <OperationalSummarySection data={overview} isLoading={overviewLoading} />
 
+        {!directorLoading && !directorSummary && (
+          <Card className="border-dashed border-primary/30 bg-primary/5">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-2">FB 帳號分析 — 使用步驟</h3>
+              <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
+                <li>在<strong className="text-foreground">設定中心</strong>綁定 FB Access Token（離開欄位會自動儲存），並點「立即同步帳號」。</li>
+                <li>在上方選擇要分析的廣告帳號後，點<strong className="text-foreground">「更新資料」</strong>取得廣告與素材數據。</li>
+                <li>若仍無資料，請至設定中心檢查 FB 連線與權限。</li>
+              </ol>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/settings">前往設定中心</a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         <DirectorSummarySection data={directorSummary} isLoading={directorLoading} />
 
         <HighRiskAccountsSection />

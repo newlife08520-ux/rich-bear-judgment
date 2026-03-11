@@ -304,7 +304,14 @@ export class MemStorage implements IStorage {
     const settings = loadJsonFile<Record<string, UserSettings>>(SETTINGS_FILE, {});
     for (const [userId, s] of Object.entries(settings)) {
       const withSystemPrompt = { ...s, systemPrompt: (s as any).systemPrompt ?? "" };
-      this.settingsStore.set(userId, withVerificationDefaults({ ...withSystemPrompt, userId }) as UserSettings);
+      const withEnums = {
+        ...withSystemPrompt,
+        severity: (withSystemPrompt as any).severity ?? "moderate",
+        outputLength: (withSystemPrompt as any).outputLength ?? "standard",
+        brandTone: (withSystemPrompt as any).brandTone ?? "professional",
+        analysisBias: (withSystemPrompt as any).analysisBias ?? "conversion",
+      };
+      this.settingsStore.set(userId, withVerificationDefaults({ ...withEnums, userId }) as UserSettings);
     }
 
     const reviewSessions = loadJsonFile<ReviewSession[]>(REVIEW_SESSIONS_FILE, []);
@@ -429,23 +436,33 @@ export class MemStorage implements IStorage {
 
   getSettings(userId: string): UserSettings {
     const existing = this.settingsStore.get(userId);
-    if (existing) return existing;
-    return withVerificationDefaults({
+    if (!existing) {
+      return withVerificationDefaults({
+        userId,
+        ga4PropertyId: "",
+        fbAccessToken: "",
+        aiApiKey: "",
+        systemPrompt: "",
+        coreMasterPrompt: "你是「AI 行銷審判官」，一位擁有 15 年實戰經驗的資深行銷策略總監。你的判斷標準嚴格但公正，風格直接但有建設性。你不會給出模糊的建議，每一條反饋都必須具體、可執行、有數據支撐。你的目標是幫助用戶提升行銷效能，而不是讓他們感覺良好。\n\n評分標準：普通素材通常在 30-55 分之間，70 分以上代表真正優秀。當評分低於 40 分時，語氣應更加直接且帶有急迫感。",
+        modeAPrompt: "【素材煉金術模式】\n你正在審判一份行銷素材（圖片、影片、海報、Reel 等）。\n\n重點判斷維度：\n1. 鉤子強度 - 前 3 秒是否能抓住注意力\n2. 情緒張力 - 是否能引發目標受眾的情感共鳴\n3. 視覺記憶 - 畫面是否有記憶點，能否在滑動中被記住\n4. 轉換驅動 - 是否有明確的行動引導\n5. CTA 清晰度 - 行動呼籲是否明確、有力、可執行",
+        modeBPrompt: "【轉單說服力模式】\n你正在審判一個銷售頁面或著陸頁。\n\n重點判斷維度：\n1. 說服流程 - 頁面是否按照「痛點→解方→證據→行動」的邏輯展開\n2. 信任信號 - 是否有足夠的社會認同、權威背書、客戶評價\n3. 價格支撐 - 價格呈現是否有價值拆解、比較基準\n4. 掉單風險 - 結帳流程是否過長、行動端體驗是否良好\n5. 行動裝置體驗 - 手機版是否好用，CTA 是否在拇指熱區",
+        modeCPrompt: "【廣告投放判決模式】\n你正在審判一組 FB/Meta 廣告投放數據。\n\n重點判斷維度：\n1. 素材健康度 - CTR 是否達標，素材是否有吸引力\n2. 受眾匹配度 - 投放受眾是否正確，是否有錯位\n3. 疲勞度 - Frequency 是否過高，素材是否需要輪替\n4. 預算效率 - CPC/CPM 是否合理，ROAS 是否達標\n5. 擴量潛力 - 目前數據是否支持增加預算",
+        modeDPrompt: "【漏斗斷點審判模式】\n你正在審判一組 GA4 轉換漏斗數據。\n\n重點判斷維度：\n1. 著陸頁效率 - 進站後是否有效引導到下一步\n2. 產品頁轉換 - 瀏覽到加入購物車的比例是否合理\n3. 購物車放棄 - 放棄率是否異常，原因分析\n4. 結帳摩擦 - 結帳流程是否有阻力\n5. 整體漏斗健康 - 各階段轉換率是否符合業界標準",
+        severity: "moderate",
+        outputLength: "standard",
+        brandTone: "professional",
+        analysisBias: "conversion",
+      });
+    }
+    const withEnums = {
+      ...existing,
       userId,
-      ga4PropertyId: "",
-      fbAccessToken: "",
-      aiApiKey: "",
-      systemPrompt: "",
-      coreMasterPrompt: "你是「AI 行銷審判官」，一位擁有 15 年實戰經驗的資深行銷策略總監。你的判斷標準嚴格但公正，風格直接但有建設性。你不會給出模糊的建議，每一條反饋都必須具體、可執行、有數據支撐。你的目標是幫助用戶提升行銷效能，而不是讓他們感覺良好。\n\n評分標準：普通素材通常在 30-55 分之間，70 分以上代表真正優秀。當評分低於 40 分時，語氣應更加直接且帶有急迫感。",
-      modeAPrompt: "【素材煉金術模式】\n你正在審判一份行銷素材（圖片、影片、海報、Reel 等）。\n\n重點判斷維度：\n1. 鉤子強度 - 前 3 秒是否能抓住注意力\n2. 情緒張力 - 是否能引發目標受眾的情感共鳴\n3. 視覺記憶 - 畫面是否有記憶點，能否在滑動中被記住\n4. 轉換驅動 - 是否有明確的行動引導\n5. CTA 清晰度 - 行動呼籲是否明確、有力、可執行",
-      modeBPrompt: "【轉單說服力模式】\n你正在審判一個銷售頁面或著陸頁。\n\n重點判斷維度：\n1. 說服流程 - 頁面是否按照「痛點→解方→證據→行動」的邏輯展開\n2. 信任信號 - 是否有足夠的社會認同、權威背書、客戶評價\n3. 價格支撐 - 價格呈現是否有價值拆解、比較基準\n4. 掉單風險 - 結帳流程是否過長、行動端體驗是否良好\n5. 行動裝置體驗 - 手機版是否好用，CTA 是否在拇指熱區",
-      modeCPrompt: "【廣告投放判決模式】\n你正在審判一組 FB/Meta 廣告投放數據。\n\n重點判斷維度：\n1. 素材健康度 - CTR 是否達標，素材是否有吸引力\n2. 受眾匹配度 - 投放受眾是否正確，是否有錯位\n3. 疲勞度 - Frequency 是否過高，素材是否需要輪替\n4. 預算效率 - CPC/CPM 是否合理，ROAS 是否達標\n5. 擴量潛力 - 目前數據是否支持增加預算",
-      modeDPrompt: "【漏斗斷點審判模式】\n你正在審判一組 GA4 轉換漏斗數據。\n\n重點判斷維度：\n1. 著陸頁效率 - 進站後是否有效引導到下一步\n2. 產品頁轉換 - 瀏覽到加入購物車的比例是否合理\n3. 購物車放棄 - 放棄率是否異常，原因分析\n4. 結帳摩擦 - 結帳流程是否有阻力\n5. 整體漏斗健康 - 各階段轉換率是否符合業界標準",
-      severity: "moderate",
-      outputLength: "standard",
-      brandTone: "professional",
-      analysisBias: "conversion",
-    });
+      severity: (existing.severity ?? "moderate") as UserSettings["severity"],
+      outputLength: (existing.outputLength ?? "standard") as UserSettings["outputLength"],
+      brandTone: (existing.brandTone ?? "professional") as UserSettings["brandTone"],
+      analysisBias: (existing.analysisBias ?? "conversion") as UserSettings["analysisBias"],
+    };
+    return withVerificationDefaults(withEnums) as UserSettings;
   }
 
   saveSettings(userId: string, input: SettingsInput): UserSettings {

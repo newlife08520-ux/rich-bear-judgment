@@ -1119,7 +1119,9 @@ export async function registerRoutes(
   app.put("/api/settings", requireAuth, (req, res) => {
     const result = settingsSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "設定資料格式有誤" });
+      const errPayload = { message: "設定資料格式有誤", errors: result.error.flatten() };
+      console.error("[PUT /api/settings] validation failed", JSON.stringify(result.error.flatten(), null, 2));
+      return res.status(400).json(errPayload);
     }
     const settings = storage.saveSettings(req.session.userId!, result.data);
     res.json(settings);

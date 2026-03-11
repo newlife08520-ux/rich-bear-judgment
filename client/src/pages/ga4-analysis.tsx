@@ -758,7 +758,7 @@ export default function GA4AnalysisPage() {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">GA4 頁面分析 — 使用步驟</h3>
               <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
-                <li>確認已在<strong className="text-foreground">設定中心</strong>串接 GA4 Property。</li>
+                <li>在<strong className="text-foreground">設定中心</strong>串接 GA4 Property（離開欄位會自動儲存）。</li>
                 <li>在上方選擇 GA4 資產後，點<strong className="text-foreground">「更新資料」</strong>取得最新漏斗與頁面數據。</li>
                 <li>若仍無資料，請至<strong className="text-foreground">設定中心</strong>檢查 GA4 連線與權限。</li>
               </ol>
