@@ -53,11 +53,20 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { AssetThumbnailImg, toAbsoluteUploadUrl } from "@/components/AssetThumbnailImg";
 import { generateSOPNames } from "@shared/auto-naming";
 import { appendUtmToLandingUrl } from "@shared/utm-inject";
 import type { AssetAspectRatio } from "@shared/schema";
+
+/** Campaign 目標 → 活動目標前綴（SOP 命名用） */
+const OBJECTIVE_TO_PREFIX: Record<string, string> = {
+  轉換: "轉換次數(原始)",
+  觸及: "觸及人數(原始)",
+  互動: "互動(原始)",
+  品牌知名度: "品牌知名度(原始)",
+  訊息: "訊息(原始)",
+};
 
 /** Meta 常用 CTA，預設「來去逛逛」；送出時未填則自動帶入來去逛逛 */
 const META_CTA_OPTIONS = [
@@ -181,6 +190,7 @@ type FormState = {
   adName: string;
   budgetDaily: string;
   budgetTotal: string;
+  scheduleType: "immediate" | "custom";
   scheduleStart: string;
   scheduleEnd: string;
   audienceStrategy: AudienceStrategy;
@@ -211,6 +221,7 @@ const emptyForm: FormState = {
   adName: "",
   budgetDaily: "",
   budgetTotal: "",
+  scheduleType: "immediate",
   scheduleStart: "",
   scheduleEnd: "",
   audienceStrategy: "broad",
@@ -241,6 +252,7 @@ function draftToForm(d: PublishDraft): FormState {
     adName: d.adName,
     budgetDaily: d.budgetDaily != null ? String(d.budgetDaily) : "",
     budgetTotal: d.budgetTotal != null ? String(d.budgetTotal) : "",
+    scheduleType: (d.scheduleStart ?? d.scheduleEnd) ? "custom" : "immediate",
     scheduleStart: d.scheduleStart ?? "",
     scheduleEnd: d.scheduleEnd ?? "",
     audienceStrategy: d.audienceStrategy,
@@ -262,8 +274,8 @@ function draftToForm(d: PublishDraft): FormState {
 }
 
 function formToBody(f: FormState): object {
-  const budgetDaily = f.budgetDaily.trim() ? Number(f.budgetDaily) : undefined;
-  const budgetTotal = f.budgetTotal.trim() ? Number(f.budgetTotal) : undefined;
+  const budgetDaily = (f.budgetDaily ?? "").trim() && f.budgetDaily !== "0" ? Number(f.budgetDaily) : undefined;
+  const budgetTotal = (f.budgetTotal ?? "").trim() && f.budgetTotal !== "0" ? Number(f.budgetTotal) : undefined;
   let ctaValue = (f.cta ?? "").trim() || "來去逛逛";
   if (ctaValue && !META_CTA_OPTIONS.includes(ctaValue)) ctaValue = "來去逛逛";
   const landingRaw = f.landingPageUrl.trim() || undefined;
@@ -284,8 +296,8 @@ function formToBody(f: FormState): object {
     adName: f.adName.trim(),
     budgetDaily,
     budgetTotal,
-    scheduleStart: f.scheduleStart.trim() || undefined,
-    scheduleEnd: f.scheduleEnd.trim() || undefined,
+    scheduleStart: f.scheduleType === "custom" ? (f.scheduleStart.trim() || undefined) : undefined,
+    scheduleEnd: f.scheduleType === "custom" ? (f.scheduleEnd.trim() || undefined) : undefined,
     audienceStrategy: f.audienceStrategy,
     placementStrategy: f.placementStrategy,
     assetPackageId: f.assetPackageId.trim() || undefined,
@@ -546,6 +558,40 @@ export default function PublishPlaceholderPage() {
     setWizardStep(1);
     setFormOpen(true);
   };
+
+  /** 選好素材組後自動帶入 Campaign / Ad Set / Ad 名稱（SOP 公式） */
+  useEffect(() => {
+    if (form.selectedVersionIds.length === 0 || batchGroups.length === 0) return;
+    const selectedGroup = batchGroups.find(
+      (g) => g.versionIds.length === form.selectedVersionIds.length && g.versionIds.every((id) => form.selectedVersionIds.includes(id))
+    );
+    if (!selectedGroup) return;
+    const productName = (form.productName ?? "").trim() || selectedPackage?.brandProductName?.trim() || selectedPackage?.name?.trim() || "素材";
+    const materialStrategy = (form.materialStrategy ?? "").trim() || "素材";
+    const headlineSnippet = (form.headlineSnippet ?? "").trim() || (form.headline ?? "").trim().slice(0, 20) || "文案";
+    const objectivePrefix = OBJECTIVE_TO_PREFIX[form.campaignObjective] || form.objectivePrefix || "轉換次數(原始)";
+    const audienceCode = audienceStrategyLabels[form.audienceStrategy] || "廣泛";
+    const now = new Date();
+    const dateMMDD = `${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const validRatios: ReadonlyArray<"9:16" | "4:5" | "1:1" | "16:9"> = ["9:16", "4:5", "1:1", "16:9"];
+    const aspectRatiosInGroup = selectedGroup.ratios.filter((r): r is "9:16" | "4:5" | "1:1" | "16:9" => validRatios.includes(r as "9:16" | "4:5" | "1:1" | "16:9"));
+    const names = generateSOPNames({
+      objectivePrefix,
+      productName,
+      materialStrategy,
+      headlineSnippet,
+      dateMMDD,
+      audienceCode,
+      groupDisplayName: selectedGroup.label,
+      aspectRatiosInGroup: aspectRatiosInGroup.length ? aspectRatiosInGroup : ["1:1"],
+    });
+    setForm((prev) => ({
+      ...prev,
+      campaignName: names.campaignName,
+      adSetName: names.adSetName,
+      adName: names.adName,
+    }));
+  }, [form.selectedVersionIds, form.campaignObjective, form.productName, form.materialStrategy, form.headlineSnippet, form.audienceStrategy, form.headline, batchGroups, selectedPackage?.brandProductName, selectedPackage?.name]);
 
   const onSelectPackage = (packageId: string) => {
     const pkg = packages.find((p) => p.id === packageId);
@@ -946,7 +992,10 @@ export default function PublishPlaceholderPage() {
                         </PopoverContent>
                       </Popover>
                     ) : (
-                      <Input value={form.accountId} onChange={(e) => setForm((f) => ({ ...f, accountId: e.target.value }))} placeholder="請輸入廣告帳號 ID（可先至設定同步帳號）" />
+                      <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/50 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                        請先至設定中心綁定 Meta 並點「立即同步帳號」，同步後此處會出現可選廣告帳號。
+                        <Link href="/settings" className="ml-2 font-medium underline">前往設定</Link>
+                      </div>
                     )}
                   </div>
                   {form.accountId && (
@@ -991,7 +1040,9 @@ export default function PublishPlaceholderPage() {
                               </PopoverContent>
                             </Popover>
                           ) : (
-                            <Input value={form.pageId} onChange={(e) => setForm((f) => ({ ...f, pageId: e.target.value }))} placeholder="載入中或無可用粉專" disabled={metaPages.length === 0} />
+                            <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                              {metaPagesByAccountFetched ? "此廣告帳號無可用粉專，請至 Meta 商業管理員綁定粉專" : "載入粉專列表中…"}
+                            </div>
                           )}
                           {form.accountId && metaPagesByAccountFetched && metaPages.length === 0 && (
                             <p className="text-xs text-amber-600">
@@ -1028,7 +1079,9 @@ export default function PublishPlaceholderPage() {
                               </PopoverContent>
                             </Popover>
                           ) : (
-                            <Input value={form.igAccountId} onChange={(e) => setForm((f) => ({ ...f, igAccountId: e.target.value }))} placeholder={form.pageId ? "此粉專未綁定 IG" : "請先選擇粉專"} disabled={!form.pageId} />
+                            <div className="rounded-md border border-muted bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                              {form.pageId ? "此粉專未綁定 IG" : "請先選擇粉專"}
+                            </div>
                           )}
                           {selectedPageHasNoIg && (
                             <p className="text-xs text-destructive">此粉專未綁定 IG，無法投放 Reels/Stories。請改選「僅動態牆」或先至 Meta 綁定 IG。</p>
@@ -1040,32 +1093,64 @@ export default function PublishPlaceholderPage() {
                     <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Campaign 目標</Label>
-                      <Input value={form.campaignObjective} onChange={(e) => setForm((f) => ({ ...f, campaignObjective: e.target.value }))} placeholder="多數為轉換" />
-                      <p className="text-xs text-muted-foreground">預設：轉換</p>
+                      <Select value={form.campaignObjective || "轉換"} onValueChange={(v) => setForm((f) => ({ ...f, campaignObjective: v, objectivePrefix: OBJECTIVE_TO_PREFIX[v] ?? f.objectivePrefix }))}>
+                        <SelectTrigger><SelectValue placeholder="選擇目標" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="轉換">轉換</SelectItem>
+                          <SelectItem value="觸及">觸及</SelectItem>
+                          <SelectItem value="互動">互動</SelectItem>
+                          <SelectItem value="品牌知名度">品牌知名度</SelectItem>
+                          <SelectItem value="訊息">訊息</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Campaign 名稱 *</Label>
-                      <Input value={form.campaignName} onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))} />
+                      <Input value={form.campaignName} onChange={(e) => setForm((f) => ({ ...f, campaignName: e.target.value }))} placeholder="選素材組後自動帶入，或手動填" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Ad Set 名稱 *</Label>
-                      <Input value={form.adSetName} onChange={(e) => setForm((f) => ({ ...f, adSetName: e.target.value }))} />
+                      <Input value={form.adSetName} onChange={(e) => setForm((f) => ({ ...f, adSetName: e.target.value }))} placeholder="選素材組後自動帶入" />
                     </div>
                     <div className="space-y-2">
                       <Label>Ad 名稱 *</Label>
-                      <Input value={form.adName} onChange={(e) => setForm((f) => ({ ...f, adName: e.target.value }))} />
+                      <Input value={form.adName} onChange={(e) => setForm((f) => ({ ...f, adName: e.target.value }))} placeholder="選素材組後自動帶入" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>每日預算</Label>
-                      <Input type="number" min={0} step={1} value={form.budgetDaily} onChange={(e) => setForm((f) => ({ ...f, budgetDaily: e.target.value }))} placeholder="與總預算二選一" />
+                      <Label>每日預算（與總預算二選一）</Label>
+                      <Select value={form.budgetDaily !== undefined && form.budgetDaily !== "" ? form.budgetDaily : "0"} onValueChange={(v) => setForm((f) => ({ ...f, budgetDaily: v, budgetTotal: v !== "0" ? "" : f.budgetTotal }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">不設（改用總預算）</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                          <SelectItem value="300">300</SelectItem>
+                          <SelectItem value="500">500</SelectItem>
+                          <SelectItem value="1000">1000</SelectItem>
+                          <SelectItem value="2000">2000</SelectItem>
+                          <SelectItem value="5000">5000</SelectItem>
+                          <SelectItem value="10000">10000</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>總預算</Label>
-                      <Input type="number" min={0} step={1} value={form.budgetTotal} onChange={(e) => setForm((f) => ({ ...f, budgetTotal: e.target.value }))} placeholder="與每日預算二選一" />
+                      <Label>總預算（與每日預算二選一）</Label>
+                      <Select value={form.budgetTotal !== undefined && form.budgetTotal !== "" ? form.budgetTotal : "0"} onValueChange={(v) => setForm((f) => ({ ...f, budgetTotal: v, budgetDaily: v !== "0" ? "" : f.budgetDaily }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">不設（改用每日預算）</SelectItem>
+                          <SelectItem value="100">100</SelectItem>
+                          <SelectItem value="300">300</SelectItem>
+                          <SelectItem value="500">500</SelectItem>
+                          <SelectItem value="1000">1000</SelectItem>
+                          <SelectItem value="2000">2000</SelectItem>
+                          <SelectItem value="5000">5000</SelectItem>
+                          <SelectItem value="10000">10000</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -1094,13 +1179,27 @@ export default function PublishPlaceholderPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>排程開始（選填）</Label>
-                      <Input value={form.scheduleStart} onChange={(e) => setForm((f) => ({ ...f, scheduleStart: e.target.value }))} placeholder="ISO 或日期字串" />
+                      <Label>排程</Label>
+                      <Select value={form.scheduleType} onValueChange={(v: "immediate" | "custom") => setForm((f) => ({ ...f, scheduleType: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="immediate">立即開始</SelectItem>
+                          <SelectItem value="custom">自訂開始／結束時間</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>排程結束（選填）</Label>
-                      <Input value={form.scheduleEnd} onChange={(e) => setForm((f) => ({ ...f, scheduleEnd: e.target.value }))} placeholder="ISO 或日期字串" />
-                    </div>
+                    {form.scheduleType === "custom" && (
+                      <>
+                        <div className="space-y-2">
+                          <Label>排程開始</Label>
+                          <Input value={form.scheduleStart} onChange={(e) => setForm((f) => ({ ...f, scheduleStart: e.target.value }))} placeholder="ISO 或日期字串" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>排程結束</Label>
+                          <Input value={form.scheduleEnd} onChange={(e) => setForm((f) => ({ ...f, scheduleEnd: e.target.value }))} placeholder="ISO 或日期字串" />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>
