@@ -228,7 +228,7 @@ export async function callGeminiChat(
   }
 
   const history = chatMessagesToHistory(messages);
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const modelName = process.env.GEMINI_MODEL || "gemini-3.1-pro-preview";
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);

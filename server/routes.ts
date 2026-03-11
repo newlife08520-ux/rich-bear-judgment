@@ -259,7 +259,7 @@ export async function registerRoutes(
     try {
       if (type === "ai") {
         const productionModel = process.env.GEMINI_MODEL || "gemini-3.1-pro-preview";
-        const testModel = "gemini-2.0-flash";
+        const testModel = productionModel;
         try {
           const { GoogleGenerativeAI } = await import("@google/generative-ai");
           const genAI = new GoogleGenerativeAI(value.trim());
