@@ -1283,10 +1283,23 @@ interface BudgetActionRow {
   costRuleStatus?: string;
 }
 
-/** Action Center API 回傳格式（Phase 2A 含 batchValidity、evidenceLevel、次級區） */
+/** 首頁可信度：同一批資料的 meta，供除錯與驗證 */
+interface ActionCenterSourceMeta {
+  batchId: string | null;
+  generatedAt: string | null;
+  dateRange: string | null;
+  scopeKey: string | null;
+  campaignCountUsed: number;
+  excludedNoDelivery: number;
+  excludedUnderSample: number;
+  unmappedCount: number;
+}
+
+/** Action Center API 回傳格式（Phase 2A 含 batchValidity、evidenceLevel、次級區；可信度修復含 sourceMeta） */
 interface ActionCenterData {
   batchValidity?: "valid" | "legacy" | "insufficient";
   batchValidityReason?: string;
+  sourceMeta?: ActionCenterSourceMeta;
   productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string; evidenceLevel?: string }>;
   productLevelMain?: Array<{ productName: string; spend: number; revenue: number; roas: number; hasRule?: boolean; costRuleStatus?: string; evidenceLevel?: string }>;
   productLevelNoDelivery?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
@@ -1706,7 +1719,7 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-muted-foreground">尚無符合條件的黑馬素材（Creative Edge 高、樣本足夠、花費未飽和）。</p>
+                    <p className="text-sm text-muted-foreground">目前無符合條件素材。</p>
                   )}
                 </CardContent>
               </Card>
@@ -1731,9 +1744,33 @@ export default function DashboardPage() {
                 </ul>
               </div>
             </section>
+
+            {/* 首頁可信度：同一批資料來源 meta（debug / 驗證用） */}
+            {actionData?.sourceMeta && (
+              <div className="text-[11px] text-muted-foreground border border-border/60 rounded-md px-3 py-2 bg-muted/20">
+                <span className="font-medium">資料來源</span>
+                {" "}batchId={actionData.sourceMeta.batchId ?? "—"}
+                {" · "}generatedAt={actionData.sourceMeta.generatedAt ?? "—"}
+                {" · "}dateRange={actionData.sourceMeta.dateRange ?? "—"}
+                {" · "}scopeKey={actionData.sourceMeta.scopeKey ?? "—"}
+                {" · "}campaignCountUsed={actionData.sourceMeta.campaignCountUsed}
+                {" · "}excludedNoDelivery={actionData.sourceMeta.excludedNoDelivery}
+                {" · "}excludedUnderSample={actionData.sourceMeta.excludedUnderSample}
+                {" · "}unmappedCount={actionData.sourceMeta.unmappedCount}
+              </div>
+            )}
           </>
         )}
 
+        {/* 舊首頁區塊退場：收合成「舊版報表（次級）」，首頁主軸僅新五區 */}
+        <Collapsible defaultOpen={false}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm mt-4">
+              <span className="font-medium">舊版報表（次級）</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-6 pt-2">
         {/* Phase 2A Guardrail 1：待驗證區說明（排除項有去處） */}
         {actionData && ((actionData.budgetActionNoDelivery?.length ?? 0) + (actionData.budgetActionUnderSample?.length ?? 0)) > 0 && (
           <p className="text-sm text-muted-foreground">
@@ -1999,30 +2036,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Phase 2C：帳號區次級化優化 — 視覺收束，不搶主視覺 */}
-        {employee.department === "ADMIN" && hasSummary && summary && (
-          <div className="mt-10 pt-6 border-t border-border/80">
-            <Collapsible defaultOpen={false}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm">
-                  <span className="font-medium">報表與帳號（次級）</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-6 pt-2">
-              <HeroSummaryCard summary={summary} isLoading={summaryLoading} />
-              <TopPriorityAccountsSection accounts={summary.topPriorityAccounts || []} isLoading={summaryLoading} />
-              <AccountRankingTable accounts={accounts} isLoading={rankingLoading} />
-              <OpportunitySummaryCard />
-              {allRisky.length > 0 && <RiskyCampaignsSection campaigns={allRisky} isLoading={summaryLoading} />}
-              <AnomalySummarySection anomalies={anomalies} isLoading={anomalyLoading} />
-              <BoardsSection />
-              <AIRecommendationsSection summary={summary} isLoading={summaryLoading} />
-            </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
-
         {employee.department === "ADMIN" && actionData && actionData.productLevel.length > 0 && (
           <Card>
             <CardContent className="pt-4">
@@ -2038,7 +2051,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {actionData.productLevel.map((p) => (
+                    {(actionData.productLevel ?? []).map((p) => (
                       <tr key={p.productName} className="border-t">
                         <td className="p-2 font-medium">{p.productName}</td>
                         <td className="p-2 text-right">{formatCurrency(p.spend)}</td>
@@ -2051,6 +2064,33 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Phase 2C：帳號區次級化優化 — 視覺收束，不搶主視覺 */}
+        {employee.department === "ADMIN" && hasSummary && summary && (
+          <div className="mt-10 pt-6 border-t border-border/80">
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground text-sm">
+                  <span className="font-medium">報表與帳號（次級）</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-6 pt-2">
+                <HeroSummaryCard summary={summary} isLoading={summaryLoading} />
+                <TopPriorityAccountsSection accounts={summary.topPriorityAccounts || []} isLoading={summaryLoading} />
+                <AccountRankingTable accounts={accounts} isLoading={rankingLoading} />
+                <OpportunitySummaryCard />
+                {allRisky.length > 0 && <RiskyCampaignsSection campaigns={allRisky} isLoading={summaryLoading} />}
+                <AnomalySummarySection anomalies={anomalies} isLoading={anomalyLoading} />
+                <BoardsSection />
+                <AIRecommendationsSection summary={summary} isLoading={summaryLoading} />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         )}
 
         {employee.department === "AD" && (

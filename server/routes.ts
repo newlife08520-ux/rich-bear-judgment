@@ -2458,9 +2458,20 @@ export async function registerRoutes(
 
     if (!batch || !batch.campaignMetrics || batch.campaignMetrics.length === 0) {
       const batchValidity = getBatchValidity(batch ?? null);
+      const emptySourceMeta = {
+        batchId: batch?.batchId ?? null,
+        generatedAt: batch?.generatedAt ?? null,
+        dateRange: batch?.dateRange ? (typeof batch.dateRange === "object" && "preset" in batch.dateRange ? (batch.dateRange as { preset?: string }).preset : "") : null,
+        scopeKey: null,
+        campaignCountUsed: 0,
+        excludedNoDelivery: 0,
+        excludedUnderSample: 0,
+        unmappedCount: 0,
+      };
       return res.json({
         batchValidity: batchValidity.validity,
         batchValidityReason: batchValidity.reason,
+        sourceMeta: emptySourceMeta,
         productLevel: [],
         productLevelMain: [],
         productLevelNoDelivery: [],
@@ -2765,22 +2776,26 @@ export async function registerRoutes(
     const budgetActionNoDelivery = budgetActionTable.filter(
       (r) => (r as { dataStatus: string }).dataStatus === DATA_STATUS_NO_DELIVERY
     );
+    /** 可信度：未分類不得進核心區 */
+    const excludeUnmapped = (r: { productName?: string }) => (r.productName ?? "") !== "未分類";
     const tableRescue = budgetActionDecisionReady
-      .filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉")
+      .filter((r) => (r.suggestedAction === "先降" || r.suggestedPct === "關閉") && excludeUnmapped(r))
       .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }))
       .sort((a, b) => b.spend - a.spend);
     const tableScaleUp = budgetActionDecisionReady
       .filter(
         (r) =>
+          excludeUnmapped(r) &&
           (r.suggestedAction === "可加碼" || r.suggestedAction === "高潛延伸") && (r as { hasRule: boolean }).hasRule === true
       )
       .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
     const tableNoMisjudge = budgetActionDecisionReady
-      .filter((r) => r.suggestedAction === "維持")
+      .filter((r) => r.suggestedAction === "維持" && excludeUnmapped(r))
       .map((r) => ({ ...r, whyNotMore: (r as { whyNotMore?: string }).whyNotMore }));
     const creativeWithEdge = creativeLeaderboard as Array<{ productName: string; spend: number; revenue: number; roas: number; conversions: number; scaleReadinessScore?: number; funnelReadiness?: number; creativeEdge?: number; [k: string]: unknown }>;
     const spendThreshold = totalAccountSpend * 0.2;
     const tableExtend = creativeWithEdge.filter((c) => {
+      if (c.productName === "未分類") return false;
       const edge = c.creativeEdge ?? 0;
       const funnelOk = (c.funnelReadiness ?? 0) >= 50 || c.conversions > 0;
       const sampleOk = c.conversions > 0 && c.spend >= 10;
@@ -2934,14 +2949,30 @@ export async function registerRoutes(
         evidenceLevel,
       };
     });
-    const productLevelMain = productLevelWithRule.filter((p) => p.spend > 0 && p.productName !== "未分類");
+    /** 主力區：未分類、花費 0、ROAS 0 不得用主力語氣呈現 */
+    const productLevelMain = productLevelWithRule.filter(
+      (p) => p.spend > 0 && p.productName !== "未分類" && p.roas > 0
+    );
     const productLevelNoDelivery = productLevelWithRule.filter((p) => p.spend === 0);
     const productLevelUnmapped = productLevelWithRule.filter((p) => p.productName === "未分類");
 
     const batchValidityResult = getBatchValidity(batch);
+    const scopeKey = [scopeAccountIds?.join(",") ?? "", scopeProducts?.join(",") ?? ""].filter(Boolean).join("|") || undefined;
+    const dr = batch.dateRange as { preset?: string; label?: string } | undefined;
+    const sourceMeta = {
+      batchId: batch.batchId,
+      generatedAt: batch.generatedAt,
+      dateRange: dr?.preset ?? dr?.label ?? "",
+      scopeKey: scopeKey ?? null,
+      campaignCountUsed: rows.length,
+      excludedNoDelivery: budgetActionNoDelivery.length,
+      excludedUnderSample: budgetActionUnderSample.length,
+      unmappedCount: productLevelUnmapped.length,
+    };
     res.json({
       batchValidity: batchValidityResult.validity,
       batchValidityReason: batchValidityResult.reason,
+      sourceMeta,
       productLevel: productLevelWithRule,
       productLevelMain,
       productLevelNoDelivery,
