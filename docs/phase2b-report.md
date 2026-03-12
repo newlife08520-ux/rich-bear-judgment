@@ -116,8 +116,8 @@
 | 項目 | 值 |
 |------|-----|
 | **程式 commit** | **16ec9e5**（Phase 2A + Phase 2B 程式，已 push 至 origin/main） |
-| **文件 commit** | **f01c5a3**（本輪修正回報格式與完成語氣） |
-| **staging 部署版本** | 依 Railway 設定；若自 main 自動 deploy，則為 push 後之 main 最新 commit（f01c5a3）。可驗收網址：請以 Railway 專案之 staging 網址為準。 |
+| **文件 commit** | **de57560**（本輪回報格式與完成語氣修正） |
+| **staging 部署版本** | 依 Railway 設定；若自 main 自動 deploy，則為 push 後之 main 最新 commit（**de57560**）。可驗收網址：請以 Railway 專案之 staging 網址為準。 |
 
 ---
 
