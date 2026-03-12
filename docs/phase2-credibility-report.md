@@ -81,6 +81,6 @@
 
 ## 7. Commit hash
 
-- **程式 commit**：**4697b15**（與本回報同 commit）
+- **程式 commit**：**11a53b0**（與本回報同 commit）
 - **文件 commit**：同上
 - **staging or production 部署版本**：（部署後填寫）
