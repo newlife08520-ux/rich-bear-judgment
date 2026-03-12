@@ -299,18 +299,23 @@ export default function ProductsPage() {
               <span>總營收 <strong>{formatCurrency(totalRevenue)}</strong></span>
               <span>平均 ROAS <strong>{avgRoas.toFixed(2)}</strong></span>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">每張卡回答七件事：值不值得砸、為什麼、靠哪些素材撐、被哪些素材拖、下一步、成本規則、breakEven／target／headroom。</p>
           </CardContent>
         </Card>
 
-        {/* Phase 3 商品主戰場：每商品一卡，回答七件事，非表格 */}
+        {/* Phase 3A 商品主戰場：主卡樣式、七件事、在撐/在拖數、總監判語、語意色 */}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((r) => {
             const statusLabel = PRODUCT_STATUS[r.productStatus];
             const statusColor = r.productStatus === "scale" ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20" :
               r.productStatus === "stop" ? "border-red-300 bg-red-50/50 dark:bg-red-950/20" :
               r.productStatus === "danger" ? "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20" : "border-border bg-muted/20";
-            const supporting = (r.creatives ?? []).filter((c: { roas: number }) => c.roas >= 2).sort((a: { roas: number }, b: { roas: number }) => b.roas - a.roas).slice(0, 3);
-            const dragging = (r.creatives ?? []).filter((c: { roas: number; materialStrategy?: string }) => c.roas < 1 || (failureRatesByTag[c.materialStrategy ?? ""] ?? 0) > 0.8).sort((a: { spend: number }, b: { spend: number }) => b.spend - a.spend).slice(0, 3);
+            const supporting = (r.creatives ?? []).filter((c: { roas: number }) => c.roas >= 2).sort((a: { roas: number }, b: { roas: number }) => b.roas - a.roas);
+            const dragging = (r.creatives ?? []).filter((c: { roas: number; materialStrategy?: string }) => c.roas < 1 || (failureRatesByTag[c.materialStrategy ?? ""] ?? 0) > 0.8).sort((a: { spend: number }, b: { spend: number }) => b.spend - a.spend);
+            const supportingCount = supporting.length;
+            const draggingCount = dragging.length;
+            const supportingPreview = supporting.slice(0, 3);
+            const draggingPreview = dragging.slice(0, 3);
             const rescueForProduct = tableRescue.filter((x: { productName: string }) => x.productName === r.productName);
             const scaleUpForProduct = tableScaleUp.filter((x: { productName: string }) => x.productName === r.productName);
             const nextStep = rescueForProduct.length > 0 ? `先救 ${rescueForProduct.length} 檔` : scaleUpForProduct.length > 0 ? `可加碼 ${scaleUpForProduct.length} 檔` : r.ruleTags?.join("、") || "—";
@@ -324,6 +329,7 @@ export default function ProductsPage() {
                     )}
                     <Badge variant="secondary" className={cn("text-[10px]", r.productStatus === "scale" ? "text-emerald-700" : r.productStatus === "stop" ? "text-red-700" : "")}>{statusLabel}</Badge>
                   </div>
+                  <p className="text-sm font-medium text-foreground border-l-2 border-primary/50 pl-2 py-0.5" title={r.aiSuggestion}>總監判語：{r.aiSuggestion}</p>
                   <div className="grid gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground font-medium flex items-center gap-1"><Target className="w-3 h-3" /> 值不值得砸</span>
@@ -335,11 +341,11 @@ export default function ProductsPage() {
                     </div>
                     <div>
                       <span className="text-muted-foreground font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" /> 靠哪些素材撐</span>
-                      <p className="mt-0.5 text-xs">{supporting.length === 0 ? "尚無高 ROAS 素材" : supporting.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${c.materialStrategy ?? ""} ${(c.headlineSnippet ?? "").slice(0, 20)} ROAS ${c.roas.toFixed(1)}`).join(" · ")}</p>
+                      <p className="mt-0.5 text-xs">{supportingCount === 0 ? "尚無高 ROAS 素材" : supportingPreview.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${c.materialStrategy ?? ""} ${(c.headlineSnippet ?? "").slice(0, 20)} ROAS ${c.roas.toFixed(1)}`).join(" · ") + (supportingCount > 3 ? ` …共 ${supportingCount} 支` : "")}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground font-medium flex items-center gap-1"><TrendingDown className="w-3 h-3" /> 被哪些素材拖</span>
-                      <p className="mt-0.5 text-xs">{dragging.length === 0 ? "尚無明顯拖累" : dragging.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${(c.materialStrategy ?? "").slice(0, 8)} ROAS ${c.roas.toFixed(1)}`).join(" · ")}</p>
+                      <p className="mt-0.5 text-xs">{draggingCount === 0 ? "尚無明顯拖累" : draggingPreview.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${(c.materialStrategy ?? "").slice(0, 8)} ROAS ${c.roas.toFixed(1)}`).join(" · ") + (draggingCount > 3 ? ` …共 ${draggingCount} 支` : "")}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground font-medium flex items-center gap-1"><Zap className="w-3 h-3" /> 下一步做什麼</span>
@@ -367,6 +373,7 @@ export default function ProductsPage() {
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t text-xs text-muted-foreground">
                     <span>{formatCurrency(r.spend)}</span>
                     <span>ROAS {r.roas.toFixed(2)}</span>
+                    <span>在撐 {supportingCount} 支 · 在拖 {draggingCount} 支</span>
                     <span className="ml-auto">
                       <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={() => openCreateTask(r)}>
                         <ListPlus className="w-3 h-3" /> 生成任務
