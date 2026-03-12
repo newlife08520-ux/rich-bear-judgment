@@ -32,6 +32,7 @@ import {
   Trophy,
   Crown,
   Bot,
+  Calculator,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1582,6 +1583,7 @@ export default function DashboardPage() {
                 <span>ROAS <strong className="text-lg">{(actionData.productLevel.reduce((s, p) => s + p.revenue, 0) / Math.max(1, actionData.productLevel.reduce((s, p) => s + p.spend, 0))).toFixed(2)}</strong></span>
                 <span>利潤估算 <strong className="text-lg">{formatCurrency(actionData.productLevel.reduce((s, p) => s + p.revenue - p.spend, 0))}</strong></span>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">以上為本批「商品」維度加總；區塊 1 為「活動」維度，勿將活動花費與商品花費直接相加。</p>
             </CardContent>
           </Card>
         )}
@@ -1629,18 +1631,32 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-muted-foreground">本批尚無決策就緒項目，或請先設定成本規則與同步資料。</p>
+                    <p className="text-sm text-muted-foreground">
+                      本批尚無決策就緒項目。請先至{" "}
+                      <Link href="/settings/profit-rules" className="text-primary hover:underline inline-flex items-center gap-1">
+                        <Calculator className="w-3.5 h-3.5" />獲利規則中心
+                      </Link>{" "}
+                      設定各商品成本比與目標 ROAS，並同步資料。
+                    </p>
                   )}
                 </CardContent>
               </Card>
 
-              {/* 區塊 2：主力商品戰情 — 商品與判語為主，數字收斂 */}
+              {/* 區塊 2：主力商品戰情 — 有規則且達標的主力，與區塊 3 危險對比 */}
               <Card className="border-border/80" data-testid="block-2-main-products">
                 <CardContent className="p-5">
-                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    主力商品戰情
-                  </h2>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        主力商品戰情
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">有成本規則且達標，建議維持或小步放大</p>
+                    </div>
+                    <Link href="/settings/profit-rules" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 shrink-0">
+                      <Calculator className="w-3 h-3" />設定成本規則
+                    </Link>
+                  </div>
                   {(actionData.productLevelMain && actionData.productLevelMain.length > 0) ? (
                     <ul className="space-y-4">
                       {(actionData.productLevelMain)
@@ -1659,18 +1675,23 @@ export default function DashboardPage() {
                         ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-muted-foreground">尚無主力商品（需有成本規則且花費 &gt; 0）。</p>
+                    <p className="text-sm text-muted-foreground">
+                      尚無主力商品（需有成本規則且花費 &gt; 0）。請至{" "}
+                      <Link href="/settings/profit-rules" className="text-primary hover:underline">獲利規則中心</Link>{" "}
+                      設定各商品成本比與目標淨利率。
+                    </p>
                   )}
                 </CardContent>
               </Card>
 
-              {/* 區塊 3：高預算危險商品 — 危險感明確但不廉價 */}
+              {/* 區塊 3：高預算危險商品 — 建議止血或降預算，與區塊 2 對比 */}
               <Card className="border-red-200/80 dark:border-red-800/80 bg-red-50/30 dark:bg-red-950/20" data-testid="block-3-high-risk">
                 <CardContent className="p-5">
-                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-foreground mb-1 flex items-center gap-2">
                     <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
                     高預算危險商品
                   </h2>
+                  <p className="text-xs text-muted-foreground mb-3">建議止血或降預算，勿重手加碼</p>
                   {(actionData.tableRescue && actionData.tableRescue.length > 0) || (actionData.riskyCampaigns && actionData.riskyCampaigns.length > 0) ? (
                     <ul className="space-y-3">
                       {(actionData.tableRescue ?? []).map((r) => (
@@ -1719,45 +1740,56 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-muted-foreground">目前無符合條件素材。</p>
+                    <p className="text-sm text-muted-foreground py-4 text-center rounded-lg bg-muted/20 border border-dashed border-border/60">
+                      本批尚無黑馬素材，可從下方舊版報表「素材金榜」或創意排行榜觀察潛力。
+                    </p>
                   )}
                 </CardContent>
               </Card>
 
-              {/* 區塊 5：今日操作節制提醒 — 收束區，總監提醒語氣 */}
-              <div className="rounded-lg border border-border/60 bg-muted/30 py-4 px-5" data-testid="block-5-restraint">
-                <h2 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                  <Shield className="w-3.5 h-3.5 shrink-0" />
-                  今日操作節制提醒
+              {/* 區塊 5：今日操作節制提醒 — footer guardrail，降噪不搶主區 */}
+              <div className="rounded-lg border border-border/40 bg-muted/20 py-3 px-4" data-testid="block-5-restraint">
+                <h2 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                  <Shield className="w-3 h-3 shrink-0" />
+                  本批資料說明與節制提醒
                 </h2>
-                <ul className="space-y-1 text-sm text-muted-foreground">
+                <ul className="space-y-0.5 text-xs text-muted-foreground">
                   {actionData.batchValidityReason && (
                     <li>本批資料：{actionData.batchValidityReason}</li>
                   )}
                   {(actionData.budgetActionNoDelivery?.length ?? 0) + (actionData.budgetActionUnderSample?.length ?? 0) > 0 && (
-                    <li>尚有 <strong className="text-foreground/80">{actionData.budgetActionNoDelivery?.length ?? 0}</strong> 筆未投遞、<strong className="text-foreground/80">{actionData.budgetActionUnderSample?.length ?? 0}</strong> 筆樣本不足，不參與核心決策，請勿依此亂調預算。</li>
+                    <li>未投遞 {actionData.budgetActionNoDelivery?.length ?? 0} 筆、樣本不足 {actionData.budgetActionUnderSample?.length ?? 0} 筆，不參與核心決策。</li>
                   )}
                   {actionData.funnelEvidence === false && (
-                    <li>目前無漏斗資料，決策區多為廣告層推測，不建議依此單獨定罪。</li>
+                    <li>無漏斗資料，決策區為廣告層推測，不建議單獨定罪。</li>
                   )}
-                  <li>本輪尚未接入「今日已調次數」，先以 guardrail 提醒代替；今日若某項資料仍屬規則缺失或樣本不足，請先別亂動。</li>
+                  <li>規則缺失或樣本不足時請先別亂動；欲減少「規則缺失」請至 <Link href="/settings/profit-rules" className="text-primary/80 hover:underline">獲利規則中心</Link> 設定成本比與目標淨利率。</li>
                 </ul>
               </div>
             </section>
 
-            {/* 首頁可信度：同一批資料來源 meta（debug / 驗證用） */}
+            {/* 首頁可信度：同一批資料來源 meta 預設收起，改為「查看資料來源」debug drawer */}
             {actionData?.sourceMeta && (
-              <div className="text-[11px] text-muted-foreground border border-border/60 rounded-md px-3 py-2 bg-muted/20">
-                <span className="font-medium">資料來源</span>
-                {" "}batchId={actionData.sourceMeta.batchId ?? "—"}
-                {" · "}generatedAt={actionData.sourceMeta.generatedAt ?? "—"}
-                {" · "}dateRange={actionData.sourceMeta.dateRange ?? "—"}
-                {" · "}scopeKey={actionData.sourceMeta.scopeKey ?? "—"}
-                {" · "}campaignCountUsed={actionData.sourceMeta.campaignCountUsed}
-                {" · "}excludedNoDelivery={actionData.sourceMeta.excludedNoDelivery}
-                {" · "}excludedUnderSample={actionData.sourceMeta.excludedUnderSample}
-                {" · "}unmappedCount={actionData.sourceMeta.unmappedCount}
-              </div>
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-[11px] text-muted-foreground hover:text-foreground h-auto py-1.5 px-2 -ml-2">
+                    查看資料來源
+                    <ChevronRight className="h-3 w-3 ml-0.5 inline-block" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="text-[11px] text-muted-foreground border border-border/60 rounded-md px-3 py-2 bg-muted/20 mt-1 font-mono">
+                    batchId={actionData.sourceMeta.batchId ?? "—"}
+                    {" · "}generatedAt={actionData.sourceMeta.generatedAt ?? "—"}
+                    {" · "}dateRange={actionData.sourceMeta.dateRange ?? "—"}
+                    {" · "}scopeKey={actionData.sourceMeta.scopeKey ?? "—"}
+                    {" · "}campaignCountUsed={actionData.sourceMeta.campaignCountUsed}
+                    {" · "}excludedNoDelivery={actionData.sourceMeta.excludedNoDelivery}
+                    {" · "}excludedUnderSample={actionData.sourceMeta.excludedUnderSample}
+                    {" · "}unmappedCount={actionData.sourceMeta.unmappedCount}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </>
         )}
@@ -2020,26 +2052,34 @@ export default function DashboardPage() {
         )}
 
         {actionData?.productLevel && actionData.productLevel.length > 0 && (
-          <ProductRedBlackBoard productLevel={actionData.productLevel} />
+          <ProductRedBlackBoard productLevel={actionData.productLevel.filter((p) => p.spend > 0)} />
         )}
-        {actionData?.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 && (
+        {actionData?.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 && (() => {
+          const withSpend = actionData.creativeLeaderboard.filter((c) => c.spend > 0);
+          if (withSpend.length === 0) return null;
+          return (
           <>
             <CreativeLeaderboardHero
-              creativeLeaderboard={actionData.creativeLeaderboard}
+              creativeLeaderboard={withSpend}
               failureRatesByTag={actionData.failureRatesByTag}
               department={employee.department}
             />
             <CreativeBlacklistSection
-              creativeLeaderboard={actionData.creativeLeaderboard}
+              creativeLeaderboard={withSpend}
               failureRatesByTag={actionData.failureRatesByTag}
             />
           </>
-        )}
+          );
+        })()}
 
-        {employee.department === "ADMIN" && actionData && actionData.productLevel.length > 0 && (
+        {employee.department === "ADMIN" && actionData && actionData.productLevel.length > 0 && (() => {
+          const withSpend = (actionData.productLevel ?? []).filter((p) => p.spend > 0);
+          if (withSpend.length === 0) return null;
+          return (
           <Card>
             <CardContent className="pt-4">
               <h3 className="font-semibold mb-3">全公司商品排行榜</h3>
+              <p className="text-xs text-muted-foreground mb-2">僅顯示有花費之商品，0 花費已隱藏</p>
               <div className="table-scroll-container rounded-md border">
                 <table className="w-full text-sm min-w-[32rem]">
                   <thead>
@@ -2051,7 +2091,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(actionData.productLevel ?? []).map((p) => (
+                    {withSpend.map((p) => (
                       <tr key={p.productName} className="border-t">
                         <td className="p-2 font-medium">{p.productName}</td>
                         <td className="p-2 text-right">{formatCurrency(p.spend)}</td>
@@ -2064,7 +2104,8 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        )}
+          );
+        })()}
 
           </CollapsibleContent>
         </Collapsible>

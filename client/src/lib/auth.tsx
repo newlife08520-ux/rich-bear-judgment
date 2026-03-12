@@ -16,6 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // 401 = 未登入或 session 過期，預期行為；不影響首頁 action-center 等已登入後的 query
     fetch("/api/auth/me", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data))
