@@ -1588,12 +1588,12 @@ export default function DashboardPage() {
 
         {actionData?.productLevel && actionData.productLevel.length > 0 && (
           <>
-            {/* Phase 2C：首頁五區視覺精修 — 主次層級、決策卡、收束區，不改邏輯 */}
+            {/* Phase 2C：首頁五區視覺精修 — 區塊 1 整頁最強、決策卡、收束區，不改邏輯 */}
             <section className="space-y-10" data-testid="section-phase2b-five-blocks">
-              {/* 區塊 1：今日最該動的 5 件事 — 主視覺最強，決策卡化 */}
-              <Card className="border-primary/25 bg-gradient-to-b from-primary/5 to-transparent shadow-sm" data-testid="block-1-today-actions">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              {/* 區塊 1：今日最該動的 5 件事 — 整頁最強區，決策卡化 */}
+              <Card className="border-primary/30 bg-gradient-to-b from-primary/8 to-transparent shadow-md ring-1 ring-primary/10" data-testid="block-1-today-actions">
+                <CardContent className="p-6 sm:p-7">
+                  <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 sm:text-xl sm:mb-5">
                     <ListChecks className="w-5 h-5 text-primary shrink-0" />
                     今日最該動的 5 件事
                   </h2>
@@ -1617,7 +1617,7 @@ export default function DashboardPage() {
                               <span className="text-[11px] text-muted-foreground border border-border/60 rounded px-1.5 py-0.5">{EVIDENCE_LABELS[a.evidenceLevel]}</span>
                             )}
                           </div>
-                          <p className="text-[15px] leading-relaxed text-foreground mt-1" data-testid="director-verdict">{a.directorVerdict}</p>
+                          <p className="text-[15px] sm:text-base leading-relaxed text-foreground mt-1 font-medium" data-testid="director-verdict">{a.directorVerdict}</p>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
                             <span>花費 {formatCurrency(a.spend)}</span>
                             <span>ROAS {a.roas.toFixed(2)}</span>
