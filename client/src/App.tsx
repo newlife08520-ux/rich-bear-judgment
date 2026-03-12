@@ -28,6 +28,7 @@ import AssetsPage from "@/pages/assets";
 import PublishPlaceholderPage from "@/pages/publish-placeholder";
 import PublishHistoryPlaceholderPage from "@/pages/publish-history-placeholder";
 import CreativeLifecyclePage from "@/pages/creative-lifecycle";
+import CreativesPage from "@/pages/creatives";
 import ScorecardPage from "@/pages/scorecard";
 import NotFound from "@/pages/not-found";
 import { Scale } from "lucide-react";
@@ -84,6 +85,7 @@ function AuthenticatedApp() {
                 <Route path="/history" component={HistoryPage} />
                 <Route path="/assets" component={AssetsPage} />
                 <Route path="/creative-lifecycle" component={CreativeLifecyclePage} />
+                <Route path="/creatives" component={CreativesPage} />
                 <Route path="/scorecard" component={ScorecardPage} />
                 <Route path="/publish/history" component={PublishHistoryPlaceholderPage} />
                 <Route path="/publish" component={PublishPlaceholderPage} />

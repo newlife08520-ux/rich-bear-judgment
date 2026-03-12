@@ -2934,9 +2934,15 @@ export async function registerRoutes(
     });
     const todayActions: TodayActionRow[] = [...todayRescue, ...todayScaleUp, ...todayNoMisjudge, ...todayExtend].slice(0, 5);
 
-    /** 商品層：補 hasRule / costRuleStatus / evidenceLevel；拆成核心排行 vs 未投遞 vs 未映射 */
+    /** 商品層：補 hasRule / costRuleStatus / evidenceLevel / breakEvenRoas / targetRoas / profitHeadroom（Phase 3 商品主戰場） */
     const productLevelWithRule = productLevel.map((p) => {
       const hasRule = getProductProfitRuleExplicit(p.productName) != null;
+      const rule = getProductProfitRule(p.productName);
+      const beRoas = breakEvenRoas(rule.costRatio);
+      const tgtRoas = targetRoas(rule.costRatio, rule.targetNetMargin);
+      const profitHeadroom = hasRule && typeof tgtRoas === "number" && tgtRoas < 1e6 && tgtRoas > 0
+        ? (p.roas / tgtRoas) - 1
+        : null;
       let evidenceLevel: EvidenceLevel;
       if (p.productName === "未分類") evidenceLevel = EVIDENCE_RULES_MISSING;
       else if (p.spend === 0) evidenceLevel = EVIDENCE_NO_DELIVERY;
@@ -2947,11 +2953,14 @@ export async function registerRoutes(
         hasRule,
         costRuleStatus: hasRule ? "已設定" : "待補成本規則",
         evidenceLevel,
+        breakEvenRoas: beRoas < 1e6 ? beRoas : null,
+        targetRoas: tgtRoas < 1e6 ? tgtRoas : null,
+        profitHeadroom,
       };
     });
-    /** 主力區：未分類、花費 0、ROAS 0 不得用主力語氣呈現 */
+    /** 主力區：未分類、花費 0、ROAS 0、規則缺失 不得進主力（與 guardrail 一致） */
     const productLevelMain = productLevelWithRule.filter(
-      (p) => p.spend > 0 && p.productName !== "未分類" && p.roas > 0
+      (p) => p.spend > 0 && p.productName !== "未分類" && p.roas > 0 && p.hasRule === true
     );
     const productLevelNoDelivery = productLevelWithRule.filter((p) => p.spend === 0);
     const productLevelUnmapped = productLevelWithRule.filter((p) => p.productName === "未分類");

@@ -34,7 +34,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Package, ListPlus, ChevronRight } from "lucide-react";
+import { Package, ListPlus, ChevronRight, Target, TrendingUp, TrendingDown, Zap, Shield, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { AccountExceptionsBlock } from "@/components/account-exceptions-block";
@@ -43,6 +43,14 @@ import { useLocation, Link } from "wouter";
 function formatCurrency(value: number) {
   return `NT$ ${value.toLocaleString()}`;
 }
+
+const EVIDENCE_LABELS: Record<string, string> = {
+  ads_only: "廣告層推測",
+  ga_verified: "已有 GA 證據",
+  rules_missing: "規則缺失",
+  insufficient_sample: "樣本不足",
+  no_delivery: "尚未投遞",
+};
 
 type ProductRow = ReturnType<typeof deriveProductRow> & {
   productName: string;
@@ -158,6 +166,9 @@ export default function ProductsPage() {
   const unmappedCount = actionData?.unmappedCount ?? 0;
   const creativeLeaderboard = actionData?.creativeLeaderboard ?? [];
   const failureRatesByTag = actionData?.failureRatesByTag ?? {};
+  const tableRescue = actionData?.tableRescue ?? [];
+  const tableScaleUp = actionData?.tableScaleUp ?? [];
+  const tierHighPotentialCreatives = actionData?.tierHighPotentialCreatives ?? [];
 
   useEffect(() => {
     if (!productNameFromUrl || productLevelMain.length === 0) return;
@@ -178,7 +189,14 @@ export default function ProductsPage() {
   const confidenceByProduct = new Map((confidenceData?.products ?? []).map((p) => [p.productName, p]));
   const batchUnmappedSpend = confidenceData?.batchUnmappedSpend ?? 0;
 
-  const rows = productLevelMain.map((p: { productName: string; spend: number; revenue: number; roas: number; impressions?: number; clicks?: number; conversions?: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string }) => {
+  /** Phase 3 商品主戰場：以有花費且非未分類之商品為單位，含 breakEven/target/headroom */
+  const productLevelBattle = productLevel.filter(
+    (p: { spend: number; productName?: string }) => p.spend > 0 && (p.productName ?? "") !== "未分類"
+  );
+  const rows = productLevelBattle.map((p: {
+    productName: string; spend: number; revenue: number; roas: number; impressions?: number; clicks?: number; conversions?: number; campaignCount?: number;
+    hasRule?: boolean; costRuleStatus?: string; evidenceLevel?: string; breakEvenRoas?: number | null; targetRoas?: number | null; profitHeadroom?: number | null;
+  }) => {
     const derived = deriveProductRow({
       productName: p.productName,
       spend: p.spend,
@@ -191,10 +209,10 @@ export default function ProductsPage() {
     });
     const creatives = creativeLeaderboard.filter((c) => c.productName === p.productName);
     const winnerCount = creatives.filter((c) => c.roas >= 2).length;
-    const fatigueCount = creatives.filter((c) => (failureRatesByTag[c.materialStrategy] ?? 0) > 0.8).length;
+    const fatigueCount = creatives.filter((c) => (failureRatesByTag[(c as { materialStrategy?: string }).materialStrategy] ?? 0) > 0.8).length;
     const conf = confidenceByProduct.get(p.productName);
-    const hasRule = (p as { hasRule?: boolean }).hasRule;
-    const costRuleStatus = (p as { costRuleStatus?: string }).costRuleStatus ?? (hasRule ? "已設定" : "待補成本規則");
+    const hasRule = p.hasRule;
+    const costRuleStatus = p.costRuleStatus ?? (hasRule ? "已設定" : "待補成本規則");
     return {
       ...p,
       ...derived,
@@ -207,6 +225,10 @@ export default function ProductsPage() {
       overrideHitRate: conf?.overrideHitRate ?? 0,
       hasRule,
       costRuleStatus,
+      creatives,
+      breakEvenRoas: p.breakEvenRoas ?? null,
+      targetRoas: p.targetRoas ?? null,
+      profitHeadroom: p.profitHeadroom ?? null,
     };
   });
 
@@ -253,7 +275,7 @@ export default function ProductsPage() {
           <SidebarTrigger />
           <h1 className="page-title flex items-center gap-2">
             <Package className="w-5 h-5" />
-            商品作戰室
+            商品主戰場
           </h1>
         </div>
       </header>
@@ -280,129 +302,87 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="table-scroll-container overflow-x-auto">
-              <table className="w-full text-sm min-w-[900px]">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-2 sticky left-0 bg-muted/50 z-10">商品</th>
-                    <th className="text-left p-2">成本規則</th>
-                    <th className="text-left p-2">商品 owner</th>
-                    <th className="text-left p-2">投手 owner</th>
-                    <th className="text-left p-2">素材 owner</th>
-                    <th className="text-right p-2">花費</th>
-                    <th className="text-right p-2">營收</th>
-                    <th className="text-right p-2">ROAS</th>
-                    <th className="text-right p-2">CTR%</th>
-                    <th className="text-right p-2">CVR%</th>
-                    <th className="text-right p-2">CPC</th>
-                    <th className="text-right p-2">CPA</th>
-                    <th className="text-center p-2">素材數/勝出/疲勞</th>
-                    <th className="text-center p-2">狀態</th>
-                    <th className="text-left p-2">AI 建議</th>
-                    <th className="text-center p-2" title="資料可信度：未映射花費、衝突數、override 占比">可信度</th>
-                    <th className="text-left p-2">下一步</th>
-                    <th className="text-center p-2">指派狀態</th>
-                    <th className="text-center p-2">動作</th>
-                    <th className="text-right p-2">最後更新</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r) => {
-                    const owners = ownerMap[r.productName] || { productOwnerId: "", mediaOwnerId: "", creativeOwnerId: "", taskStatus: "unassigned" };
-                    const statusLabel = PRODUCT_STATUS[r.productStatus];
-                    const statusColor = r.productStatus === "scale" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300" :
-                      r.productStatus === "stop" ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300" :
-                      r.productStatus === "danger" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300" : "bg-muted text-muted-foreground";
-                    return (
-                      <tr key={r.productName} className="border-b hover:bg-muted/30">
-                        <td className="p-2 sticky left-0 bg-background z-10 font-medium">{r.productName}</td>
-                        <td className="p-2">
-                          {r.costRuleStatus === "待補成本規則" ? (
-                            <Link href="/settings/profit-rules">
-                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[10px] cursor-pointer hover:bg-amber-50">
-                                未設定 · 點此設定
-                              </Badge>
-                            </Link>
-                          ) : (
-                            <Badge variant="secondary" className="text-[10px] text-muted-foreground">已設定</Badge>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          <Select value={owners.productOwnerId || "_"} onValueChange={(v) => updateOwner(r.productName, "productOwnerId", v === "_" ? "" : v)}>
-                            <SelectTrigger className="h-8 w-[100px] text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="_">—</SelectItem>
-                              {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="p-2">
-                          <Select value={owners.mediaOwnerId || "_"} onValueChange={(v) => updateOwner(r.productName, "mediaOwnerId", v === "_" ? "" : v)}>
-                            <SelectTrigger className="h-8 w-[100px] text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="_">—</SelectItem>
-                              {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="p-2">
-                          <Select value={owners.creativeOwnerId || "_"} onValueChange={(v) => updateOwner(r.productName, "creativeOwnerId", v === "_" ? "" : v)}>
-                            <SelectTrigger className="h-8 w-[100px] text-xs"><SelectValue placeholder="—" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="_">—</SelectItem>
-                              {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="p-2 text-right whitespace-nowrap">{formatCurrency(r.spend)}</td>
-                        <td className="p-2 text-right whitespace-nowrap">{formatCurrency(r.revenue)}</td>
-                        <td className={cn("p-2 text-right font-medium", r.roas >= 2 ? "text-emerald-600" : r.roas < 1 ? "text-red-600" : "")}>{r.roas.toFixed(2)}</td>
-                        <td className="p-2 text-right">{r.ctr.toFixed(2)}%</td>
-                        <td className="p-2 text-right">{r.cvr.toFixed(2)}%</td>
-                        <td className="p-2 text-right">{r.cpc.toFixed(0)}</td>
-                        <td className="p-2 text-right">{r.cpa > 0 ? formatCurrency(r.cpa) : "—"}</td>
-                        <td className="p-2 text-center">{r.creativeCount} / {r.winnerCount} / {r.fatigueCount}</td>
-                        <td className="p-2">
-                          <Badge variant="secondary" className={cn("text-[10px]", statusColor)}>{statusLabel}</Badge>
-                        </td>
-                        <td className="p-2 max-w-[140px] truncate" title={r.aiSuggestion}>{r.aiSuggestion}</td>
-                        <td className="p-2 text-center" title={`未映射花費 NT$${batchUnmappedSpend.toLocaleString()} · 衝突 ${r.conflictCount} · override ${(r.overrideHitRate * 100).toFixed(0)}%`}>
-                          <Badge variant={r.data_confidence === "high" ? "secondary" : r.data_confidence === "medium" ? "outline" : "destructive"} className="text-[10px]">
-                            {r.data_confidence === "high" ? "高" : r.data_confidence === "medium" ? "中" : "低"}
-                          </Badge>
-                        </td>
-                        <td className="p-2 max-w-[120px] truncate">{r.ruleTags.join("、") || "—"}</td>
-                        <td className="p-2">
-                          <Select value={owners.taskStatus} onValueChange={(v) => updateOwner(r.productName, "taskStatus", v)}>
-                            <SelectTrigger className="h-8 w-[90px] text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="unassigned">未指派</SelectItem>
-                              <SelectItem value="assigned">已指派</SelectItem>
-                              <SelectItem value="in_progress">進行中</SelectItem>
-                              <SelectItem value="done">已完成</SelectItem>
-                              <SelectItem value="pending_confirm">待確認</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="p-2">
-                          <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openCreateTask(r)}>
-                            <ListPlus className="w-3 h-3" /> 生成任務
-                          </Button>
-                        </td>
-                        <td className="p-2 text-right text-muted-foreground text-xs">—</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {filtered.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">無符合條件的商品，請放寬篩選或更新資料。</div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Phase 3 商品主戰場：每商品一卡，回答七件事，非表格 */}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((r) => {
+            const statusLabel = PRODUCT_STATUS[r.productStatus];
+            const statusColor = r.productStatus === "scale" ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20" :
+              r.productStatus === "stop" ? "border-red-300 bg-red-50/50 dark:bg-red-950/20" :
+              r.productStatus === "danger" ? "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20" : "border-border bg-muted/20";
+            const supporting = (r.creatives ?? []).filter((c: { roas: number }) => c.roas >= 2).sort((a: { roas: number }, b: { roas: number }) => b.roas - a.roas).slice(0, 3);
+            const dragging = (r.creatives ?? []).filter((c: { roas: number; materialStrategy?: string }) => c.roas < 1 || (failureRatesByTag[c.materialStrategy ?? ""] ?? 0) > 0.8).sort((a: { spend: number }, b: { spend: number }) => b.spend - a.spend).slice(0, 3);
+            const rescueForProduct = tableRescue.filter((x: { productName: string }) => x.productName === r.productName);
+            const scaleUpForProduct = tableScaleUp.filter((x: { productName: string }) => x.productName === r.productName);
+            const nextStep = rescueForProduct.length > 0 ? `先救 ${rescueForProduct.length} 檔` : scaleUpForProduct.length > 0 ? `可加碼 ${scaleUpForProduct.length} 檔` : r.ruleTags?.join("、") || "—";
+            return (
+              <Card key={r.productName} className={cn("flex flex-col", statusColor)}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-foreground">{r.productName}</h3>
+                    {(r as { evidenceLevel?: string }).evidenceLevel && EVIDENCE_LABELS[(r as { evidenceLevel?: string }).evidenceLevel!] && (
+                      <Badge variant="outline" className="text-[10px] font-normal">{EVIDENCE_LABELS[(r as { evidenceLevel?: string }).evidenceLevel!]}</Badge>
+                    )}
+                    <Badge variant="secondary" className={cn("text-[10px]", r.productStatus === "scale" ? "text-emerald-700" : r.productStatus === "stop" ? "text-red-700" : "")}>{statusLabel}</Badge>
+                  </div>
+                  <div className="grid gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1"><Target className="w-3 h-3" /> 值不值得砸</span>
+                      <p className="mt-0.5">{r.roas >= 2 ? "值得砸，ROAS 達標" : r.roas < 1 ? "不建議砸，先止血" : "觀察中"}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1">為什麼</span>
+                      <p className="mt-0.5 truncate" title={r.aiSuggestion}>{r.aiSuggestion}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" /> 靠哪些素材撐</span>
+                      <p className="mt-0.5 text-xs">{supporting.length === 0 ? "尚無高 ROAS 素材" : supporting.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${c.materialStrategy ?? ""} ${(c.headlineSnippet ?? "").slice(0, 20)} ROAS ${c.roas.toFixed(1)}`).join(" · ")}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1"><TrendingDown className="w-3 h-3" /> 被哪些素材拖</span>
+                      <p className="mt-0.5 text-xs">{dragging.length === 0 ? "尚無明顯拖累" : dragging.map((c: { materialStrategy?: string; headlineSnippet?: string; roas: number }) => `${(c.materialStrategy ?? "").slice(0, 8)} ROAS ${c.roas.toFixed(1)}`).join(" · ")}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1"><Zap className="w-3 h-3" /> 下一步做什麼</span>
+                      <p className="mt-0.5">{nextStep}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1"><Shield className="w-3 h-3" /> 成本規則是否可信</span>
+                      <p className="mt-0.5">
+                        {r.costRuleStatus === "待補成本規則" ? (
+                          <Link href="/settings/profit-rules" className="text-amber-600 hover:underline inline-flex items-center gap-1"><Calculator className="w-3 h-3" />待補，點此設定</Link>
+                        ) : (
+                          "已設定，可依保本／目標判斷"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1">breakEven／target／headroom</span>
+                      <p className="mt-0.5 text-xs">
+                        {r.hasRule && r.breakEvenRoas != null && r.targetRoas != null
+                          ? `保本 ${(r.breakEvenRoas as number).toFixed(1)} · 目標 ${(r.targetRoas as number).toFixed(1)}${r.profitHeadroom != null ? ` · headroom ${(r.profitHeadroom as number) >= 0 ? "+" : ""}${((r.profitHeadroom as number) * 100).toFixed(0)}%` : ""}`
+                          : "需先設定成本規則"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t text-xs text-muted-foreground">
+                    <span>{formatCurrency(r.spend)}</span>
+                    <span>ROAS {r.roas.toFixed(2)}</span>
+                    <span className="ml-auto">
+                      <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={() => openCreateTask(r)}>
+                        <ListPlus className="w-3 h-3" /> 生成任務
+                      </Button>
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        {filtered.length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">無符合條件的商品，請放寬篩選或更新資料。</CardContent>
+          </Card>
+        )}
 
         {(unmappedCount > 0 || productLevelNoDelivery.length > 0) && (
           <Collapsible>

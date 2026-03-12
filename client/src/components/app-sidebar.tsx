@@ -27,6 +27,7 @@ import {
   ListTodo,
   Package,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useEmployee, getDepartmentLabel } from "@/lib/employee-context";
@@ -42,6 +43,7 @@ const decisionNavItems = [
 /** 成長：擴量、素材與投放 */
 const growthNavItems = [
   { title: "素材中心", icon: Image, url: "/assets" },
+  { title: "素材作戰台", icon: Zap, url: "/creatives" },
   { title: "素材生命週期", icon: TrendingUp, url: "/creative-lifecycle" },
   { title: "投放中心", icon: Send, url: "/publish" },
   { title: "投放紀錄", icon: ListChecks, url: "/publish/history" },
