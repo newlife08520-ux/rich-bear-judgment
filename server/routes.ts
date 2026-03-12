@@ -82,7 +82,20 @@ import {
 import { buildDecisionCards, type CreativeLeaderboardRow } from "@shared/decision-cards-engine";
 import { classifyMaterialTier } from "@shared/material-tier";
 import { SCORE_DEFINITIONS } from "@shared/score-definitions";
-import { breakEvenRoas, targetRoas, DATA_STATUS_NO_DELIVERY, DATA_STATUS_UNDER_SAMPLE, DATA_STATUS_DECISION_READY } from "@shared/schema";
+import {
+  breakEvenRoas,
+  targetRoas,
+  DATA_STATUS_NO_DELIVERY,
+  DATA_STATUS_UNDER_SAMPLE,
+  DATA_STATUS_DECISION_READY,
+  EVIDENCE_ADS_ONLY,
+  EVIDENCE_GA_VERIFIED,
+  EVIDENCE_RULES_MISSING,
+  EVIDENCE_INSUFFICIENT_SAMPLE,
+  EVIDENCE_NO_DELIVERY,
+  type EvidenceLevel,
+} from "@shared/schema";
+import { getBatchValidity } from "@shared/batch-validity";
 import { computeScaleReadiness, getBudgetRecommendation as getScaleBudgetRecommendation, getTrendABC, creativeEdge } from "@shared/scale-score-engine";
 import { getProductProfitRules, getProductProfitRule, getProductProfitRuleExplicit, setProductProfitRule } from "./profit-rules-store";
 import { getInitialVerdict, setInitialVerdict } from "./initial-verdicts-store";
@@ -173,6 +186,55 @@ export async function registerRoutes(
   app.get("/api/health/ffprobe", (_req, res) => {
     const result = checkFfprobeAvailable();
     res.status(result.ok ? 200 : 503).json(result);
+  });
+
+  /** ---------- Facebook / Meta Webhook（訂閱私訊、大頭貼、feed 貼文留言等）---------- */
+  const FB_WEBHOOK_VERIFY_TOKEN = process.env.FB_WEBHOOK_VERIFY_TOKEN || "rich-bear-verify-token";
+
+  app.get("/api/webhook/facebook", (req, res) => {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+    if (mode === "subscribe" && token === FB_WEBHOOK_VERIFY_TOKEN) {
+      res.status(200).send(challenge);
+      return;
+    }
+    res.status(403).send("Forbidden");
+  });
+
+  app.post("/api/webhook/facebook", (req, res) => {
+    const body = req.body as Record<string, unknown> | undefined;
+    console.log("🔥🔥🔥 [FB RAW WEBHOOK]:", JSON.stringify(body ?? {}, null, 2));
+
+    res.status(200).send("OK");
+
+    if (!body || typeof body !== "object") return;
+    if (body.object !== "page") return;
+
+    const entries = Array.isArray(body.entry) ? body.entry : [];
+    for (const entry of entries) {
+      const entryObj = entry as { id?: string; time?: number; messaging?: unknown[]; changes?: unknown[] };
+      const pageId = entryObj.id;
+      const messaging = Array.isArray(entryObj.messaging) ? entryObj.messaging : [];
+      const changes = Array.isArray(entryObj.changes) ? entryObj.changes : [];
+
+      for (const event of messaging) {
+        try {
+          console.log("[FB WEBHOOK] messaging event", pageId, JSON.stringify(event));
+          // 私訊、大頭貼等：在此處理或轉發
+        } catch (e) {
+          console.error("[FB WEBHOOK] messaging handler error", e);
+        }
+      }
+      for (const change of changes) {
+        try {
+          console.log("[FB WEBHOOK] changes event (feed/comments etc.)", pageId, JSON.stringify(change));
+          // 貼文留言 feed/comments：在此處理或轉發
+        } catch (e) {
+          console.error("[FB WEBHOOK] changes handler error", e);
+        }
+      }
+    }
   });
 
   app.use("/api/assets", requireAuth, assetRouter);
@@ -1230,25 +1292,21 @@ export async function registerRoutes(
       const promoteData = await promoteRes.json();
       if (!promoteRes.ok) {
         const errMsg = (promoteData as { error?: { message?: string; code?: number } }).error?.message || "Meta API 錯誤";
-        const code = (promoteData as { error?: { code?: number } }).error?.code;
-        if (code === 200 || code === 190 || promoteRes.status === 403) {
-          const fallbackRes = await fetch(
-            `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(token)}`
-          );
-          const fallbackData = await fallbackRes.json();
-          if (!fallbackRes.ok) {
-            return res.status(400).json({ message: errMsg, pages: [], igAccounts: [] });
-          }
-          const raw = (fallbackData as { data?: any[] }).data || [];
-          const pages: { id: string; name: string }[] = raw.map((p: any) => ({ id: p.id, name: p.name || p.id }));
-          const igAccounts: { id: string; username: string; pageId: string }[] = [];
-          for (const p of raw) {
-            const ig = p.instagram_business_account;
-            if (ig?.id) igAccounts.push({ id: ig.id, username: ig.username || ig.id, pageId: p.id });
-          }
-          return res.json({ pages, igAccounts, noFilterByAccount: true, message: "無法依廣告帳號過濾粉專，顯示 Token 下全部粉專／IG，請自行確認對應關係" });
+        const fallbackRes = await fetch(
+          `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(token)}`
+        );
+        const fallbackData = await fallbackRes.json();
+        if (!fallbackRes.ok) {
+          return res.status(400).json({ message: errMsg, pages: [], igAccounts: [] });
         }
-        return res.status(400).json({ message: errMsg, pages: [], igAccounts: [] });
+        const raw = (fallbackData as { data?: any[] }).data || [];
+        const pages: { id: string; name: string }[] = raw.map((p: any) => ({ id: p.id, name: p.name || p.id }));
+        const igAccounts: { id: string; username: string; pageId: string }[] = [];
+        for (const p of raw) {
+          const ig = p.instagram_business_account;
+          if (ig?.id) igAccounts.push({ id: ig.id, username: ig.username || ig.id, pageId: p.id });
+        }
+        return res.json({ pages, igAccounts, noFilterByAccount: true, message: "無法依廣告帳號過濾粉專，改顯示此 Token 可管理的全部粉專／IG，請自行確認與廣告帳號的對應" });
       }
       const rawPages = (promoteData as { data?: any[] }).data || [];
       const pages: { id: string; name: string }[] = rawPages.map((p: any) => ({ id: p.id, name: p.name || p.id }));
@@ -1679,6 +1737,7 @@ export async function registerRoutes(
     const userId = req.session.userId!;
     const syncedAccounts = storage.getSyncedAccounts(userId);
     const batch = getBatchFromRequest(req);
+    const batchValidityResult = getBatchValidity(batch ?? null);
     const metaCount = syncedAccounts.filter((a: SyncedAccount) => a.platform === "meta").length;
     const ga4Count = syncedAccounts.filter((a: SyncedAccount) => a.platform === "ga4").length;
     const hasSynced = metaCount > 0 || ga4Count > 0;
@@ -1691,9 +1750,17 @@ export async function registerRoutes(
         hasSummary: false,
         dataStatus,
         message,
+        batchValidity: batchValidityResult.validity,
+        batchValidityReason: batchValidityResult.reason,
       });
     }
-    res.json({ hasSummary: true, summary: batch.summary, dataStatus: "has_data" });
+    res.json({
+      hasSummary: true,
+      summary: batch.summary,
+      dataStatus: "has_data",
+      batchValidity: batchValidityResult.validity,
+      batchValidityReason: batchValidityResult.reason,
+    });
   });
 
   app.get("/api/dashboard/account-ranking", requireAuth, (req, res) => {
@@ -2390,18 +2457,33 @@ export async function registerRoutes(
     const useOverrides = req.query.useOverrides !== "false";
 
     if (!batch || !batch.campaignMetrics || batch.campaignMetrics.length === 0) {
+      const batchValidity = getBatchValidity(batch ?? null);
       return res.json({
+        batchValidity: batchValidity.validity,
+        batchValidityReason: batchValidity.reason,
         productLevel: [],
+        productLevelMain: [],
+        productLevelNoDelivery: [],
+        productLevelUnmapped: [],
+        unmappedCount: 0,
         creativeLeaderboard: [],
+        creativeLeaderboardUnderSample: [],
         hiddenGems: [],
         urgentStop: [],
         riskyCampaigns: [],
         failureRatesByTag: {},
         budgetActionTable: [],
+        budgetActionNoDelivery: [],
+        budgetActionUnderSample: [],
         tableRescue: [],
         tableScaleUp: [],
         tableNoMisjudge: [],
         tableExtend: [],
+        todayActions: [],
+        tierMainAccount: [],
+        tierHighPotentialCreatives: [],
+        tierNoise: [],
+        funnelEvidence: false,
       });
     }
 
@@ -2489,6 +2571,22 @@ export async function registerRoutes(
       const beRoas = breakEvenRoas(rule.costRatio);
       const tgtRoas = targetRoas(rule.costRatio, rule.targetNetMargin);
       const mw = c.multiWindow;
+      /** Phase 2A Guardrail 2：成本比缺失時不得高信心判賺錢／可放大 */
+      const scaleAction = rec.action;
+      const suggestedAction =
+        !hasRule && (scaleAction === "可加碼" || scaleAction === "高潛延伸")
+          ? "待補規則"
+          : scaleAction;
+      const reason =
+        !hasRule && (scaleAction === "可加碼" || scaleAction === "高潛延伸")
+          ? "成本規則未補齊，暫不建議高信心判賺錢／可放大"
+          : rec.reason;
+      /** Phase 2A Guardrail 3：evidenceLevel 落地 */
+      let evidenceLevel: EvidenceLevel;
+      if (dataStatus === "no_delivery") evidenceLevel = EVIDENCE_NO_DELIVERY;
+      else if (dataStatus === "under_sample") evidenceLevel = EVIDENCE_INSUFFICIENT_SAMPLE;
+      else if (!hasRule) evidenceLevel = EVIDENCE_RULES_MISSING;
+      else evidenceLevel = EVIDENCE_ADS_ONLY;
       return {
         campaignId: c.campaignId,
         campaignName: c.campaignName,
@@ -2502,6 +2600,7 @@ export async function registerRoutes(
         impactAmount,
         sampleStatus: sampleStatusLabel,
         dataStatus,
+        evidenceLevel,
         scaleReadinessScore: score,
         profitHeadroom: breakdown.profitHeadroom,
         breakEvenRoas: beRoas < 1e6 ? beRoas : null,
@@ -2512,9 +2611,9 @@ export async function registerRoutes(
         trendABC,
         trendCore: trendSignals.trendCore,
         momentum: trendSignals.momentum,
-        suggestedAction: rec.action,
+        suggestedAction,
         suggestedPct: rec.suggestedPct,
-        reason: rec.reason,
+        reason,
         whyNotMore: rec.whyNotMore,
         hasRule,
         costRuleStatus: hasRule ? "已設定" : "待補成本規則",
@@ -2525,9 +2624,9 @@ export async function registerRoutes(
     for (const p of productLevel) {
       productAvgRoasByProduct.set(p.productName, p.spend > 0 ? p.revenue / p.spend : 0);
     }
-    /** 創意榜核心只含花費 > 0（金榜/黑榜不混入未投遞） */
+    /** 創意榜核心只含花費 > 0（金榜/黑榜不混入未投遞）；Phase 2A 加 evidenceLevel，樣本不足不進核心排序 */
     const creativeRawDecisionReady = creativeRaw.filter((c) => c.spend > 0);
-    const creativeLeaderboard = creativeRawDecisionReady.map((c) => {
+    const creativeLeaderboardRaw = creativeRawDecisionReady.map((c) => {
       const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
       const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
       const budgetSuggestion = getBudgetRecommendation(c.spend, c.roas) ?? undefined;
@@ -2557,6 +2656,8 @@ export async function registerRoutes(
       const rec = getScaleBudgetRecommendation(input);
       const productAvgRoas = productAvgRoasByProduct.get(c.productName) ?? 0;
       const edge = creativeEdge(c.roas, productAvgRoas);
+      const evidenceLevel: EvidenceLevel =
+        breakdown.confidenceScore < 40 ? EVIDENCE_INSUFFICIENT_SAMPLE : EVIDENCE_ADS_ONLY;
       return {
         ...c,
         thumbnailUrl,
@@ -2572,8 +2673,17 @@ export async function registerRoutes(
         whyNotMore: rec.whyNotMore,
         productAverageRoas: productAvgRoas,
         creativeEdge: edge,
+        evidenceLevel,
+        confidenceScore: breakdown.confidenceScore,
       };
     });
+    /** 核心創意榜排除樣本不足，未分類排最後 */
+    const creativeLeaderboard = [...creativeLeaderboardRaw]
+      .filter((c) => (c as { evidenceLevel: EvidenceLevel }).evidenceLevel !== EVIDENCE_INSUFFICIENT_SAMPLE)
+      .sort((a, b) => (a.productName === "未分類" ? 1 : b.productName === "未分類" ? -1 : 0));
+    const creativeLeaderboardUnderSample = creativeLeaderboardRaw.filter(
+      (c) => (c as { evidenceLevel: EvidenceLevel }).evidenceLevel === EVIDENCE_INSUFFICIENT_SAMPLE
+    );
     const failureRatesByTag = getHistoricalFailureRateByTag(rows);
 
     const totalSpend = productLevel.reduce((s, p) => s + p.spend, 0);
@@ -2643,9 +2753,17 @@ export async function registerRoutes(
       return revShare >= 0.15 && p.roas >= 1;
     }).sort((a, b) => b.revenue - a.revenue);
 
-    /** 核心決策表只含花費 > 0（排除 no_delivery）；可加碼表僅含已設定成本規則者 */
+    /** Phase 2A Guardrail 1：核心區只含 decision_ready（排除 no_delivery、under_sample） */
     const budgetActionDecisionReady = budgetActionTable.filter(
-      (r) => (r as { spend: number }).spend > 0 && (r as { dataStatus: string }).dataStatus !== DATA_STATUS_NO_DELIVERY
+      (r) =>
+        (r as { spend: number }).spend > 0 &&
+        (r as { dataStatus: string }).dataStatus === DATA_STATUS_DECISION_READY
+    );
+    const budgetActionUnderSample = budgetActionTable.filter(
+      (r) => (r as { dataStatus: string }).dataStatus === DATA_STATUS_UNDER_SAMPLE
+    );
+    const budgetActionNoDelivery = budgetActionTable.filter(
+      (r) => (r as { dataStatus: string }).dataStatus === DATA_STATUS_NO_DELIVERY
     );
     const tableRescue = budgetActionDecisionReady
       .filter((r) => r.suggestedAction === "先降" || r.suggestedPct === "關閉")
@@ -2673,33 +2791,177 @@ export async function registerRoutes(
     const tierNoise = tableRescue.map((r) => ({ campaignId: r.campaignId, campaignName: r.campaignName, productName: r.productName, spend: r.spend, reason: r.reason }));
     const tierHighPotential = tableExtend.slice(0, 10).map((c) => ({ ...c, revenue: c.revenue }));
 
-    /** 商品層：補 hasRule / costRuleStatus；拆成核心排行 vs 未投遞 vs 未映射 */
-    const productLevelWithRule = productLevel.map((p) => ({
-      ...p,
-      hasRule: getProductProfitRuleExplicit(p.productName) != null,
-      costRuleStatus: getProductProfitRuleExplicit(p.productName) != null ? "已設定" : "待補成本規則",
+    /** Phase 2B：今日最該動的 5 件事（合併四類，每筆帶總監判語 §41） */
+    const buildDirectorVerdict = (
+      typeLabel: string,
+      reason: string,
+      action: string,
+      pct: number | "關閉",
+      whyNotMore?: string | null
+    ): string => {
+      const actionStr = pct === "關閉" ? "關閉" : `${action} ${pct}%`;
+      const parts = [`${typeLabel}：${reason}。建議 ${actionStr}`];
+      if (whyNotMore && String(whyNotMore).trim()) parts.push(String(whyNotMore).trim());
+      return parts.join("。");
+    };
+    type TodayActionRow = {
+      type: "放大" | "止血" | "不要誤殺" | "值得延伸" | "規則缺失待補";
+      objectType: "商品" | "素材" | "活動";
+      productName: string;
+      campaignName?: string;
+      campaignId?: string;
+      accountId?: string;
+      spend: number;
+      revenue: number;
+      roas: number;
+      breakEvenRoas?: number | null;
+      targetRoas?: number | null;
+      roas1d?: number | null;
+      roas3d?: number | null;
+      roas7d?: number | null;
+      suggestedAction: string;
+      suggestedPct: number | "關閉";
+      evidenceLevel: EvidenceLevel;
+      reason: string;
+      whyNotMore?: string | null;
+      directorVerdict: string;
+    };
+    const todayRescue: TodayActionRow[] = tableRescue.slice(0, 2).map((r) => ({
+      type: "止血",
+      objectType: "活動" as const,
+      productName: r.productName,
+      campaignName: r.campaignName,
+      campaignId: r.campaignId,
+      accountId: r.accountId,
+      spend: r.spend,
+      revenue: r.revenue ?? 0,
+      roas: r.roas,
+      breakEvenRoas: r.breakEvenRoas ?? null,
+      targetRoas: r.targetRoas ?? null,
+      roas1d: r.roas1d ?? null,
+      roas3d: r.roas3d ?? null,
+      roas7d: r.roas7d ?? null,
+      suggestedAction: r.suggestedAction,
+      suggestedPct: r.suggestedPct,
+      evidenceLevel: (r as { evidenceLevel?: EvidenceLevel }).evidenceLevel ?? EVIDENCE_ADS_ONLY,
+      reason: r.reason,
+      whyNotMore: (r as { whyNotMore?: string }).whyNotMore ?? null,
+      directorVerdict: buildDirectorVerdict("止血", r.reason, r.suggestedAction, r.suggestedPct, (r as { whyNotMore?: string }).whyNotMore),
     }));
+    const todayScaleUp: TodayActionRow[] = tableScaleUp.slice(0, 2).map((r) => ({
+      type: "放大",
+      objectType: "活動" as const,
+      productName: r.productName,
+      campaignName: r.campaignName,
+      campaignId: r.campaignId,
+      accountId: r.accountId,
+      spend: r.spend,
+      revenue: r.revenue ?? 0,
+      roas: r.roas,
+      breakEvenRoas: r.breakEvenRoas ?? null,
+      targetRoas: r.targetRoas ?? null,
+      roas1d: r.roas1d ?? null,
+      roas3d: r.roas3d ?? null,
+      roas7d: r.roas7d ?? null,
+      suggestedAction: r.suggestedAction,
+      suggestedPct: r.suggestedPct,
+      evidenceLevel: (r as { evidenceLevel?: EvidenceLevel }).evidenceLevel ?? EVIDENCE_ADS_ONLY,
+      reason: r.reason,
+      whyNotMore: (r as { whyNotMore?: string }).whyNotMore ?? null,
+      directorVerdict: buildDirectorVerdict("放大", r.reason, r.suggestedAction, r.suggestedPct, (r as { whyNotMore?: string }).whyNotMore),
+    }));
+    const todayNoMisjudge: TodayActionRow[] = tableNoMisjudge.slice(0, 1).map((r) => ({
+      type: "不要誤殺",
+      objectType: "活動" as const,
+      productName: r.productName,
+      campaignName: r.campaignName,
+      campaignId: r.campaignId,
+      accountId: r.accountId,
+      spend: r.spend,
+      revenue: r.revenue ?? 0,
+      roas: r.roas,
+      breakEvenRoas: r.breakEvenRoas ?? null,
+      targetRoas: r.targetRoas ?? null,
+      roas1d: r.roas1d ?? null,
+      roas3d: r.roas3d ?? null,
+      roas7d: r.roas7d ?? null,
+      suggestedAction: r.suggestedAction,
+      suggestedPct: r.suggestedPct,
+      evidenceLevel: (r as { evidenceLevel?: EvidenceLevel }).evidenceLevel ?? EVIDENCE_ADS_ONLY,
+      reason: r.reason,
+      whyNotMore: (r as { whyNotMore?: string }).whyNotMore ?? null,
+      directorVerdict: buildDirectorVerdict("不要誤殺", r.reason, r.suggestedAction, r.suggestedPct, (r as { whyNotMore?: string }).whyNotMore),
+    }));
+    const todayExtend: TodayActionRow[] = tableExtend.slice(0, 2).map((c) => {
+      const r = c as typeof c & { budgetReason?: string; whyNotMore?: string; productName: string; spend: number; revenue: number; roas: number };
+      return {
+        type: "值得延伸" as const,
+        objectType: "素材" as const,
+        productName: r.productName,
+        campaignName: undefined,
+        campaignId: undefined,
+        accountId: undefined,
+        spend: r.spend,
+        revenue: r.revenue ?? 0,
+        roas: r.roas,
+        breakEvenRoas: null,
+        targetRoas: null,
+        roas1d: null,
+        roas3d: null,
+        roas7d: null,
+        suggestedAction: typeof r.suggestedAction === "string" ? r.suggestedAction : "維持",
+        suggestedPct: (r.suggestedPct as number | "關閉") ?? 0,
+        evidenceLevel: (r.evidenceLevel as EvidenceLevel) ?? EVIDENCE_ADS_ONLY,
+        reason: r.budgetReason ?? "Creative Edge 高、花費未飽和，可延伸",
+        whyNotMore: r.whyNotMore ?? null,
+        directorVerdict: `值得延伸：${r.budgetReason ?? "Creative Edge 高、花費未飽和"}。${r.whyNotMore ?? "先小步延伸，再觀察轉換。"}`,
+      };
+    });
+    const todayActions: TodayActionRow[] = [...todayRescue, ...todayScaleUp, ...todayNoMisjudge, ...todayExtend].slice(0, 5);
+
+    /** 商品層：補 hasRule / costRuleStatus / evidenceLevel；拆成核心排行 vs 未投遞 vs 未映射 */
+    const productLevelWithRule = productLevel.map((p) => {
+      const hasRule = getProductProfitRuleExplicit(p.productName) != null;
+      let evidenceLevel: EvidenceLevel;
+      if (p.productName === "未分類") evidenceLevel = EVIDENCE_RULES_MISSING;
+      else if (p.spend === 0) evidenceLevel = EVIDENCE_NO_DELIVERY;
+      else if (!hasRule) evidenceLevel = EVIDENCE_RULES_MISSING;
+      else evidenceLevel = EVIDENCE_ADS_ONLY;
+      return {
+        ...p,
+        hasRule,
+        costRuleStatus: hasRule ? "已設定" : "待補成本規則",
+        evidenceLevel,
+      };
+    });
     const productLevelMain = productLevelWithRule.filter((p) => p.spend > 0 && p.productName !== "未分類");
     const productLevelNoDelivery = productLevelWithRule.filter((p) => p.spend === 0);
     const productLevelUnmapped = productLevelWithRule.filter((p) => p.productName === "未分類");
 
+    const batchValidityResult = getBatchValidity(batch);
     res.json({
+      batchValidity: batchValidityResult.validity,
+      batchValidityReason: batchValidityResult.reason,
       productLevel: productLevelWithRule,
       productLevelMain,
       productLevelNoDelivery,
       productLevelUnmapped,
       unmappedCount: productLevelUnmapped.length,
       creativeLeaderboard,
+      creativeLeaderboardUnderSample,
       hiddenGems,
       urgentStop,
       riskyCampaigns,
       funnelWarnings,
       failureRatesByTag,
       budgetActionTable,
+      budgetActionNoDelivery,
+      budgetActionUnderSample,
       tableRescue,
       tableScaleUp,
       tableNoMisjudge,
       tableExtend,
+      todayActions,
       tierMainAccount: tierMain,
       tierHighPotentialCreatives: tierHighPotential,
       tierNoise: tierNoise.slice(0, 20),

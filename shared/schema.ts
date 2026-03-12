@@ -1531,19 +1531,19 @@ export interface UserSettings {
 }
 
 export const settingsSchema = z.object({
-  ga4PropertyId: z.string().optional().default(""),
-  fbAccessToken: z.string().optional().default(""),
-  aiApiKey: z.string().optional().default(""),
-  systemPrompt: z.string().optional().default(""),
-  coreMasterPrompt: z.string().optional().default(""),
-  modeAPrompt: z.string().optional().default(""),
-  modeBPrompt: z.string().optional().default(""),
-  modeCPrompt: z.string().optional().default(""),
-  modeDPrompt: z.string().optional().default(""),
-  severity: z.enum(["strict", "moderate", "lenient"]).optional().default("moderate"),
-  outputLength: z.enum(["summary", "standard", "detailed"]).optional().default("standard"),
-  brandTone: z.enum(["professional", "direct", "friendly", "aggressive"]).optional().default("professional"),
-  analysisBias: z.enum(["commercial", "creative", "conversion", "brand"]).optional().default("conversion"),
+  ga4PropertyId: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  fbAccessToken: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  aiApiKey: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  systemPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  coreMasterPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  modeAPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  modeBPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  modeCPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  modeDPrompt: z.union([z.string(), z.null()]).optional().default("").transform((v) => (v == null ? "" : String(v))),
+  severity: z.enum(["strict", "moderate", "lenient"]).optional().nullable().transform((v) => (v ?? "moderate")),
+  outputLength: z.enum(["summary", "standard", "detailed"]).optional().nullable().transform((v) => (v ?? "standard")),
+  brandTone: z.enum(["professional", "direct", "friendly", "aggressive"]).optional().nullable().transform((v) => (v ?? "professional")),
+  analysisBias: z.enum(["commercial", "creative", "conversion", "brand"]).optional().nullable().transform((v) => (v ?? "conversion")),
 });
 
 export type SettingsInput = z.infer<typeof settingsSchema>;
@@ -1860,3 +1860,35 @@ export const DATA_STATUS_UNDER_SAMPLE = "under_sample";
 /** 已達可判讀門檻 */
 export const DATA_STATUS_DECISION_READY = "decision_ready";
 export type DataStatus = typeof DATA_STATUS_NO_DELIVERY | typeof DATA_STATUS_UNDER_SAMPLE | typeof DATA_STATUS_DECISION_READY;
+
+// ========== 證據層級（§35 API contract、§41 總監語言）==========
+/** 僅廣告層數據，不得確診站內漏斗 */
+export const EVIDENCE_ADS_ONLY = "ads_only";
+/** 已有 GA／漏斗證據 */
+export const EVIDENCE_GA_VERIFIED = "ga_verified";
+/** 成本規則未補齊，不得高信心判賺錢／可放大 */
+export const EVIDENCE_RULES_MISSING = "rules_missing";
+/** 樣本不足，不建議重判 */
+export const EVIDENCE_INSUFFICIENT_SAMPLE = "insufficient_sample";
+/** 未投遞／花費 0，不進核心判斷 */
+export const EVIDENCE_NO_DELIVERY = "no_delivery";
+export type EvidenceLevel =
+  | typeof EVIDENCE_ADS_ONLY
+  | typeof EVIDENCE_GA_VERIFIED
+  | typeof EVIDENCE_RULES_MISSING
+  | typeof EVIDENCE_INSUFFICIENT_SAMPLE
+  | typeof EVIDENCE_NO_DELIVERY;
+
+export const EVIDENCE_LEVEL_LABELS: Record<EvidenceLevel, string> = {
+  [EVIDENCE_ADS_ONLY]: "廣告層推測",
+  [EVIDENCE_GA_VERIFIED]: "已有 GA 證據",
+  [EVIDENCE_RULES_MISSING]: "規則缺失",
+  [EVIDENCE_INSUFFICIENT_SAMPLE]: "樣本不足",
+  [EVIDENCE_NO_DELIVERY]: "尚未投遞",
+};
+
+// ========== Latest valid batch（§36、Phase 2A Guardrail 6）==========
+export const BATCH_VALIDITY_VALID = "valid";
+export const BATCH_VALIDITY_LEGACY = "legacy";
+export const BATCH_VALIDITY_INSUFFICIENT = "insufficient";
+export type BatchValidity = typeof BATCH_VALIDITY_VALID | typeof BATCH_VALIDITY_LEGACY | typeof BATCH_VALIDITY_INSUFFICIENT;

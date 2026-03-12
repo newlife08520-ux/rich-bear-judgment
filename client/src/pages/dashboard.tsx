@@ -1243,6 +1243,15 @@ function ScoreDefinitionsTrigger() {
   );
 }
 
+/** 證據層級（Phase 2A Guardrail 3） */
+const EVIDENCE_LABELS: Record<string, string> = {
+  ads_only: "廣告層推測",
+  ga_verified: "已有 GA 證據",
+  rules_missing: "規則缺失",
+  insufficient_sample: "樣本不足",
+  no_delivery: "尚未投遞",
+};
+
 /** 預算動作列（活動維度）；含證據欄位供決策表顯示 */
 interface BudgetActionRow {
   campaignId: string;
@@ -1255,6 +1264,7 @@ interface BudgetActionRow {
   impactAmount: number;
   sampleStatus: string;
   dataStatus?: "no_delivery" | "under_sample" | "decision_ready";
+  evidenceLevel?: string;
   scaleReadinessScore?: number;
   profitHeadroom?: number;
   breakEvenRoas?: number | null;
@@ -1273,10 +1283,12 @@ interface BudgetActionRow {
   costRuleStatus?: string;
 }
 
-/** Action Center API 回傳格式 */
+/** Action Center API 回傳格式（Phase 2A 含 batchValidity、evidenceLevel、次級區） */
 interface ActionCenterData {
-  productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string }>;
-  productLevelMain?: Array<{ productName: string; spend: number; revenue: number; roas: number; hasRule?: boolean; costRuleStatus?: string }>;
+  batchValidity?: "valid" | "legacy" | "insufficient";
+  batchValidityReason?: string;
+  productLevel: Array<{ productName: string; spend: number; revenue: number; roas: number; campaignCount?: number; hasRule?: boolean; costRuleStatus?: string; evidenceLevel?: string }>;
+  productLevelMain?: Array<{ productName: string; spend: number; revenue: number; roas: number; hasRule?: boolean; costRuleStatus?: string; evidenceLevel?: string }>;
   productLevelNoDelivery?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
   productLevelUnmapped?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
   unmappedCount?: number;
@@ -1304,10 +1316,36 @@ interface ActionCenterData {
   funnelWarnings?: FunnelWarningItem[];
   failureRatesByTag?: Record<string, number>;
   budgetActionTable?: BudgetActionRow[];
+  budgetActionNoDelivery?: BudgetActionRow[];
+  budgetActionUnderSample?: BudgetActionRow[];
+  creativeLeaderboardUnderSample?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number; evidenceLevel?: string }>;
   tableRescue?: BudgetActionRow[];
   tableScaleUp?: BudgetActionRow[];
   tableNoMisjudge?: BudgetActionRow[];
   tableExtend?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number; conversions: number; creativeEdge?: number; scaleReadinessScore?: number; [k: string]: unknown }>;
+  /** Phase 2B：今日最該動的 5 件事（合併止血/放大/不要誤殺/值得延伸，每筆帶總監判語） */
+  todayActions?: Array<{
+    type: "放大" | "止血" | "不要誤殺" | "值得延伸" | "規則缺失待補";
+    objectType: "商品" | "素材" | "活動";
+    productName: string;
+    campaignName?: string;
+    campaignId?: string;
+    accountId?: string;
+    spend: number;
+    revenue: number;
+    roas: number;
+    breakEvenRoas?: number | null;
+    targetRoas?: number | null;
+    roas1d?: number | null;
+    roas3d?: number | null;
+    roas7d?: number | null;
+    suggestedAction: string;
+    suggestedPct: number | "關閉";
+    evidenceLevel?: string;
+    reason: string;
+    whyNotMore?: string | null;
+    directorVerdict: string;
+  }>;
   tierMainAccount?: Array<{ productName: string; spend: number; revenue: number; roas: number }>;
   tierHighPotentialCreatives?: Array<{ productName: string; materialStrategy: string; headlineSnippet: string; spend: number; revenue: number; roas: number }>;
   tierNoise?: Array<{ campaignId: string; campaignName: string; productName: string; spend: number; reason: string }>;
@@ -1329,7 +1367,7 @@ export default function DashboardPage() {
     queryKey: actionCenterQueryKey,
     queryFn: async () => {
       const res = await fetch(`/api/dashboard/action-center?${actionCenterParams.toString()}`, { credentials: "include" });
-      if (!res.ok) return { productLevel: [], creativeLeaderboard: [], hiddenGems: [], urgentStop: [], riskyCampaigns: [], funnelWarnings: [], failureRatesByTag: {}, budgetActionTable: [] };
+      if (!res.ok) return { productLevel: [], creativeLeaderboard: [], hiddenGems: [], urgentStop: [], riskyCampaigns: [], funnelWarnings: [], failureRatesByTag: {}, budgetActionTable: [], todayActions: [] };
       return res.json();
     },
   });
@@ -1344,7 +1382,14 @@ export default function DashboardPage() {
   });
   const unassignedTaskCount = workbenchTasks.filter((t: { status: string }) => t.status === "unassigned" || t.status === "assigned").length;
 
-  const { data: summaryData, isLoading: summaryLoading } = useQuery<{ hasSummary: boolean; summary?: CrossAccountSummary; dataStatus?: "no_sync" | "synced_no_data" | "has_data"; message?: string }>({
+  const { data: summaryData, isLoading: summaryLoading } = useQuery<{
+    hasSummary: boolean;
+    summary?: CrossAccountSummary;
+    dataStatus?: "no_sync" | "synced_no_data" | "has_data";
+    message?: string;
+    batchValidity?: "valid" | "legacy" | "insufficient";
+    batchValidityReason?: string;
+  }>({
     queryKey: ["/api/dashboard/cross-account-summary"],
   });
 
@@ -1488,6 +1533,23 @@ export default function DashboardPage() {
       </header>
 
       <div className="min-h-full p-4 md:p-6 space-y-6 page-container-fluid">
+        {/* Phase 2A Guardrail 6：batch 有效性橫幅 */}
+        {(actionData?.batchValidity === "legacy" || actionData?.batchValidity === "insufficient" || summaryData?.batchValidity === "legacy" || summaryData?.batchValidity === "insufficient") && (
+          <Card className={cn(
+            actionData?.batchValidity === "insufficient" || summaryData?.batchValidity === "insufficient"
+              ? "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/30"
+              : "border-muted bg-muted/30"
+          )}>
+            <CardContent className="py-3 px-4 text-sm">
+              {actionData?.batchValidity === "insufficient" || summaryData?.batchValidity === "insufficient"
+                ? "資料不足，請先更新資料後再依決策區建議操作。"
+                : "目前為舊版資料僅供參考，核心決策請以「決策焦點」與下方表格為準。"}
+              {(actionData?.batchValidityReason || summaryData?.batchValidityReason) && (
+                <span className="text-muted-foreground ml-1">（{actionData?.batchValidityReason || summaryData?.batchValidityReason}）</span>
+              )}
+            </CardContent>
+          </Card>
+        )}
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="py-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-lg font-medium">
@@ -1513,129 +1575,166 @@ export default function DashboardPage() {
 
         {actionData?.productLevel && actionData.productLevel.length > 0 && (
           <>
-            <h2 className="text-base font-semibold text-foreground">決策焦點 · 優先回答四問</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="section-today-focus">
-            <Card className="border-emerald-200 dark:border-emerald-800">
-              <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> 1. 今天誰在賺錢</h4>
-                <ul className="space-y-1">
-                  {(actionData.productLevelMain ?? actionData.productLevel)
-                    .filter((p) => p.spend > 0 && (p as { hasRule?: boolean }).hasRule && p.roas >= 1)
-                    .sort((a, b) => b.roas - a.roas)
-                    .slice(0, 3)
-                    .map((p) => (
-                      <li key={p.productName} className="flex justify-between text-sm">
-                        <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
-                        <span className="text-emerald-600">ROAS {p.roas.toFixed(2)}</span>
-                      </li>
-                    ))}
-                </ul>
-                {actionData.productLevel.filter((p) => (p as { hasRule?: boolean }).hasRule && p.roas >= 1).length === 0 && (
-                  <p className="text-xs text-muted-foreground">尚無（或尚未設定成本規則）</p>
-                )}
-              </CardContent>
-            </Card>
-            <Card className="border-red-200 dark:border-red-800">
-              <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5" /> 2. 今天誰最危險</h4>
-                {actionData.tableRescue && actionData.tableRescue.length > 0 ? (
-                  <ul className="space-y-2 text-sm">
-                    {actionData.tableRescue.slice(0, 3).map((r) => (
-                      <li key={r.campaignId} className="flex flex-col gap-0.5">
-                        <span className="font-medium truncate">{r.productName} · {r.campaignName}</span>
-                        <span className="text-red-600">花費 {formatCurrency(r.spend)} · ROAS {r.roas.toFixed(2)}</span>
-                        {r.breakEvenRoas != null && <span className="text-muted-foreground text-xs">保本 ROAS {r.breakEvenRoas.toFixed(2)} · Headroom {r.profitHeadroom != null ? r.profitHeadroom.toFixed(2) : "—"}</span>}
-                        <span className="text-muted-foreground text-xs">{r.suggestedAction} {r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <ul className="space-y-1">
-                    {(actionData.productLevelMain ?? actionData.productLevel)
-                      .filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1))
-                      .sort((a, b) => b.spend - a.spend)
-                      .slice(0, 3)
-                      .map((p) => (
-                        <li key={p.productName} className="flex justify-between text-sm">
-                          <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
-                          <span className="text-red-600">花費 {formatCurrency(p.spend)} · ROAS {p.roas.toFixed(2)}</span>
+            {/* Phase 2B：首頁第一屏固定五區塊（總監晨會桌面） */}
+            <section className="space-y-6" data-testid="section-phase2b-five-blocks">
+              {/* 區塊 1：今日最該動的 5 件事 */}
+              <Card className="border-2 border-primary/30 shadow-md" data-testid="block-1-today-actions">
+                <CardContent className="pt-4 pb-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <ListChecks className="w-4 h-4 text-primary" />
+                    區塊 1 · 今日最該動的 5 件事
+                  </h2>
+                  {actionData.todayActions && actionData.todayActions.length > 0 ? (
+                    <ul className="space-y-3">
+                      {actionData.todayActions.map((a, i) => (
+                        <li key={`${a.type}-${a.productName}-${a.campaignId ?? a.campaignName ?? i}`} className="rounded-lg border bg-card p-3">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <Badge variant={a.type === "止血" ? "destructive" : a.type === "放大" ? "default" : "secondary"}>
+                              {a.type}
+                            </Badge>
+                            <span className="font-medium text-sm">{a.productName}{a.campaignName ? ` · ${a.campaignName}` : ""}</span>
+                            {a.evidenceLevel && EVIDENCE_LABELS[a.evidenceLevel] && (
+                              <Badge variant="outline" className="text-xs font-normal">{EVIDENCE_LABELS[a.evidenceLevel]}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-foreground mt-1" data-testid="director-verdict">{a.directorVerdict}</p>
+                          <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                            <span>花費 {formatCurrency(a.spend)}</span>
+                            <span>ROAS {a.roas.toFixed(2)}</span>
+                            {a.breakEvenRoas != null && <span>保本 {a.breakEvenRoas.toFixed(2)}</span>}
+                            {a.targetRoas != null && <span>目標 {a.targetRoas.toFixed(2)}</span>}
+                            <span>{a.suggestedAction} {a.suggestedPct === "關閉" ? "關閉" : `${a.suggestedPct}%`}</span>
+                          </div>
                         </li>
                       ))}
-                  </ul>
-                )}
-                {(!actionData.tableRescue?.length && actionData.productLevel.filter((p) => p.spend > 0 && (p.revenue <= 0 || p.roas < 1)).length === 0) && (
-                  <p className="text-xs text-muted-foreground">尚無</p>
-                )}
-              </CardContent>
-            </Card>
-            <Card className="border-amber-200 dark:border-amber-800">
-              <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" /> 3. 今天誰最值得放大</h4>
-                {actionData.tableScaleUp && actionData.tableScaleUp.length > 0 ? (
-                  <ul className="space-y-2 text-sm">
-                    {actionData.tableScaleUp.slice(0, 5).map((r) => (
-                      <li key={r.campaignId} className="flex flex-col gap-0.5">
-                        <span className="font-medium truncate">{r.productName} · {r.campaignName}</span>
-                        <span className="text-emerald-600">ROAS {r.roas.toFixed(2)}</span>
-                        {(r.breakEvenRoas != null || r.targetRoas != null) && (
-                          <span className="text-muted-foreground text-xs">
-                            保本 {r.breakEvenRoas != null ? r.breakEvenRoas.toFixed(2) : "—"} · 目標 {r.targetRoas != null ? r.targetRoas.toFixed(2) : "—"}
-                            {r.profitHeadroom != null && ` · Headroom ${r.profitHeadroom.toFixed(2)}`}
-                          </span>
-                        )}
-                        {(r.roas1d != null || r.roas3d != null || r.roas7d != null) && (
-                          <span className="text-muted-foreground text-xs">1d/3d/7d: {[r.roas1d, r.roas3d, r.roas7d].map((x) => x != null ? x.toFixed(2) : "—").join(" / ")}</span>
-                        )}
-                        <span className="text-muted-foreground text-xs">{r.reason}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : actionData.creativeLeaderboard && actionData.creativeLeaderboard.length > 0 ? (
-                  <ul className="space-y-1">
-                    {[...actionData.creativeLeaderboard]
-                      .filter((c) => (c as { materialTier?: string }).materialTier === "Winner" || (c as { materialTier?: string }).materialTier === "Potential")
-                      .sort((a, b) => b.revenue - a.revenue || b.roas - a.roas)
-                      .slice(0, 5)
-                      .map((c, i) => (
-                        <li key={`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}-${i}`} className="text-sm truncate">
-                          <Link href="/products" className="hover:underline">{c.productName}</Link> · {c.materialStrategy}+{c.headlineSnippet} <span className="text-emerald-600">ROAS {c.roas.toFixed(2)}</span>
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">本批尚無決策就緒項目，或請先設定成本規則與同步資料。</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 區塊 2：主力商品戰情 */}
+              <Card className="border-emerald-200 dark:border-emerald-800" data-testid="block-2-main-products">
+                <CardContent className="pt-4 pb-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-emerald-600" />
+                    區塊 2 · 主力商品戰情
+                  </h2>
+                  {(actionData.productLevelMain && actionData.productLevelMain.length > 0) ? (
+                    <ul className="space-y-2 text-sm">
+                      {(actionData.productLevelMain)
+                        .filter((p) => p.spend > 0 && p.productName !== "未分類")
+                        .sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0))
+                        .slice(0, 8)
+                        .map((p) => (
+                          <li key={p.productName} className="flex flex-col gap-0.5 py-2 border-b border-muted/50 last:border-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link href="/products" className="font-medium hover:underline">{p.productName}</Link>
+                              {(p as { evidenceLevel?: string }).evidenceLevel && EVIDENCE_LABELS[(p as { evidenceLevel?: string }).evidenceLevel!] && (
+                                <Badge variant="outline" className="text-xs font-normal">{EVIDENCE_LABELS[(p as { evidenceLevel?: string }).evidenceLevel!]}</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">主力：花費佔比高、ROAS {p.roas.toFixed(2)} 達標，建議維持或小步放大。</p>
+                            <span className="text-emerald-600 text-xs">花費 {formatCurrency(p.spend)} · ROAS {p.roas.toFixed(2)}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">尚無主力商品（需有成本規則且花費 &gt; 0）。</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 區塊 3：高預算危險商品 */}
+              <Card className="border-red-200 dark:border-red-800" data-testid="block-3-high-risk">
+                <CardContent className="pt-4 pb-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4 text-red-600" />
+                    區塊 3 · 高預算危險商品
+                  </h2>
+                  {(actionData.tableRescue && actionData.tableRescue.length > 0) || (actionData.riskyCampaigns && actionData.riskyCampaigns.length > 0) ? (
+                    <ul className="space-y-2 text-sm">
+                      {(actionData.tableRescue ?? []).map((r) => (
+                        <li key={r.campaignId} className="flex flex-col gap-0.5 py-2 border-b border-muted/50 last:border-0">
+                          <span className="font-medium truncate">{r.productName} · {r.campaignName}</span>
+                          <p className="text-xs text-muted-foreground">{r.reason} 建議 {r.suggestedAction} {r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}。</p>
+                          <span className="text-red-600 text-xs">花費 {formatCurrency(r.spend)} · ROAS {r.roas.toFixed(2)}</span>
                         </li>
                       ))}
+                      {(actionData.riskyCampaigns ?? [])
+                        .filter((r) => !(actionData.tableRescue ?? []).some((t) => t.campaignId === r.campaignId))
+                        .sort((a, b) => b.spend - a.spend)
+                        .slice(0, 3)
+                        .map((r) => (
+                          <li key={r.campaignId} className="flex flex-col gap-0.5 py-1 border-b border-muted/50 last:border-0">
+                            <span className="font-medium truncate">{r.campaignName}</span>
+                            <span className="text-red-600 text-xs">花費 {formatCurrency(r.spend)} · {r.suggestion}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">尚無高預算危險項目。</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 區塊 4：被埋沒的黑馬素材 */}
+              <Card className="border-amber-200 dark:border-amber-800" data-testid="block-4-dark-horses">
+                <CardContent className="pt-4 pb-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-600" />
+                    區塊 4 · 被埋沒的黑馬素材
+                  </h2>
+                  {actionData.tierHighPotentialCreatives && actionData.tierHighPotentialCreatives.length > 0 ? (
+                    <ul className="space-y-2 text-sm">
+                      {actionData.tierHighPotentialCreatives.slice(0, 5).map((c, i) => (
+                        <li key={`${c.productName}-${c.headlineSnippet}-${i}`} className="flex flex-col gap-0.5 py-2 border-b border-muted/50 last:border-0">
+                          <span className="font-medium">{c.productName}</span>
+                          <span className="text-muted-foreground text-xs truncate">{c.materialStrategy} · {c.headlineSnippet}</span>
+                          <p className="text-xs text-muted-foreground">給投手：可小步加預算觀察轉換，勿一次拉滿。</p>
+                          <p className="text-xs text-muted-foreground">給設計：維持此方向，可複製元素到其他素材測試。</p>
+                          <span className="text-amber-600 text-xs">花費 {formatCurrency(c.spend)} · ROAS {c.roas.toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">尚無符合條件的黑馬素材（Creative Edge 高、樣本足夠、花費未飽和）。</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 區塊 5：今日操作節制提醒 */}
+              <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20" data-testid="block-5-restraint">
+                <CardContent className="pt-4 pb-4">
+                  <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-amber-600" />
+                    區塊 5 · 今日操作節制提醒
+                  </h2>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground">
+                    {actionData.batchValidityReason && (
+                      <li>本批資料：{actionData.batchValidityReason}</li>
+                    )}
+                    {(actionData.budgetActionNoDelivery?.length ?? 0) + (actionData.budgetActionUnderSample?.length ?? 0) > 0 && (
+                      <li>尚有 <strong>{actionData.budgetActionNoDelivery?.length ?? 0}</strong> 筆未投遞、<strong>{actionData.budgetActionUnderSample?.length ?? 0}</strong> 筆樣本不足，不參與核心決策，請勿依此亂調預算。</li>
+                    )}
+                    {actionData.funnelEvidence === false && (
+                      <li>目前無漏斗資料，決策區多為廣告層推測，不建議依此單獨定罪。</li>
+                    )}
+                    <li>本輪尚未接入「今日已調次數」，先以 guardrail 提醒代替；今日若某項資料仍屬規則缺失或樣本不足，請先別亂動。</li>
                   </ul>
-                ) : (
-                  <p className="text-xs text-muted-foreground">尚無達標贏家/潛力股（需已設定成本規則）</p>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-3 pb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> 4. 今天先做哪 3 件事</h4>
-                <p className="text-sm">
-                  高優先級警報 <strong>{(actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0)}</strong> 則
-                  {((actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0)) > 0 && (
-                    <Link href="/" className="ml-1 text-primary hover:underline">查看</Link>
-                  )}
-                </p>
-                <ul className="text-sm space-y-1 mt-1">
-                  {(actionData?.riskyCampaigns?.length ?? 0) > 0 && (
-                    <li><Link href="/products" className="text-primary hover:underline">1. 處理危險活動 ({actionData!.riskyCampaigns!.length} 則)</Link></li>
-                  )}
-                  {(actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0) > 0 && (
-                    <li><Link href="/" className="text-primary hover:underline">2. 查看警報與止血建議</Link></li>
-                  )}
-                  {unassignedTaskCount > 0 && (
-                    <li><Link href="/tasks" className="text-primary hover:underline">3. 前往任務中心 ({unassignedTaskCount} 則待分配)</Link></li>
-                  )}
-                </ul>
-                {((actionData?.riskyCampaigns?.length ?? 0) === 0 && (actionData?.funnelWarnings?.length ?? 0) + (actionData?.urgentStop?.length ?? 0) === 0 && unassignedTaskCount === 0) && (
-                  <p className="text-xs text-muted-foreground mt-1">暫無優先事項，可查看下方報表</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </section>
           </>
         )}
 
+        {/* Phase 2A Guardrail 1：待驗證區說明（排除項有去處） */}
+        {actionData && ((actionData.budgetActionNoDelivery?.length ?? 0) + (actionData.budgetActionUnderSample?.length ?? 0)) > 0 && (
+          <p className="text-sm text-muted-foreground">
+            尚有 <strong>{actionData.budgetActionNoDelivery?.length ?? 0}</strong> 筆未投遞、<strong>{actionData.budgetActionUnderSample?.length ?? 0}</strong> 筆樣本不足，已移至待驗證區，不參與核心決策排序。
+          </p>
+        )}
         {(employee.department === "ADMIN" || employee.department === "MARKETING") && actionData?.funnelWarnings && actionData.funnelWarnings.length > 0 && (
           <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30">
             <CardContent className="pt-4">
@@ -1700,6 +1799,9 @@ export default function DashboardPage() {
                             <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
                               {r.productName} · {r.campaignName}
                               {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                              {r.evidenceLevel && EVIDENCE_LABELS[r.evidenceLevel] && (
+                                <Badge variant="outline" className="ml-1 text-xs font-normal">{EVIDENCE_LABELS[r.evidenceLevel]}</Badge>
+                              )}
                             </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
@@ -1755,6 +1857,9 @@ export default function DashboardPage() {
                             <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
                               {r.productName} · {r.campaignName}
                               {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                              {r.evidenceLevel && EVIDENCE_LABELS[r.evidenceLevel] && (
+                                <Badge variant="outline" className="ml-1 text-xs font-normal">{EVIDENCE_LABELS[r.evidenceLevel]}</Badge>
+                              )}
                             </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
@@ -1809,6 +1914,9 @@ export default function DashboardPage() {
                             <td className="p-2 truncate max-w-[180px]" title={r.campaignName}>
                               {r.productName} · {r.campaignName}
                               {r.costRuleStatus === "待補成本規則" && <span className="ml-1 text-xs text-amber-600">(待補規則)</span>}
+                              {r.evidenceLevel && EVIDENCE_LABELS[r.evidenceLevel] && (
+                                <Badge variant="outline" className="ml-1 text-xs font-normal">{EVIDENCE_LABELS[r.evidenceLevel]}</Badge>
+                              )}
                             </td>
                             <td className="text-right p-2">{formatCurrency(r.spend)}</td>
                             <td className="text-right p-2">{r.roas.toFixed(2)}</td>
@@ -1886,17 +1994,26 @@ export default function DashboardPage() {
           </>
         )}
 
+        {/* Phase 2A Guardrail 4：帳號主視角降權，收合為次級區 */}
         {employee.department === "ADMIN" && hasSummary && summary && (
-          <>
-            <HeroSummaryCard summary={summary} isLoading={summaryLoading} />
-            <TopPriorityAccountsSection accounts={summary.topPriorityAccounts || []} isLoading={summaryLoading} />
-            <AccountRankingTable accounts={accounts} isLoading={rankingLoading} />
-            <OpportunitySummaryCard />
-            {allRisky.length > 0 && <RiskyCampaignsSection campaigns={allRisky} isLoading={summaryLoading} />}
-            <AnomalySummarySection anomalies={anomalies} isLoading={anomalyLoading} />
-            <BoardsSection />
-            <AIRecommendationsSection summary={summary} isLoading={summaryLoading} />
-          </>
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
+                <span className="font-medium">報表與帳號（次級）</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-6 pt-2">
+              <HeroSummaryCard summary={summary} isLoading={summaryLoading} />
+              <TopPriorityAccountsSection accounts={summary.topPriorityAccounts || []} isLoading={summaryLoading} />
+              <AccountRankingTable accounts={accounts} isLoading={rankingLoading} />
+              <OpportunitySummaryCard />
+              {allRisky.length > 0 && <RiskyCampaignsSection campaigns={allRisky} isLoading={summaryLoading} />}
+              <AnomalySummarySection anomalies={anomalies} isLoading={anomalyLoading} />
+              <BoardsSection />
+              <AIRecommendationsSection summary={summary} isLoading={summaryLoading} />
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {employee.department === "ADMIN" && actionData && actionData.productLevel.length > 0 && (
