@@ -69,8 +69,6 @@
 
 ## 7. Commit hash
 
-（請於本輪 commit 完成後回填）
-
 | 項目 | 值 |
 |------|-----|
-| **本輪 commit** | _回填_ |
+| **本輪 commit** | **53afeb4**（Phase 3A: 商品主戰場 first-pass，首頁凍結 b21d03d） |
