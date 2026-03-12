@@ -61,14 +61,14 @@
 
 ## 6. Staging / Production 實際部署版本
 
-- **程式 commit（含 Phase 2C 視覺）**：**11a53b0**（首頁可信度修復＋舊區塊退場；Phase 2C 視覺於此前已存在並保留）。
-- **本輪 Phase 2C 微調**：已納入上述 dashboard 變更，commit 後填寫於此。
-- **Staging / Production 部署版本**：（部署後填寫實際部署之 commit 或 build 版本。）
+- **程式 commit（含 Phase 2C 視覺＋可信度修復）**：**11a53b0**（首頁可信度修復＋舊區塊退場；Phase 2C 視覺於此前已存在並保留）。
+- **本輪 Phase 2C 微調（區塊 1 整頁最強）**：**ea7369d**。
+- **Staging / Production 部署版本**：（部署後填寫實際部署之 commit，例如 ea7369d 或後續 push 之版本。）
 
 ---
 
 ## 7. Commit hash（本輪 Phase 2C 微調後）
 
-- **程式 commit**：（本輪 2C 微調 commit 後填寫）
-- **文件 commit**：（同上或與程式同 commit）
+- **程式 commit**：**ea7369d**
+- **文件 commit**：同上（與程式同 commit）
 - **Staging or production 部署版本**：（部署後填寫）
