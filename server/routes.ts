@@ -2522,11 +2522,12 @@ export async function registerRoutes(
     }
 
     const overrides = useOverrides ? await getWorkbenchMappingOverrides() : new Map<string, string>();
+    /** 無法解析出商品時歸「未分類」，總花費才等於本批全部活動加總，不會少算 */
     const resolveProduct = (row: { campaignId: string; campaignName: string }) =>
       resolveProductWithOverrides(
         row,
         overrides,
-        (name) => parseCampaignNameToTags(name)?.productName ?? null
+        (name) => parseCampaignNameToTags(name)?.productName ?? "未分類"
       );
 
     const productLevel: ProductLevelMetrics[] = aggregateByProductWithResolver(rows, resolveProduct, scopeProducts);

@@ -144,7 +144,7 @@ export function aggregateByProductWithResolver(
   for (const row of campaignMetrics) {
     const productName = resolveProduct(row);
     if (!productName) continue;
-    if (scopeProducts != null && scopeProducts.length > 0 && !scopeProducts.includes(productName)) continue;
+    if (scopeProducts != null && scopeProducts.length > 0 && productName !== "未分類" && !scopeProducts.includes(productName)) continue;
 
     const key = productName;
     const tags = parseCampaignNameToTags(row.campaignName);
