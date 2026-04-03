@@ -1,0 +1,18 @@
+{
+  "captureMeta": {
+    "source": "prod-runtime-synthetic-placeholder",
+    "trustTier": "prod-sanitized",
+    "environment": "production",
+    "route": "GET /api/dashboard/cross-account-summary",
+    "derivedFrom": "",
+    "sanitized": true,
+    "generatedAt": "2026-03-30T12:00:00.000Z",
+    "note": "Batch 12.3 placeholder: no raw prod payload in repo. Replace with sanitized prod HTTP capture when policy allows. Tier A review still uses LIVE *.live.json."
+  },
+  "payload": {
+    "dataStatus": "has_data",
+    "homepageDataTruth": "summary_ok",
+    "hasDecisionSignals": true,
+    "message": "Synthetic prod-shaped stub; identifiers redacted."
+  }
+}

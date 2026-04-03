@@ -1,0 +1,538 @@
+/*
+ * Stitch UI 參考用摘錄：已移除疑似敏感行，非可編譯單元。
+ * 實作請以 repo 內原始檔為準。
+ */
+// === pages/judgment.tsx (sanitized excerpt, max 220 lines) ===
+import { useJudgmentWorkbench } from "@/pages/judgment/useJudgmentWorkbench";
+import {
+  JudgmentHeader,
+  JudgmentHistorySidebar,
+  JudgmentDecisionCardsSection,
+  JudgmentGoalPacingSection,
+  JudgmentEmptyState,
+  JudgmentEvidencePanel,
+  JudgmentComposer,
+  JudgmentWorkbenchBubble,
+  UserBubble,
+  JudgmentFocusStrip,
+} from "@/pages/judgment/widgets";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { Loader2, ChevronDown } from "lucide-react";
+import { ExecutionGateDialog } from "@/components/ExecutionGateDialog";
+
+export default function JudgmentPage() {
+  const wb = useJudgmentWorkbench();
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      <JudgmentHeader
+        historyOpen={wb.historyOpen}
+        onToggleHistory={() => wb.setHistoryOpen((o) => !o)}
+        rightPanelOpen={wb.rightPanelOpen}
+        onToggleRightPanel={() => wb.setRightPanelOpen((o) => !o)}
+        onExportFullReport={wb.handleExportFullReport}
+        onNewChat={wb.handleNewChat}
+        layoutMode={wb.layoutMode}
+        onLayoutModeChange={wb.setLayoutMode}
+      />
+
+      <div className="flex flex-1 min-h-0">
+        {wb.historyOpen && (
+          <JudgmentHistorySidebar
+            sessions={wb.sessionsList}
+            loadingSessions={wb.loadingSessions}
+            historySearch={wb.historySearch}
+            onHistorySearchChange={wb.onHistorySearchChange}
+            currentSessionId={wb.session?.id ?? null}
+            onSelectSession={wb.handleSelectSession}
+            uiMode={wb.uiMode}
+            onModeChange={wb.handleModeChange}
+            onQuickPrompt={wb.handleQuickPrompt}
+            onTriggerFileSelect={() => wb.fileInputRef.current?.click()}
+          />
+        )}
+
+        <main className="flex-1 flex flex-col min-w-0 bg-gray-50">
+          {wb.loadingSession && wb.sessionIdFromUrl ? (
+            <div className="flex-1 flex items-center justify-center bg-gray-50">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              <ScrollArea className="flex-1 bg-gray-50">
+                <div className="max-w-6xl mx-auto w-full px-4 py-6 space-y-6">
+                  {wb.layoutMode === "operator" && (
+                    <div className="space-y-6" data-testid="judgment-operator-workbench">
+                      <JudgmentDecisionCardsSection decisionCards={wb.decisionCards} />
+                      <JudgmentGoalPacingSection goalPacingByProduct={wb.goalPacingByProduct} />
+                    </div>
+                  )}
+
+                  {wb.layoutMode === "focus" && (
+                    <JudgmentFocusStrip
+                      decisionCards={wb.decisionCards}
+                      goalPacingByProduct={wb.goalPacingByProduct}
+                      onOpenOperatorBlocks={() => wb.setOperatorWorkbenchOpen(true)}
+                    />
+                  )}
+
+                  {wb.layoutMode === "focus" && (
+                    <p
+                      className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 -mt-1"
+                      data-testid="judgment-focus-evidence-hint"
+                    >
+                      <button
+                        type="button"
+                        className="text-primary underline-offset-2 hover:underline"
+                        onClick={() => wb.setRightPanelOpen((o) => !o)}
+                      >
+                        {wb.rightPanelOpen ? "收合證據側欄" : "證據側欄"}
+                      </button>
+                      <span>
+                        附件 {wb.attachments.length} · 帳戶 {wb.scope.selectedAccountIds?.length ?? 0}
+                      </span>
+                    </p>
+                  )}
+
+                  {wb.messages.length === 0 && !wb.isSubmitting && (
+                    <JudgmentEmptyState
+                      workflow={wb.workflow}
+                      setWorkflow={wb.setWorkflow}
+                      selectedSubtype={wb.selectedSubtype}
+                      setSelectedSubtype={wb.setSelectedSubtype}
+                      setUiMode={wb.setUiMode}
+                      onQuickPrompt={wb.handleQuickPrompt}
+                    />
+                  )}
+
+                  {wb.messages.map((msg) =>
+                    msg.role === "user" ? (
+                      <UserBubble key={msg.id} message={msg} />
+                    ) : (
+                      <JudgmentWorkbenchBubble
+                        key={msg.id}
+                        message={msg}
+                        judgmentContext={{
+                          sessionId: wb.session?.id ?? null,
+                          productName: wb.urlContext.productName,
+                          creativeId: wb.urlContext.creativeId,
+                          impactAmount: wb.urlContext.impactAmount,
+                        }}
+                        onCreateTask={wb.handleCreateTaskFromJudgment}
+                        onExportReport={wb.handleExportSingleReport}
+                        auditBlockId={`audit-${msg.id}`}
+                      />
+                    )
+                  )}
+
+                  {wb.isSubmitting && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[85%] rounded-xl rounded-tl-sm bg-white shadow-sm border border-gray-200 px-4 py-3 flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                        <span className="text-sm text-gray-700">總監審視中…</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {wb.layoutMode === "focus" && (
+                    <Collapsible
+                      open={wb.operatorWorkbenchOpen}
+                      onOpenChange={wb.setOperatorWorkbenchOpen}
+                      data-testid="judgment-operator-collapsible"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-between text-xs text-muted-foreground h-8 font-normal"
+                        >
+                          進階：決策卡與目標節奏
+                          <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-6 pt-4">
+                        <JudgmentDecisionCardsSection decisionCards={wb.decisionCards} />
+                        <JudgmentGoalPacingSection goalPacingByProduct={wb.goalPacingByProduct} />
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  <div ref={wb.messagesEndRef} />
+                </div>
+              </ScrollArea>
+
+              {wb.rightPanelOpen && (
+                <JudgmentEvidencePanel
+                  scopeAccountIds={wb.scope.selectedAccountIds ?? []}
+                  attachments={wb.attachments}
+                />
+              )}
+
+              <JudgmentComposer
+                workflow={wb.workflow}
+                setWorkflow={wb.setWorkflow}
+                inputText={wb.inputText}
+                setInputText={wb.setInputText}
+                attachments={wb.attachments}
+                removeAttachment={wb.removeAttachment}
+                addFiles={wb.addFiles}
+                canSubmit={wb.canSubmit}
+                isSubmitting={wb.isSubmitting}
+                submitError={wb.submitError}
+                onSend={wb.handleSend}
+                onKeyDown={wb.handleKeyDown}
+                onQuickPrompt={wb.handleQuickPrompt}
+                textareaRef={wb.textareaRef}
+                fileInputRef={wb.fileInputRef}
+                selectedSubtype={wb.selectedSubtype}
+              />
+            </>
+          )}
+        </main>
+      </div>
+
+      <ExecutionGateDialog
+        open={wb.judgmentExecGateOpen}
+        onOpenChange={wb.onJudgmentExecGateOpenChange}
+        gate={wb.judgmentExecGate}
+        onConfirm={async () => {
+          await wb.confirmJudgmentTaskCreate();
+        }}
+        confirming={wb.judgmentExecGateConfirming}
+        error={wb.judgmentExecConfirmError}
+        intro="系統已記錄從審判官建立任務的 dry-run。勾選確認後將寫入 apply 稽核並建立任務。"
+        checkboxLabel="我已閱讀預覽，確認要建立任務並接受稽核紀錄"
+      />
+    </div>
+  );
+}
+
+
+// === judgment/widgets/JudgmentHeader.tsx (sanitized excerpt, max 120 lines) ===
+import { Scale, Download, History, PanelLeft, PanelLeftClose, PanelRight, PanelRightClose } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+
+export function JudgmentHeader({
+  historyOpen,
+  onToggleHistory,
+  rightPanelOpen,
+  onToggleRightPanel,
+  onExportFullReport,
+  onNewChat,
+  layoutMode,
+  onLayoutModeChange,
+}: {
+  historyOpen: boolean;
+  onToggleHistory: () => void;
+  rightPanelOpen: boolean;
+  onToggleRightPanel: () => void;
+  onExportFullReport: () => void;
+  onNewChat: () => void;
+  layoutMode: "focus" | "operator";
+  onLayoutModeChange: (m: "focus" | "operator") => void;
+}) {
+  return (
+    <header className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white shrink-0 no-print">
+      <SidebarTrigger data-testid="button-sidebar-toggle" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1.5"
+        onClick={onToggleHistory}
+        aria-label={historyOpen ? "收合歷史" : "展開歷史"}
+      >
+        {historyOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+        <History className="w-4 h-4" />
+        <span className="hidden sm:inline">{historyOpen ? "收合歷史" : "查看更多歷史"}</span>
+      </Button>
+      <div className="flex-1 min-w-0">
+        <h1 className="page-title truncate" data-testid="text-page-title">
+          審判官
+        </h1>
+        <p className="text-xs text-muted-foreground truncate">王牌爆款陪跑行銷總監｜判讀素材、頁面、廣告與漏斗</p>
+        <div className="flex flex-wrap gap-1 mt-2" data-testid="judgment-layout-mode-toggle">
+          <Button
+            type="button"
+            variant={layoutMode === "focus" ? "secondary" : "ghost"}
+            size="sm"
+            className={cn("h-7 text-xs", layoutMode === "focus" && "ring-1 ring-border")}
+            onClick={() => onLayoutModeChange("focus")}
+          >
+            聚焦審判
+          </Button>
+          <Button
+            type="button"
+            variant={layoutMode === "operator" ? "secondary" : "ghost"}
+            size="sm"
+            className={cn("h-7 text-xs", layoutMode === "operator" && "ring-1 ring-border")}
+            onClick={() => onLayoutModeChange("operator")}
+          >
+            營運工作台
+          </Button>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onExportFullReport}
+        className="gap-1.5 no-print"
+        data-testid="button-export-full-report"
+      >
+        <Download className="w-3.5 h-3.5" />
+        📄 匯出裁決報告
+      </Button>
+      <Button variant="outline" size="sm" onClick={onNewChat} className="gap-1.5" data-testid="button-new-chat">
+        <Scale className="w-3.5 h-3.5" />
+        新對話
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1.5"
+        onClick={onToggleRightPanel}
+        aria-label={rightPanelOpen ? "收合右側" : "展開右側"}
+      >
+        {rightPanelOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRight className="w-4 h-4" />}
+        <span className="hidden sm:inline">證據</span>
+      </Button>
+    </header>
+  );
+}
+
+
+// === judgment/widgets/JudgmentFocusStrip.tsx (sanitized excerpt, max 80 lines) ===
+import type { DecisionCardBlock } from "@shared/decision-cards-engine";
+import type { GoalPacingEvaluation } from "@shared/goal-pacing-engine";
+import { Button } from "@/components/ui/button";
+
+export function JudgmentFocusStrip({
+  decisionCards,
+  goalPacingByProduct,
+  onOpenOperatorBlocks,
+}: {
+  decisionCards: DecisionCardBlock[];
+  goalPacingByProduct: Record<string, GoalPacingEvaluation>;
+  onOpenOperatorBlocks: () => void;
+}) {
+  const summaryCard = decisionCards.find((c) => c.key === "summary");
+  const pacingEntries = Object.entries(goalPacingByProduct ?? {});
+  const pacingAlert = pacingEntries.find(([, v]) => v?.operatorPacingState && v.operatorPacingState !== "on_track");
+
+  const conclusion =
+    summaryCard?.conclusion ??
+    (decisionCards.length === 0
+      ? "尚無決策卡資料，請先同步廣告並重新整理。"
+      : decisionCards[0]?.conclusion ?? "—");
+
+  return (
+    <div
+      className="rounded-md border border-gray-200/80 bg-gray-50/80 px-3 py-2"
+      data-testid="judgment-focus-strip"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-gray-900 leading-tight line-clamp-1">{conclusion}</p>
+          {pacingAlert && (
+            <p className="text-[10px] text-amber-800 dark:text-amber-200 mt-0.5 line-clamp-1">
+              節奏 {pacingAlert[0]}：{pacingAlert[1]?.pacingLabel ?? pacingAlert[1]?.recommendedAction ?? "需關注"}
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="shrink-0 text-[11px] h-7 px-2 text-muted-foreground"
+          onClick={onOpenOperatorBlocks}
+        >
+          工作台
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
+// === judgment/widgets/JudgmentComposer.tsx (sanitized excerpt, max 200 lines) ===
+import { Send, Paperclip, Loader2, X, FileText, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { workflowLabels } from "@shared/schema";
+import type { Workflow } from "@shared/schema";
+import { QUICK_PROMPTS, EMPTY_ENTRIES, ACCEPT_ATTACH } from "../judgment-types";
+import type { PendingAttachment } from "../judgment-types";
+
+export function JudgmentComposer({
+  workflow,
+  setWorkflow,
+  inputText,
+  setInputText,
+  attachments,
+  removeAttachment,
+  addFiles,
+  canSubmit,
+  isSubmitting,
+  submitError,
+  onSend,
+  onKeyDown,
+  onQuickPrompt,
+  textareaRef,
+  fileInputRef,
+  selectedSubtype,
+}: {
+  workflow: Workflow;
+  setWorkflow: (w: Workflow) => void;
+  inputText: string;
+  setInputText: (v: string) => void;
+  attachments: PendingAttachment[];
+  removeAttachment: (id: string) => void;
+  addFiles: (files: FileList | File[]) => void;
+  canSubmit: boolean;
+  isSubmitting: boolean;
+  submitError: string | null;
+  onSend: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  onQuickPrompt: (text: string, w?: Workflow) => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  selectedSubtype: string | null;
+}) {
+  const placeholder =
+    selectedSubtype
+      ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.placeholder ??
+        "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)")
+      : "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)";
+
+  return (
+    <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 no-print">
+      <div className="max-w-6xl mx-auto flex flex-col gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground shrink-0">工作流：</span>
+          {(Object.keys(workflowLabels) as Workflow[]).map((w) => (
+            <Button
+              key={w}
+              type="button"
+              variant={workflow === w ? "default" : "outline"}
+              size="sm"
+              className="shrink-0 rounded-full text-xs h-7"
+              onClick={() => setWorkflow(w)}
+              data-testid={`workflow-${w}`}
+            >
+              {workflowLabels[w]}
+            </Button>
+          ))}
+          <Badge variant="secondary" className="text-[10px] shrink-0">
+            目前：{workflowLabels[workflow]}
+          </Badge>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {QUICK_PROMPTS.map((q) => (
+            <Button
+              key={q.id}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 rounded-full text-xs gap-1"
+              onClick={() => onQuickPrompt(q.text, q.workflow)}
+              data-testid={`quick-prompt-${q.id}`}
+            >
+              <span>{q.icon}</span>
+              {q.label}
+            </Button>
+          ))}
+        </div>
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {attachments.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm"
+                data-testid={`attachment-${a.id}`}
+              >
+                {a.preview ? (
+                  <img src={a.preview} alt="" className="w-10 h-10 object-cover rounded" />
+                ) : (
+                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
+                <span className="max-w-[120px] truncate">{a.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(a.id)}
+                  className="p-0.5 rounded hover:bg-muted"
+                  data-testid={`remove-attach-${a.id}`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {submitError && (
+          <div className="flex items-center gap-2 text-sm text-destructive" data-testid="alert-submit-error">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{submitError}</span>
+          </div>
+        )}
+        <div className="flex gap-2 items-end">
+          <Textarea
+            ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
+            rows={1}
+            className="min-h-[44px] max-h-[200px] resize-y"
+            data-testid="textarea-chat-input"
+            disabled={isSubmitting}
+          />
+          <input
+            ref={fileInputRef as React.RefObject<HTMLInputElement>}
+            type="file"
+            accept={ACCEPT_ATTACH}
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files?.length) addFiles(e.target.files);
+              e.target.value = "";
+            }}
+            data-testid="input-file-attach"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            title="附加圖片、PDF 或影片"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSubmitting}
+            data-testid="button-attach"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            onClick={onSend}
+            disabled={!canSubmit}
+            className="shrink-0 gap-1.5"
+            data-testid="button-send-judgment"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            送出
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          支援圖片、PDF、影片 (最高 200MB)；可貼網址，總監會參考頁面內容。判讀依「角色視角 Overlay」該視角已發布補充 ＋ 系統校準。
+        </p>
+      </div>
+    </div>
+  );
+}
+

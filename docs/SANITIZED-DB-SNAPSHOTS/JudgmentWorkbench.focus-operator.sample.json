@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "purpose": "sanitized sample：Judgment focus（精簡條）vs operator（全展開）所依賴的 decision-cards／goal-pacing 形狀",
+    "relatedCapture": "docs/RUNTIME-QUERY-CAPTURES/workbench-decision-cards.sample.json"
+  },
+  "layoutModeFocus": {
+    "visibleInMain": ["judgment-focus-strip", "chat-empty-or-thread", "collapsible-operator-workbench"],
+    "hiddenUntilExpand": ["full-decision-cards", "full-goal-pacing"]
+  },
+  "layoutModeOperator": {
+    "visibleInMain": ["judgment-decision-cards-section", "judgment-goal-pacing-section"]
+  },
+  "decisionCardsStub": [
+    {
+      "key": "summary",
+      "title": "總結",
+      "conclusion": "（去敏感）目前廣告組合整體可控，優先處理尾端轉換落差。"
+    }
+  ],
+  "goalPacingStub": {
+    "RedactedProduct": {
+      "operatorPacingState": "behind",
+      "pacingLabel": "落後於月目標",
+      "recommendedAction": "檢視預算與素材輪替"
+    }
+  }
+}

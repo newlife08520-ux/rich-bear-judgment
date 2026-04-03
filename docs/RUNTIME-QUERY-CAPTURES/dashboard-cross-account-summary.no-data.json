@@ -1,0 +1,17 @@
+{
+  "captureMeta": {
+    "source": "supertest-route-response",
+    "generatedAt": "2026-03-31T17:39:44.403Z",
+    "note": "Captured via script/capture-runtime-query-captures.ts; sanitized"
+  },
+  "body": {
+    "homepageDataTruth": "no_decision",
+    "dataStatus": "no_sync",
+    "hasSummary": false,
+    "hasDecisionSignals": false,
+    "message": "請先同步 FB／GA4 帳號並完成資料刷新。",
+    "coverageNote": null,
+    "batchValidity": "insufficient",
+    "batchValidityReason": "無 batch"
+  }
+}

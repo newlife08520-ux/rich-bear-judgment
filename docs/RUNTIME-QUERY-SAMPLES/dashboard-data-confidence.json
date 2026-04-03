@@ -1,0 +1,10 @@
+﻿{
+  "withProducts": {
+    "products": [],
+    "batchUnmappedSpend": 0,
+    "campaignMetricsCount": 0,
+    "homepageDataTruth": "no_decision",
+    "dataStatus": "synced_no_data",
+    "hasDecisionSignals": false
+  }
+}

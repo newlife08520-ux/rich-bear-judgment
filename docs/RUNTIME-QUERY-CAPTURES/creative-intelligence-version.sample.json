@@ -1,0 +1,36 @@
+{
+  "captureMeta": {
+    "source": "supertest-route-response",
+    "generatedAt": "2026-03-31T17:39:44.403Z",
+    "note": "Captured via script/capture-runtime-query-captures.ts; sanitized"
+  },
+  "body": {
+    "review": null,
+    "tags": [],
+    "snapshots": [],
+    "links": [],
+    "attribution": {
+      "snapshotConfidence": {
+        "level": "low",
+        "summary": "尚無 outcome 快照；無法對版本做花費歸因評估。"
+      },
+      "linkSummary": {
+        "lines": [
+          "Active links：0；含 Meta campaignId：0；標為 primary：0。"
+        ]
+      },
+      "ambiguitySignals": {
+        "snapshotAmbiguous": false,
+        "multiActiveSameCampaign": false,
+        "staleCampaignOverlap": false,
+        "primaryCount": 0,
+        "supersededCompetingWithActive": false
+      },
+      "ambiguityReasons": [
+        "primary 連結數為 0（預期 1）。"
+      ],
+      "ambiguityCopy": "若快照 ambiguous=true 或 link 非唯一 primary，請勿將此版本當作高信心 winner／hidden diamond。"
+    },
+    "versionTimeline": []
+  }
+}

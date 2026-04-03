@@ -1,0 +1,14 @@
+{
+  "withData": {
+    "cards": [
+      {
+        "key": "summary"
+      }
+    ],
+    "goalPacingByProduct": {}
+  },
+  "empty": {
+    "cards": [],
+    "goalPacingByProduct": {}
+  }
+}

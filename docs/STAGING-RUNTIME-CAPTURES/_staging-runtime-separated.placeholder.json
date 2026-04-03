@@ -1,0 +1,12 @@
+{
+  "captureMeta": {
+    "source": "staging-placeholder",
+    "trustTier": "staging-sanitized",
+    "separatedFromSeeded": true,
+    "stagingRuntimeCapture": false,
+    "environment": "not-captured-in-repo",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "note": "Batch 10.8: staging tier lives only under docs/STAGING-RUNTIME-CAPTURES. Replace with real sanitized staging HTTP capture when available; never commit staging JSON into LIVE-RUNTIME-CAPTURES."
+  },
+  "payload": null
+}

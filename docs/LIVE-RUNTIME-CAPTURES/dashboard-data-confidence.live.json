@@ -1,0 +1,428 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/dashboard-data-confidence.with-products.json",
+    "route": "GET /api/dashboard/data-confidence",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-data-confidence.with-products.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-data-confidence.with-products.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "products": [
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 3,
+        "overrideHitRate": 0,
+        "data_confidence": "low"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 3,
+        "overrideHitRate": 0,
+        "data_confidence": "low"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 3,
+        "overrideHitRate": 0,
+        "data_confidence": "low"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 2,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      },
+      {
+        "productName": "Product Redacted",
+        "unmappedSpend": 0,
+        "conflictCount": 1,
+        "overrideHitRate": 0,
+        "data_confidence": "medium"
+      }
+    ],
+    "batchUnmappedSpend": 0,
+    "homepageDataTruth": "summary_ok",
+    "dataStatus": "has_data",
+    "hasSummary": true,
+    "hasDecisionSignals": true,
+    "message": "摘要與決策資料已就緒。",
+    "coverageNote": null,
+    "batchValidity": "valid",
+    "campaignMetricsCount": 90
+  }
+}

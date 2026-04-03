@@ -1,0 +1,10 @@
+verify:batch6_4-6_8:intelligence-suite — PASS (local run)
+Includes: generate:stage0-audit, verify:batch21*, batch22*, batch23*, batch24*, batch25*, verify:batch25:legacy-heuristic-reconciliation, verify:batch6_1:creative-intelligence-suite.
+
+Full stdout (captured):
+- docs/verify-outputs/verify-batch6_4-6_8-intelligence-suite.txt
+- docs/verify-outputs/npm-run-check.txt
+
+Optional per-batch tee:
+- npm run verify:batch21:attribution-hygiene > docs/VERIFY-BATCH21.txt
+- npm run capture:verify-outputs  (refreshes docs/verify-outputs/*.txt)

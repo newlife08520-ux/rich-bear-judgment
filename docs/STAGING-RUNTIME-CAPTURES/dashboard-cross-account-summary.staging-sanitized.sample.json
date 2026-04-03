@@ -1,0 +1,19 @@
+{
+  "captureMeta": {
+    "source": "staging-runtime-synthetic",
+    "trustTier": "staging-sanitized",
+    "environment": "staging",
+    "route": "GET /api/dashboard/cross-account-summary",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.sample.json",
+    "sanitized": true,
+    "generatedAt": "2026-03-30T12:00:00.000Z",
+    "separatedFromSeeded": true,
+    "note": "Batch 12.3 v4: synthetic sanitized body only — not production live. Never merge into LIVE-RUNTIME-CAPTURES. Replace with real staging HTTP capture when available."
+  },
+  "payload": {
+    "dataStatus": "has_data",
+    "homepageDataTruth": "summary_ok",
+    "hasDecisionSignals": true,
+    "message": "Staging-sanitized synthetic body (redacted). Triangulate with SANITIZED-DB-SNAPSHOTS and PAGE-STATE-SCREENSHOTS; Tier A remains *.live.json."
+  }
+}

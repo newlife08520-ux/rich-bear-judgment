@@ -1,0 +1,1746 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/pareto-command-layer.sample.json",
+    "route": "GET /api/pareto/command-layer",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/pareto-command-layer.sample.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/pareto-command-layer.sample.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "version": "v4",
+    "generatedAt": "2026-03-31T17:39:45.099Z",
+    "engineV2": {
+      "generatedAt": "2026-03-31T17:39:45.098Z",
+      "engineVersion": "v2",
+      "canonicalWorkbench": {
+        "topRevenueContributors": [
+          {
+            "id": "id_redacted_1",
+            "label": "(原始)0228",
+            "reason": "佔正貢獻池約 9.6%（profit-like=4）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_2",
+            "label": "(原始)0225",
+            "reason": "佔正貢獻池約 6.6%（profit-like=3）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_3",
+            "label": "0211",
+            "reason": "佔正貢獻池約 5.9%（profit-like=3）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_4",
+            "label": "(原始)0215",
+            "reason": "佔正貢獻池約 5.8%（profit-like=3）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_5",
+            "label": "0223",
+            "reason": "佔正貢獻池約 5.7%（profit-like=3）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_6",
+            "label": "(原始)0130",
+            "reason": "佔正貢獻池約 5.6%（profit-like=3）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_7",
+            "label": "1204",
+            "reason": "佔正貢獻池約 5.5%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_8",
+            "label": "(原始)0209",
+            "reason": "佔正貢獻池約 5.4%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_9",
+            "label": "(原始)0221",
+            "reason": "佔正貢獻池約 5.2%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_10",
+            "label": "1223",
+            "reason": "佔正貢獻池約 5.1%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_11",
+            "label": "0115",
+            "reason": "佔正貢獻池約 5.0%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          },
+          {
+            "id": "id_redacted_12",
+            "label": "0122",
+            "reason": "佔正貢獻池約 4.8%（profit-like=2）；樣本信心 high。",
+            "sampleConfidence": "high"
+          }
+        ],
+        "topLossDrivers": [
+          {
+            "id": "id_redacted_13",
+            "label": "(原始)1107",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_14",
+            "label": "(原始)1113",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_15",
+            "label": "(原始)1114",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_16",
+            "label": "(原始)1120",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_17",
+            "label": "(原始)1124",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_18",
+            "label": "(原始)1126",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_19",
+            "label": "(原始)1127",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_20",
+            "label": "(原始)1201",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_21",
+            "label": "(原始)1204",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_22",
+            "label": "(原始)1212",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_23",
+            "label": "(原始)1208",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_24",
+            "label": "(原始)1210",
+            "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+            "sampleConfidence": "low"
+          }
+        ],
+        "hiddenDiamonds": [],
+        "moneyPits": [
+          {
+            "id": "id_redacted_25",
+            "label": "(原始)1107",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_26",
+            "label": "(原始)1113",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_27",
+            "label": "(原始)1114",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_28",
+            "label": "(原始)1120",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_29",
+            "label": "(原始)1124",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_30",
+            "label": "(原始)1126",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_31",
+            "label": "(原始)1127",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_32",
+            "label": "(原始)1201",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_33",
+            "label": "(原始)1204",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_34",
+            "label": "(原始)1212",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_35",
+            "label": "(原始)1208",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          },
+          {
+            "id": "id_redacted_36",
+            "label": "(原始)1210",
+            "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+            "sampleConfidence": "low"
+          }
+        ],
+        "dominantWinningHooks": [],
+        "dominantFailurePatterns": []
+      },
+      "canonicalPareto": {
+        "top20PctIds": [
+          "(原始)0228",
+          "(原始)0225",
+          "0211",
+          "(原始)0215",
+          "0223",
+          "(原始)0130",
+          "1204",
+          "(原始)0209",
+          "(原始)0221",
+          "1223",
+          "0115",
+          "0122"
+        ],
+        "bottom20PctIds": [
+          "(原始)1107",
+          "(原始)1113",
+          "(原始)1114",
+          "(原始)1120",
+          "(原始)1124",
+          "(原始)1126",
+          "(原始)1127",
+          "(原始)1201",
+          "(原始)1204",
+          "(原始)1212",
+          "(原始)1208",
+          "(原始)1210"
+        ],
+        "cumulativeCurve": [
+          {
+            "id": "id_redacted_37",
+            "label": "(原始)0228",
+            "cumulativeShare": 0.09596779986570927
+          },
+          {
+            "id": "id_redacted_38",
+            "label": "(原始)0225",
+            "cumulativeShare": 0.1622992140948316
+          },
+          {
+            "id": "id_redacted_39",
+            "label": "0211",
+            "cumulativeShare": 0.22121612799706733
+          },
+          {
+            "id": "id_redacted_40",
+            "label": "(原始)0215",
+            "cumulativeShare": 0.27952978919884597
+          },
+          {
+            "id": "id_redacted_41",
+            "label": "0223",
+            "cumulativeShare": 0.336614761597746
+          },
+          {
+            "id": "id_redacted_42",
+            "label": "(原始)0130",
+            "cumulativeShare": 0.39233313625152666
+          },
+          {
+            "id": "id_redacted_43",
+            "label": "1204",
+            "cumulativeShare": 0.4469871949565542
+          },
+          {
+            "id": "id_redacted_44",
+            "label": "(原始)0209",
+            "cumulativeShare": 0.5011887214053836
+          },
+          {
+            "id": "id_redacted_45",
+            "label": "(原始)0221",
+            "cumulativeShare": 0.5530303904442921
+          },
+          {
+            "id": "id_redacted_46",
+            "label": "1223",
+            "cumulativeShare": 0.6039242251239945
+          },
+          {
+            "id": "id_redacted_47",
+            "label": "0115",
+            "cumulativeShare": 0.6543540870771573
+          },
+          {
+            "id": "id_redacted_48",
+            "label": "0122",
+            "cumulativeShare": 0.7024941950128891
+          },
+          {
+            "id": "id_redacted_49",
+            "label": "0203",
+            "cumulativeShare": 0.7504125834393148
+          },
+          {
+            "id": "id_redacted_50",
+            "label": "(原始)0208",
+            "cumulativeShare": 0.7967669242393224
+          },
+          {
+            "id": "id_redacted_51",
+            "label": "(原始)0223",
+            "cumulativeShare": 0.8407904752758343
+          },
+          {
+            "id": "id_redacted_52",
+            "label": "(原始)0213",
+            "cumulativeShare": 0.87612547669679
+          },
+          {
+            "id": "id_redacted_53",
+            "label": "(原始)0224",
+            "cumulativeShare": 0.9103614225300257
+          },
+          {
+            "id": "id_redacted_54",
+            "label": "0212",
+            "cumulativeShare": 0.9440647134636501
+          },
+          {
+            "id": "id_redacted_55",
+            "label": "(原始)0227",
+            "cumulativeShare": 0.976372591642444
+          },
+          {
+            "id": "id_redacted_56",
+            "label": "(原始)0211",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_57",
+            "label": "0210",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_58",
+            "label": "(原始)0214",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_59",
+            "label": "(原始)0205",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_60",
+            "label": "0205",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_61",
+            "label": "(原始)0207",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_62",
+            "label": "(原始)0204",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_63",
+            "label": "(原始)0203",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_64",
+            "label": "(原始)0129",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_65",
+            "label": "(原始)0131",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_66",
+            "label": "(原始)0126",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_67",
+            "label": "(原始)0121",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_68",
+            "label": "(原始)0122",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_69",
+            "label": "(原始)0120",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_70",
+            "label": "(原始)0116",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_71",
+            "label": "(原始)0113",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_72",
+            "label": "(原始)0111",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_73",
+            "label": "(原始)0109",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_74",
+            "label": "(原始)0107",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_75",
+            "label": "(原始)0106",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_76",
+            "label": "(原始)0105",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_77",
+            "label": "0102",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_78",
+            "label": "(原始)0102",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_79",
+            "label": "(原始)1229",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_80",
+            "label": "(原始)1220",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_81",
+            "label": "(原始)1217",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_82",
+            "label": "(原始)1210",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_83",
+            "label": "(原始)1208",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_84",
+            "label": "(原始)1212",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_85",
+            "label": "(原始)1204",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_86",
+            "label": "(原始)1201",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_87",
+            "label": "(原始)1127",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_88",
+            "label": "(原始)1126",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_89",
+            "label": "(原始)1124",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_90",
+            "label": "(原始)1120",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_91",
+            "label": "(原始)1114",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_92",
+            "label": "(原始)1113",
+            "cumulativeShare": 1
+          },
+          {
+            "id": "id_redacted_93",
+            "label": "(原始)1107",
+            "cumulativeShare": 1
+          }
+        ],
+        "hiddenDiamondCandidates": [],
+        "dragCandidates": [
+          "(原始)1107",
+          "(原始)1113",
+          "(原始)1114",
+          "(原始)1120",
+          "(原始)1124",
+          "(原始)1126",
+          "(原始)1127",
+          "(原始)1201",
+          "(原始)1204",
+          "(原始)1212",
+          "(原始)1208",
+          "(原始)1210"
+        ]
+      },
+      "scopes": [
+        {
+          "level": "company",
+          "key": "company",
+          "label": "Company",
+          "items": [
+            {
+              "id": "id_redacted_94",
+              "label": "Company（全帳戶聚合）",
+              "spend": 3265515,
+              "revenue": 7979798
+            }
+          ],
+          "pareto": {
+            "top20PctIds": [
+              "company"
+            ],
+            "bottom20PctIds": [
+              "company"
+            ],
+            "cumulativeCurve": [
+              {
+                "id": "id_redacted_95",
+                "label": "Company（全帳戶聚合）",
+                "cumulativeShare": 1
+              }
+            ],
+            "hiddenDiamondCandidates": [],
+            "dragCandidates": []
+          },
+          "workbench": {
+            "topRevenueContributors": [
+              {
+                "id": "id_redacted_96",
+                "label": "Company（全帳戶聚合）",
+                "reason": "佔正貢獻池約 100.0%（profit-like=4714283）；樣本信心 high。",
+                "sampleConfidence": "high"
+              }
+            ],
+            "topLossDrivers": [
+              {
+                "id": "id_redacted_97",
+                "label": "Company（全帳戶聚合）",
+                "reason": "ROAS 偏弱（約 2.44），仍列於尾段觀察名單。",
+                "sampleConfidence": "high"
+              }
+            ],
+            "hiddenDiamonds": [],
+            "moneyPits": [],
+            "dominantWinningHooks": [],
+            "dominantFailurePatterns": []
+          }
+        },
+        {
+          "level": "account",
+          "key": "accounts",
+          "label": "Accounts",
+          "items": [
+            {
+              "id": "id_redacted_98",
+              "label": "森淨居所養家糊口",
+              "spend": 3265515,
+              "revenue": 7979798
+            }
+          ],
+          "pareto": {
+            "top20PctIds": [
+              "id_redacted"
+            ],
+            "bottom20PctIds": [
+              "id_redacted"
+            ],
+            "cumulativeCurve": [
+              {
+                "id": "id_redacted_99",
+                "label": "森淨居所養家糊口",
+                "cumulativeShare": 1
+              }
+            ],
+            "hiddenDiamondCandidates": [],
+            "dragCandidates": []
+          },
+          "workbench": {
+            "topRevenueContributors": [
+              {
+                "id": "id_redacted_100",
+                "label": "森淨居所養家糊口",
+                "reason": "佔正貢獻池約 100.0%（profit-like=4714283）；樣本信心 high。",
+                "sampleConfidence": "high"
+              }
+            ],
+            "topLossDrivers": [
+              {
+                "id": "id_redacted_101",
+                "label": "森淨居所養家糊口",
+                "reason": "ROAS 偏弱（約 2.44），仍列於尾段觀察名單。",
+                "sampleConfidence": "high"
+              }
+            ],
+            "hiddenDiamonds": [],
+            "moneyPits": [],
+            "dominantWinningHooks": [],
+            "dominantFailurePatterns": []
+          }
+        },
+        {
+          "level": "product",
+          "key": "products",
+          "label": "Products",
+          "items": [
+            {
+              "id": "id_redacted_102",
+              "label": "(原始)0228",
+              "spend": 32353,
+              "revenue": 140795,
+              "score": 4.35183754211356
+            },
+            {
+              "id": "id_redacted_103",
+              "label": "(原始)0225",
+              "spend": 98854,
+              "revenue": 297345,
+              "score": 3.007920772047666
+            },
+            {
+              "id": "id_redacted_104",
+              "label": "(原始)0224",
+              "spend": 3591,
+              "revenue": 5575,
+              "score": 1.5524923419660261
+            },
+            {
+              "id": "id_redacted_105",
+              "label": "(原始)0227",
+              "spend": 7928,
+              "revenue": 11615,
+              "score": 1.4650605449041372
+            },
+            {
+              "id": "id_redacted_106",
+              "label": "(原始)0223",
+              "spend": 79279,
+              "revenue": 158267,
+              "score": 1.9963294188877256
+            },
+            {
+              "id": "id_redacted_107",
+              "label": "0223",
+              "spend": 170812,
+              "revenue": 442168,
+              "score": 2.588623750087816
+            },
+            {
+              "id": "id_redacted_108",
+              "label": "(原始)0221",
+              "spend": 352734,
+              "revenue": 829227,
+              "score": 2.350856452737757
+            },
+            {
+              "id": "id_redacted_109",
+              "label": "(原始)0213",
+              "spend": 9352,
+              "revenue": 14985,
+              "score": 1.6023310521813516
+            },
+            {
+              "id": "id_redacted_110",
+              "label": "0212",
+              "spend": 113522,
+              "revenue": 173500,
+              "score": 1.5283381194834482
+            },
+            {
+              "id": "id_redacted_111",
+              "label": "(原始)0215",
+              "spend": 70621,
+              "revenue": 186746,
+              "score": 2.644340918423698
+            },
+            {
+              "id": "id_redacted_112",
+              "label": "0211",
+              "spend": 521618,
+              "revenue": 1393605,
+              "score": 2.6716965288774546
+            },
+            {
+              "id": "id_redacted_113",
+              "label": "(原始)0211",
+              "spend": 5964,
+              "revenue": 6390,
+              "score": 1.0714285714285714
+            },
+            {
+              "id": "id_redacted_114",
+              "label": "0210",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_115",
+              "label": "(原始)0214",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_116",
+              "label": "(原始)0209",
+              "spend": 231383,
+              "revenue": 568709,
+              "score": 2.4578685555982935
+            },
+            {
+              "id": "id_redacted_117",
+              "label": "(原始)0205",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_118",
+              "label": "0205",
+              "spend": 28,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_119",
+              "label": "(原始)0207",
+              "spend": 0,
+              "revenue": 14,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_120",
+              "label": "(原始)0204",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_121",
+              "label": "(原始)0208",
+              "spend": 31630,
+              "revenue": 66487,
+              "score": 2.1020233955105914
+            },
+            {
+              "id": "id_redacted_122",
+              "label": "0203",
+              "spend": 310336,
+              "revenue": 674344,
+              "score": 2.172948030521757
+            },
+            {
+              "id": "id_redacted_123",
+              "label": "(原始)0203",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_124",
+              "label": "(原始)0130",
+              "spend": 552774,
+              "revenue": 1396668,
+              "score": 2.526652845466683
+            },
+            {
+              "id": "id_redacted_125",
+              "label": "(原始)0129",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_126",
+              "label": "(原始)0131",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_127",
+              "label": "(原始)0126",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_128",
+              "label": "0122",
+              "spend": 69633,
+              "revenue": 152009,
+              "score": 2.183002312122126
+            },
+            {
+              "id": "id_redacted_129",
+              "label": "(原始)0121",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_130",
+              "label": "(原始)0122",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_131",
+              "label": "(原始)0120",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_132",
+              "label": "(原始)0116",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_133",
+              "label": "(原始)0113",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_134",
+              "label": "(原始)0111",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_135",
+              "label": "0115",
+              "spend": 66003,
+              "revenue": 150938,
+              "score": 2.286835446873627
+            },
+            {
+              "id": "id_redacted_136",
+              "label": "(原始)0109",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_137",
+              "label": "(原始)0107",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_138",
+              "label": "(原始)0106",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_139",
+              "label": "(原始)0105",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_140",
+              "label": "0102",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_141",
+              "label": "(原始)0102",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_142",
+              "label": "(原始)1229",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_143",
+              "label": "1223",
+              "spend": 121585,
+              "revenue": 280603,
+              "score": 2.307875149072665
+            },
+            {
+              "id": "id_redacted_144",
+              "label": "(原始)1220",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_145",
+              "label": "(原始)1217",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_146",
+              "label": "(原始)1210",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_147",
+              "label": "(原始)1208",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_148",
+              "label": "(原始)1212",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_149",
+              "label": "(原始)1204",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_150",
+              "label": "1204",
+              "spend": 415515,
+              "revenue": 1029808,
+              "score": 2.4783894684909087
+            },
+            {
+              "id": "id_redacted_151",
+              "label": "(原始)1201",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_152",
+              "label": "(原始)1127",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_153",
+              "label": "(原始)1126",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_154",
+              "label": "(原始)1124",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_155",
+              "label": "(原始)1120",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_156",
+              "label": "(原始)1114",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_157",
+              "label": "(原始)1113",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            },
+            {
+              "id": "id_redacted_158",
+              "label": "(原始)1107",
+              "spend": 0,
+              "revenue": 0,
+              "score": 0
+            }
+          ],
+          "pareto": {
+            "top20PctIds": [
+              "(原始)0228",
+              "(原始)0225",
+              "0211",
+              "(原始)0215",
+              "0223",
+              "(原始)0130",
+              "1204",
+              "(原始)0209",
+              "(原始)0221",
+              "1223",
+              "0115",
+              "0122"
+            ],
+            "bottom20PctIds": [
+              "(原始)1107",
+              "(原始)1113",
+              "(原始)1114",
+              "(原始)1120",
+              "(原始)1124",
+              "(原始)1126",
+              "(原始)1127",
+              "(原始)1201",
+              "(原始)1204",
+              "(原始)1212",
+              "(原始)1208",
+              "(原始)1210"
+            ],
+            "cumulativeCurve": [
+              {
+                "id": "id_redacted_159",
+                "label": "(原始)0228",
+                "cumulativeShare": 0.09596779986570927
+              },
+              {
+                "id": "id_redacted_160",
+                "label": "(原始)0225",
+                "cumulativeShare": 0.1622992140948316
+              },
+              {
+                "id": "id_redacted_161",
+                "label": "0211",
+                "cumulativeShare": 0.22121612799706733
+              },
+              {
+                "id": "id_redacted_162",
+                "label": "(原始)0215",
+                "cumulativeShare": 0.27952978919884597
+              },
+              {
+                "id": "id_redacted_163",
+                "label": "0223",
+                "cumulativeShare": 0.336614761597746
+              },
+              {
+                "id": "id_redacted_164",
+                "label": "(原始)0130",
+                "cumulativeShare": 0.39233313625152666
+              },
+              {
+                "id": "id_redacted_165",
+                "label": "1204",
+                "cumulativeShare": 0.4469871949565542
+              },
+              {
+                "id": "id_redacted_166",
+                "label": "(原始)0209",
+                "cumulativeShare": 0.5011887214053836
+              },
+              {
+                "id": "id_redacted_167",
+                "label": "(原始)0221",
+                "cumulativeShare": 0.5530303904442921
+              },
+              {
+                "id": "id_redacted_168",
+                "label": "1223",
+                "cumulativeShare": 0.6039242251239945
+              },
+              {
+                "id": "id_redacted_169",
+                "label": "0115",
+                "cumulativeShare": 0.6543540870771573
+              },
+              {
+                "id": "id_redacted_170",
+                "label": "0122",
+                "cumulativeShare": 0.7024941950128891
+              },
+              {
+                "id": "id_redacted_171",
+                "label": "0203",
+                "cumulativeShare": 0.7504125834393148
+              },
+              {
+                "id": "id_redacted_172",
+                "label": "(原始)0208",
+                "cumulativeShare": 0.7967669242393224
+              },
+              {
+                "id": "id_redacted_173",
+                "label": "(原始)0223",
+                "cumulativeShare": 0.8407904752758343
+              },
+              {
+                "id": "id_redacted_174",
+                "label": "(原始)0213",
+                "cumulativeShare": 0.87612547669679
+              },
+              {
+                "id": "id_redacted_175",
+                "label": "(原始)0224",
+                "cumulativeShare": 0.9103614225300257
+              },
+              {
+                "id": "id_redacted_176",
+                "label": "0212",
+                "cumulativeShare": 0.9440647134636501
+              },
+              {
+                "id": "id_redacted_177",
+                "label": "(原始)0227",
+                "cumulativeShare": 0.976372591642444
+              },
+              {
+                "id": "id_redacted_178",
+                "label": "(原始)0211",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_179",
+                "label": "0210",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_180",
+                "label": "(原始)0214",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_181",
+                "label": "(原始)0205",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_182",
+                "label": "0205",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_183",
+                "label": "(原始)0207",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_184",
+                "label": "(原始)0204",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_185",
+                "label": "(原始)0203",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_186",
+                "label": "(原始)0129",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_187",
+                "label": "(原始)0131",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_188",
+                "label": "(原始)0126",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_189",
+                "label": "(原始)0121",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_190",
+                "label": "(原始)0122",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_191",
+                "label": "(原始)0120",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_192",
+                "label": "(原始)0116",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_193",
+                "label": "(原始)0113",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_194",
+                "label": "(原始)0111",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_195",
+                "label": "(原始)0109",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_196",
+                "label": "(原始)0107",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_197",
+                "label": "(原始)0106",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_198",
+                "label": "(原始)0105",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_199",
+                "label": "0102",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_200",
+                "label": "(原始)0102",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_201",
+                "label": "(原始)1229",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_202",
+                "label": "(原始)1220",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_203",
+                "label": "(原始)1217",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_204",
+                "label": "(原始)1210",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_205",
+                "label": "(原始)1208",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_206",
+                "label": "(原始)1212",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_207",
+                "label": "(原始)1204",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_208",
+                "label": "(原始)1201",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_209",
+                "label": "(原始)1127",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_210",
+                "label": "(原始)1126",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_211",
+                "label": "(原始)1124",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_212",
+                "label": "(原始)1120",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_213",
+                "label": "(原始)1114",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_214",
+                "label": "(原始)1113",
+                "cumulativeShare": 1
+              },
+              {
+                "id": "id_redacted_215",
+                "label": "(原始)1107",
+                "cumulativeShare": 1
+              }
+            ],
+            "hiddenDiamondCandidates": [],
+            "dragCandidates": [
+              "(原始)1107",
+              "(原始)1113",
+              "(原始)1114",
+              "(原始)1120",
+              "(原始)1124",
+              "(原始)1126",
+              "(原始)1127",
+              "(原始)1201",
+              "(原始)1204",
+              "(原始)1212",
+              "(原始)1208",
+              "(原始)1210"
+            ]
+          },
+          "workbench": {
+            "topRevenueContributors": [
+              {
+                "id": "id_redacted_216",
+                "label": "(原始)0228",
+                "reason": "佔正貢獻池約 9.6%（profit-like=4）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_217",
+                "label": "(原始)0225",
+                "reason": "佔正貢獻池約 6.6%（profit-like=3）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_218",
+                "label": "0211",
+                "reason": "佔正貢獻池約 5.9%（profit-like=3）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_219",
+                "label": "(原始)0215",
+                "reason": "佔正貢獻池約 5.8%（profit-like=3）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_220",
+                "label": "0223",
+                "reason": "佔正貢獻池約 5.7%（profit-like=3）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_221",
+                "label": "(原始)0130",
+                "reason": "佔正貢獻池約 5.6%（profit-like=3）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_222",
+                "label": "1204",
+                "reason": "佔正貢獻池約 5.5%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_223",
+                "label": "(原始)0209",
+                "reason": "佔正貢獻池約 5.4%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_224",
+                "label": "(原始)0221",
+                "reason": "佔正貢獻池約 5.2%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_225",
+                "label": "1223",
+                "reason": "佔正貢獻池約 5.1%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_226",
+                "label": "0115",
+                "reason": "佔正貢獻池約 5.0%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              },
+              {
+                "id": "id_redacted_227",
+                "label": "0122",
+                "reason": "佔正貢獻池約 4.8%（profit-like=2）；樣本信心 high。",
+                "sampleConfidence": "high"
+              }
+            ],
+            "topLossDrivers": [
+              {
+                "id": "id_redacted_228",
+                "label": "(原始)1107",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_229",
+                "label": "(原始)1113",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_230",
+                "label": "(原始)1114",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_231",
+                "label": "(原始)1120",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_232",
+                "label": "(原始)1124",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_233",
+                "label": "(原始)1126",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_234",
+                "label": "(原始)1127",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_235",
+                "label": "(原始)1201",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_236",
+                "label": "(原始)1204",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_237",
+                "label": "(原始)1212",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_238",
+                "label": "(原始)1208",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_239",
+                "label": "(原始)1210",
+                "reason": "ROAS 偏弱（約 0.00），仍列於尾段觀察名單。",
+                "sampleConfidence": "low"
+              }
+            ],
+            "hiddenDiamonds": [],
+            "moneyPits": [
+              {
+                "id": "id_redacted_240",
+                "label": "(原始)1107",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_241",
+                "label": "(原始)1113",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_242",
+                "label": "(原始)1114",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_243",
+                "label": "(原始)1120",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_244",
+                "label": "(原始)1124",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_245",
+                "label": "(原始)1126",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_246",
+                "label": "(原始)1127",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_247",
+                "label": "(原始)1201",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_248",
+                "label": "(原始)1204",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_249",
+                "label": "(原始)1212",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_250",
+                "label": "(原始)1208",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              },
+              {
+                "id": "id_redacted_251",
+                "label": "(原始)1210",
+                "reason": "落在尾段且負貢獻或 ROAS<0.9 的候選；不代表立即關閉，需對照素材與預算。",
+                "sampleConfidence": "low"
+              }
+            ],
+            "dominantWinningHooks": [],
+            "dominantFailurePatterns": []
+          }
+        },
+        {
+          "level": "creative_version",
+          "key": "creative_versions",
+          "label": "Creative versions",
+          "items": [],
+          "pareto": {
+            "top20PctIds": [],
+            "bottom20PctIds": [],
+            "cumulativeCurve": [],
+            "hiddenDiamondCandidates": [],
+            "dragCandidates": []
+          },
+          "workbench": {
+            "topRevenueContributors": [],
+            "topLossDrivers": [],
+            "hiddenDiamonds": [],
+            "moneyPits": [],
+            "dominantWinningHooks": [],
+            "dominantFailurePatterns": []
+          }
+        }
+      ],
+      "dominantWinningHooks": [],
+      "dominantFailurePatterns": [],
+      "legacyPrecedenceNote": "儀表板／判讀／商品與創意頁應以本 payload 的 canonicalWorkbench 與 scopes 為準；舊有啟發式若衝突，以 v2 引擎為主。"
+    },
+    "crossLevelDigest": {
+      "company": {
+        "label": "Company",
+        "itemCount": 1,
+        "topContributorLabel": "Company（全帳戶聚合）",
+        "dragLabel": "Company（全帳戶聚合）",
+        "hiddenDiamondN": 0,
+        "moneyPitN": 0
+      },
+      "account": {
+        "label": "Accounts",
+        "itemCount": 1,
+        "topContributorLabel": "森淨居所養家糊口",
+        "dragLabel": "森淨居所養家糊口",
+        "hiddenDiamondN": 0,
+        "moneyPitN": 0
+      },
+      "product": {
+        "label": "Products",
+        "itemCount": 57,
+        "topContributorLabel": "(原始)0228",
+        "dragLabel": "(原始)1107",
+        "hiddenDiamondN": 0,
+        "moneyPitN": 12
+      },
+      "creative_version": {
+        "label": "Creative versions",
+        "itemCount": 0,
+        "hiddenDiamondN": 0,
+        "moneyPitN": 0
+      }
+    },
+    "doLess": {
+      "expensiveMistakesToReduce": [
+        "(原始)1107",
+        "(原始)1113",
+        "(原始)1114",
+        "(原始)1120",
+        "(原始)1124",
+        "(原始)1126",
+        "(原始)1127",
+        "(原始)1201"
+      ],
+      "shrinkOrPauseHints": [
+        "(原始)1107",
+        "(原始)1113",
+        "(原始)1114",
+        "(原始)1120",
+        "(原始)1124",
+        "(原始)1126"
+      ]
+    },
+    "doMore": {
+      "expandCandidates": [
+        "(原始)0228",
+        "(原始)0225",
+        "0211",
+        "(原始)0215",
+        "0223",
+        "(原始)0130"
+      ],
+      "dominantWinningHooks": []
+    },
+    "legacyVsEngine": {
+      "note": "舊版 dashboard 啟發式仍以 server/scoring-engine 為歷史相容；Pareto v2／command v4 以 profit-like 與樣本信心為主敘事。",
+      "whenLegacyViewDiffers": "當 ROAS 閾值標籤與 Pareto bucket 不一致時，以本 command layer 的 engineV2.canonicalWorkbench 為準，並對照素材歧義歸因標記。",
+      "surfaceDiffInstruction": "四張皮（Dashboard／商品／FB／Creative Intelligence）應同讀本 API；若畫面上舊卡片文案與 doLess／doMore 不一致，視為已知 surface diff，請以本 payload 為準。"
+    }
+  }
+}

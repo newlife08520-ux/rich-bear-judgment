@@ -1,0 +1,12 @@
+{
+  "withData": {
+    "goalPacingByProduct": {
+      "Demo": {
+        "pacingLabel": "ON_TRACK"
+      }
+    }
+  },
+  "empty": {
+    "goalPacingByProduct": {}
+  }
+}

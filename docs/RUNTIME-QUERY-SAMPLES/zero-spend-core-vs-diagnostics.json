@@ -1,0 +1,22 @@
+{
+  "coreDecisionReady": {
+    "budgetActionDecisionReadyImplicit": [
+      { "campaignId": "c_ok", "spend": 200, "dataStatus": "decision_ready", "suggestedAction": "先降" }
+    ]
+  },
+  "diagnostics": {
+    "budgetActionNoDelivery": [{ "campaignId": "c_nd", "spend": 0, "dataStatus": "no_delivery" }],
+    "budgetActionUnderSample": [{ "campaignId": "c_us", "spend": 50, "dataStatus": "under_sample" }]
+  },
+  "dormantGemCandidates": [
+    {
+      "campaignId": "c_dormant",
+      "productName": "DemoProduct",
+      "primarySpend": 0,
+      "trailingSpend7d": 120,
+      "trailingSpend14d": 200,
+      "visibilityTier": "dormant_gem_bucket",
+      "pauseSignals": ["primary_window_zero_trailing_nonzero"]
+    }
+  ]
+}

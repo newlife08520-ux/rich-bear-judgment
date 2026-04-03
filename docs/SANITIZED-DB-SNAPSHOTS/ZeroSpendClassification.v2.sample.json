@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "purpose": "Batch 15.6 v2: classify zero-spend rows for ops language",
+    "truthTier": "Tier B"
+  },
+  "buckets": {
+    "paused_winners": ["status_pause_like", "trailing_nonzero_strong_roas"],
+    "dormant_gems": ["primary_zero_trailing_nonzero", "not_no_delivery"],
+    "zero_spend_noise": ["low_signal_trailing", "policy_exclude"],
+    "no_delivery": ["dataStatus_no_delivery"],
+    "under_sample": ["insufficient_volume_window"]
+  }
+}

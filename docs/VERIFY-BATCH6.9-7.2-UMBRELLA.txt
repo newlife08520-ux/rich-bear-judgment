@@ -1,0 +1,23 @@
+Umbrella: npm run verify:batch6_9-7_2:intelligence-plus
+
+Full transcript (after capture):
+  docs/verify-outputs/verify-batch6_9-7_2-intelligence-plus.txt
+
+Per-batch npm scripts (run individually and redirect to file if needed):
+  verify:batch26:assets-dedup
+  verify:batch26_1:creative-link-soft-deactivate
+  verify:batch26_2:primary-version-meta-alignment
+  verify:batch26_3:ambiguous-snapshot-exclusion
+  verify:batch26_4:creative-drilldown-attribution-copy
+  verify:batch27:creative-intelligence-workbench
+  verify:batch27_1:tag-family-breakdown
+  verify:batch27_2:version-timeline
+  verify:batch27_3:hidden-diamond-evidence
+  verify:batch28:goal-pacing-ingestion-v2
+  verify:batch28_1:adjust-ledger-autoappend
+  verify:batch28_2:observation-window-precedence
+  verify:batch28_3:goal-pacing-copy-quality
+  verify:batch29:pareto-multilevel
+  verify:batch29_1:hidden-diamond-vs-money-pit
+  verify:batch29_2:winning-hook-propagation
+  verify:batch29_3:legacy-precedence-v2

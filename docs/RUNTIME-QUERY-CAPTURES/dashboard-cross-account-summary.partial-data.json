@@ -1,0 +1,17 @@
+{
+  "captureMeta": {
+    "source": "supertest-route-response",
+    "generatedAt": "2026-03-31T17:39:44.403Z",
+    "note": "Captured via script/capture-runtime-query-captures.ts; sanitized"
+  },
+  "body": {
+    "homepageDataTruth": "partial_decision",
+    "dataStatus": "partial_data",
+    "hasSummary": false,
+    "hasDecisionSignals": true,
+    "message": "批次摘要尚未產生，但活動／商品層資料已足以下方「今日決策中心」運作；可先依五區採取行動，並執行刷新以補齊摘要。",
+    "coverageNote": null,
+    "batchValidity": "insufficient",
+    "batchValidityReason": "缺少 summary"
+  }
+}

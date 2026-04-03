@@ -1,0 +1,4 @@
+Note: create-review-zip:verified continues after this capture with:
+wrap: batch68 → batch73 → create-review-zip.mjs → batch73_1 → inner:postZip (batch78, batch78_1, verify:review-zip-hygiene).
+Canonical chain: verify:release-candidate = core-regression + product-restructure + ops + reviewer-trust (see docs/active/VERIFY-CHAIN-CANONICAL-MAP.md).
+See parent npm log for full tail if needed.

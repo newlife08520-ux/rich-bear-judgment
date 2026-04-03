@@ -1,0 +1,14 @@
+{
+  "tier": "D",
+  "label": "dirty-dormant-noisy",
+  "note": "Synthetic Tier D — dormant gem candidates with lucky single conversion; tests lowConfidenceDormant clamp.",
+  "candidates": [
+    {
+      "campaignId": "camp_dorm_synth_1",
+      "primarySpend": 0,
+      "trailingSpend7d": 45,
+      "conversions": 1,
+      "clicks": 8
+    }
+  ]
+}

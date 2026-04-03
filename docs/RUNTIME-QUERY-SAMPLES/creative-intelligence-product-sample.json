@@ -1,0 +1,8 @@
+{
+  "withData": {
+    "productName": "DemoProduct",
+    "reviews": [],
+    "attributionProductDiagnostics": { "ambiguousSnapshotRatio": 0 }
+  },
+  "empty": { "productName": "DemoProduct", "reviews": [] }
+}

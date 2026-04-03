@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "purpose": "sanitized sample: batch missing summary but has campaignMetrics",
+    "relatedCapture": "docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.partial-data.json"
+  },
+  "id": "batch_sanitized_partial",
+  "userId": "user_sanitized",
+  "campaignMetrics": [
+    {
+      "campaignId": "c1",
+      "campaignName": "Redacted",
+      "spend": 1200,
+      "revenue": 3400,
+      "roas": 2.83
+    }
+  ],
+  "productLevel": [],
+  "computedAt": "2026-03-25T00:00:00.000Z"
+}

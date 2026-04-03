@@ -1,0 +1,21 @@
+{
+  "withSummary": {
+    "homepageDataTruth": "summary_ok",
+    "dataStatus": "has_data",
+    "hasSummary": true,
+    "hasDecisionSignals": true,
+    "message": "ok",
+    "coverageNote": null,
+    "batchValidity": "valid"
+  },
+  "partialNoSummary": {
+    "homepageDataTruth": "partial_decision",
+    "dataStatus": "partial_data",
+    "hasSummary": false,
+    "hasDecisionSignals": true,
+    "message": "partial",
+    "coverageNote": null,
+    "batchValidity": "insufficient",
+    "batchValidityReason": "缺少 summary"
+  }
+}

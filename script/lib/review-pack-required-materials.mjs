@@ -1,0 +1,55 @@
+/**
+ * 審查包「五、審查材料」必備路徑（與 create-review-zip / verify-review-zip-hygiene 共用）。
+ * 目錄：ZIP 內須至少有一筆 entry 以該前綴開頭（fflate 不寫空目錄）。
+ */
+export const REQUIRED_REVIEW_MATERIAL_DIR_PREFIXES = [
+  "docs/PAGE-STATE-SCREENSHOTS/",
+  "docs/RUNTIME-QUERY-CAPTURES/",
+  "docs/LIVE-RUNTIME-CAPTURES/",
+  "docs/SANITIZED-DB-SNAPSHOTS/",
+  "docs/VERIFY-FULL-OUTPUTS/",
+];
+
+/** 相對 repo 根、ZIP 內路徑（一律 /） */
+export const REQUIRED_REVIEW_MATERIAL_FILES = [
+  "docs/SCREENSHOT-TO-DATA-MAP.md",
+  "docs/UI-TRUTH-MAPPING.md",
+  "docs/API-SAMPLE-PAYLOADS.md",
+  "docs/OPEN-ISSUES-AND-BLOCKERS.md",
+  "docs/DELETE-CANDIDATES.md",
+  "docs/active/VERIFY-CHAIN-CANONICAL-MAP-v2.md",
+  "docs/active/TIER-D-DIRTY-ACCOUNT-PACK.md",
+  "docs/active/EXECUTION-AUDIT-SURFACE.md",
+  "docs/active/META-ERROR-HANDLING-RUNBOOK.md",
+  "docs/active/DATA-TRUTH-STATE-MACHINE.md",
+  "docs/active/PUBLISH-MVP-CLOSURE.md",
+  "docs/active/OUT-OF-BAND-SYNC-DESIGN.md",
+  "docs/active/PUBLISH-LIMITATIONS-AND-SAFETY.md",
+  "docs/active/EXECUTION-ACCOUNTABILITY-RULES.md",
+  "docs/active/ACTIONABLE-ERROR-UX-MATRIX.md",
+  "docs/active/PARTIAL-VS-NO-DATA-PLAYBOOK.md",
+  "docs/active/TIER-D-COVERAGE-MATRIX.md",
+  "docs/active/CI-STATISTICAL-LIMITATIONS.md",
+  "docs/active/VERIFY-CHAIN-MIGRATION-NOTES-v2.md",
+  "docs/active/GEMINI-RECONCILIATION-BATCH16.2.md",
+  "docs/active/PUBLISH-MVP-CLOSURE-v2.md",
+  "docs/active/PUBLISH-REALITY-CHECK.md",
+  "docs/active/OUT-OF-BAND-SYNC-DESIGN-v2.md",
+  "docs/active/EXTERNAL-META-CHANGE-POLICY-v2.md",
+  "docs/active/EXECUTION-AUDIT-SURFACE-v2.md",
+  "docs/active/META-ERROR-HANDLING-RUNBOOK-v2.md",
+  "docs/active/ACTIONABLE-ERROR-UX-MATRIX-v2.md",
+  "docs/active/DATA-TRUTH-STATE-MACHINE-v2.md",
+  "docs/active/PARTIAL-VS-NO-DATA-PLAYBOOK-v2.md",
+  "docs/active/TRUTH-PACK-TIER-MODEL-v3.md",
+  "docs/active/STAGING-CAPTURE-CONTRACT-v2.md",
+  "docs/active/PROD-SANITIZATION-CONTRACT-v2.md",
+  "docs/active/TIER-D-DIRTY-ACCOUNT-PACK-v2.md",
+  "docs/active/TIER-D-COVERAGE-MATRIX-v2.md",
+  "docs/active/ROUTES-SPLIT-PROGRESS-B.md",
+  "docs/active/SCHEMA-SPLIT-PROGRESS-B.md",
+  "docs/active/STRATEGIC-UI-POLISH-v1.md",
+  "docs/active/HOMEPAGE-HIERARCHY-vNext.md",
+  "docs/active/JUDGMENT-FOCUS-MINIMALITY-vNext.md",
+  "docs/active/BATCH16.2-GEMINI-INTEGRATED-EXECUTION-COMPLETION-REPORT.md",
+];

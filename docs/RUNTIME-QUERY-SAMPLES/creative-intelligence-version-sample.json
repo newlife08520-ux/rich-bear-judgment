@@ -1,0 +1,8 @@
+{
+  "withData": {
+    "review": null,
+    "tags": [],
+    "attribution": { "ambiguitySignals": { "primaryCount": 0 } }
+  },
+  "empty": { "review": null, "tags": [] }
+}

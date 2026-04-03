@@ -1,0 +1,14 @@
+{
+  "withCoreAndDiagnostics": {
+    "visibilityPolicyVersion": "2026-03-25",
+    "tableRescue": [{ "campaignId": "c1", "spend": 400, "dataStatus": "decision_ready" }],
+    "budgetActionNoDelivery": [{ "campaignId": "c0", "spend": 0, "dataStatus": "no_delivery" }],
+    "dormantGemCandidates": [
+      { "campaignId": "cz", "primarySpend": 0, "trailingSpend7d": 90, "visibilityTier": "paused_winner_bucket" }
+    ]
+  },
+  "zeroSpendDiagnosticOnly": {
+    "tableRescue": [],
+    "budgetActionNoDelivery": [{ "campaignId": "c0", "spend": 0, "dataStatus": "no_delivery" }]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "tier": "D",
+  "label": "dirty-pacing-sparse",
+  "note": "Synthetic Tier D — very low clicks/conversions for pacing & learning-phase guard tests.",
+  "clicks7d": 4,
+  "conversions7d": 0,
+  "spend7d": 12.5
+}

@@ -1,0 +1,26 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.no-data.json",
+    "route": "GET /api/dashboard/cross-account-summary",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.no-data.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.no-data.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "homepageDataTruth": "no_decision",
+    "dataStatus": "no_sync",
+    "hasSummary": false,
+    "hasDecisionSignals": false,
+    "message": "請先同步 FB／GA4 帳號並完成資料刷新。",
+    "coverageNote": null,
+    "batchValidity": "insufficient",
+    "batchValidityReason": "無 batch"
+  }
+}

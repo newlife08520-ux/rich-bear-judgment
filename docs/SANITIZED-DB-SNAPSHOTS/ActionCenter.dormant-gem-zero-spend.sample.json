@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "purpose": "sanitized sample: dormant gem (0 primary spend, trailing windows nonzero), not mixed with no_delivery bucket",
+    "sourceShape": "action-center payload fragment"
+  },
+  "dormantGemCandidates": [
+    {
+      "campaignId": "camp_sanitized_001",
+      "campaignName": "Redacted Campaign",
+      "accountId": "act_sanitized",
+      "productName": "Redacted SKU",
+      "primarySpend": 0,
+      "trailingSpend7d": 95.5,
+      "trailingSpend14d": 210,
+      "visibilityTier": "dormant_gem_bucket",
+      "pauseSignals": ["primary_window_zero_trailing_nonzero"],
+      "reasonSummary": "主視窗零花費、尾隨視窗仍有花費（沉睡高潛）；7d ROAS 達標。 非 no_delivery／樣本不足診斷列。"
+    }
+  ],
+  "budgetActionNoDelivery": [
+    {
+      "campaignId": "camp_sanitized_nd",
+      "spend": 0,
+      "dataStatus": "no_delivery",
+      "evidenceLevel": "no_delivery"
+    }
+  ]
+}

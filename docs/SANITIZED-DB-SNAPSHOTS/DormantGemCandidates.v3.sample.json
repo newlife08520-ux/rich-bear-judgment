@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "purpose": "Batch 11.0 v3: revivalPriorityScore on dormantGemCandidates",
+    "sourceShape": "action-center payload fragment"
+  },
+  "dormantGemCandidates": [
+    {
+      "campaignId": "camp_v3_paused_winner",
+      "campaignName": "Redacted Paused Winner",
+      "accountId": "act_sanitized",
+      "productName": "Redacted SKU",
+      "status": "PAUSED",
+      "primarySpend": 0,
+      "trailingSpend7d": 120,
+      "trailingSpend14d": 260,
+      "roas7d": 2.1,
+      "opportunityScore": 72,
+      "healthScore": 68,
+      "visibilityTier": "paused_winner_bucket",
+      "pauseSignals": ["status_pause_like", "primary_window_zero_trailing_nonzero"],
+      "revivalPriorityScore": 245,
+      "reasonSummary": "暫停贏家：尾隨視窗仍有花費與 ROAS 訊號；非 no_delivery 診斷列。",
+      "reviveRecommendation": "復活建議：確認暫停原因與素材／庫存就緒後，依尾隨 ROAS 與門檻小幅重啟或分時段測試。",
+      "whyPausedHint": "為何像暫停：狀態欄為暫停／停止類（paused_winner 桶）；與「從未投遞」診斷分開。",
+      "whyWorthRevivingHint": "為何值得救：尾隨 7d／14d 花費達政策門檻（120／260）；7d ROAS 達標。"
+    },
+    {
+      "campaignId": "camp_v3_dormant_gem",
+      "campaignName": "Redacted Dormant Gem",
+      "accountId": "act_sanitized",
+      "productName": "Redacted SKU B",
+      "status": "ACTIVE",
+      "primarySpend": 0,
+      "trailingSpend7d": 42,
+      "trailingSpend14d": 88,
+      "roas7d": null,
+      "opportunityScore": 65,
+      "healthScore": null,
+      "visibilityTier": "dormant_gem_bucket",
+      "pauseSignals": ["primary_window_zero_trailing_nonzero"],
+      "revivalPriorityScore": 118,
+      "reasonSummary": "沉睡高潛：主視窗零花費但尾隨視窗有表現；與診斷桶分開。",
+      "reviveRecommendation": "復活建議：先對照機會／健康分與尾隨花費，排除誤判為 no_delivery 後再小額試投。",
+      "whyPausedHint": "為何主視窗零花費：主視窗與尾隨視窗不一致—常見於預算或排程縮減，需與系統延遲區分。",
+      "whyWorthRevivingHint": "為何值得救：尾隨 7d／14d 花費達政策門檻（42／88）。"
+    }
+  ]
+}

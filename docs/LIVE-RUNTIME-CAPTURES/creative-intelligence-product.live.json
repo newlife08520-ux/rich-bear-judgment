@@ -1,0 +1,33 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/creative-intelligence-product.sample.json",
+    "route": "GET /api/creative-intelligence/product/:name",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/creative-intelligence-product.sample.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/creative-intelligence-product.sample.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "productName": "Product Redacted",
+    "reviews": [],
+    "tags": [],
+    "snapshots": [],
+    "attributionProduct": {
+      "snapshotTotal": 0,
+      "ambiguousCount": 0,
+      "clearAttributionCount": 0,
+      "copy": "目前快照皆為單一 primary 結構或可歸因狀態（仍請對照樣本量）。"
+    },
+    "attributionProductDiagnostics": {
+      "ambiguousSnapshotRatio": 0,
+      "probeHint": "單版本 drilldown：Creative Intelligence workbench 之「版本歸因探測」，或 GET /api/creative-intelligence/version/:assetVersionId。",
+      "linkSemantics": "linkLifecycleState=active 且 isPrimary 之連結優先承載 campaign 歸因；soft_inactive／superseded 與同一 campaign 並存時，後續快照應標 ambiguous。"
+    }
+  }
+}

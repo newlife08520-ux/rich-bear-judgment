@@ -1,0 +1,8 @@
+{
+  "tier": "D",
+  "label": "dirty-longtail-zero-spend",
+  "note": "Synthetic Tier D — extreme long-tail campaigns with 0 primary-window spend; for policy/dormant tests only.",
+  "campaignCount": 420,
+  "zeroSpendRatio": 0.91,
+  "sampleCampaignIds": ["camp_synth_001", "camp_synth_002"]
+}

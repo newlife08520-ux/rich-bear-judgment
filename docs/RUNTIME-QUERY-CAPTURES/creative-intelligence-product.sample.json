@@ -1,0 +1,24 @@
+{
+  "captureMeta": {
+    "source": "supertest-route-response",
+    "generatedAt": "2026-03-31T17:39:44.403Z",
+    "note": "Captured via script/capture-runtime-query-captures.ts; sanitized"
+  },
+  "body": {
+    "productName": "Product Redacted",
+    "reviews": [],
+    "tags": [],
+    "snapshots": [],
+    "attributionProduct": {
+      "snapshotTotal": 0,
+      "ambiguousCount": 0,
+      "clearAttributionCount": 0,
+      "copy": "目前快照皆為單一 primary 結構或可歸因狀態（仍請對照樣本量）。"
+    },
+    "attributionProductDiagnostics": {
+      "ambiguousSnapshotRatio": 0,
+      "probeHint": "單版本 drilldown：Creative Intelligence workbench 之「版本歸因探測」，或 GET /api/creative-intelligence/version/:assetVersionId。",
+      "linkSemantics": "linkLifecycleState=active 且 isPrimary 之連結優先承載 campaign 歸因；soft_inactive／superseded 與同一 campaign 並存時，後續快照應標 ambiguous。"
+    }
+  }
+}

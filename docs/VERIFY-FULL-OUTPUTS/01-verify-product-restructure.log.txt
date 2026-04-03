@@ -1,0 +1,247 @@
+exit=0
+--- stdout ---
+
+> rest-express@1.0.0 verify:product-restructure
+> npm run verify:ui-core && npm run verify:intelligence && npm run verify:review-pack-contracts && npm run verify:commercial-readiness
+
+
+> rest-express@1.0.0 verify:ui-core
+> npm run check && tsx script/verify-dashboard-scope-unification.ts && tsx script/verify-scope-integrity.ts && tsx script/verify-no-mock-in-live-decision.ts && tsx script/verify-ai-contract-unification.ts && tsx script/verify-rule-alignment-production-paths.ts
+
+
+> rest-express@1.0.0 check
+> tsc
+
+[OK] dashboard.tsx uses useAppScope
+[OK] dashboard.tsx uses action-center API
+
+[verify-dashboard-scope-unification] failed: 0
+[OK] buildScopeKey includes custom range in key
+[OK] buildScopeKey preset-only key unchanged
+[OK] scope key differs by userId
+[INFO] AppScopeProvider userId: check client App.tsx passes user.id to AppScopeProvider
+[INFO] Storage per-user: check use-app-scope uses storageKey(userId) = app-scope:${userId}
+
+[verify-scope-integrity] passed: 3 failed: 0
+[OK] server/routes.ts does not use fetchMockGA4DataByProduct
+[OK] server/build-action-center-payload.ts does not use fetchMockGA4DataByProduct
+
+[verify-no-mock-in-live-decision] failed: 0
+[OK] shared extract exists: server/lib/extract-json.ts
+[OK] parse-structured-judgment uses extract from lib/extract-json
+[OK] parse-structured-judgment uses StructuredJudgmentSchema
+[OK] gemini uses extract from lib/extract-json
+[OK] StructuredJudgmentSchema defined in gemini-response-schema
+
+[verify-ai-contract-unification] failed: 0
+[OK] All production paths that output structuredJudgment call validateJudgmentAgainstSystemAction before response
+
+> rest-express@1.0.0 verify:intelligence
+> npm run verify:batch28_1:adjust-ledger-autoappend && npm run verify:batch28_2:observation-window-precedence && npm run verify:batch28_3:goal-pacing-copy-quality && npm run verify:batch29:pareto-multilevel && npm run verify:batch29_1:hidden-diamond-vs-money-pit
+
+
+> rest-express@1.0.0 verify:batch28_1:adjust-ledger-autoappend
+> tsx script/verify-x281.ts
+
+[verify:batch28_1:adjust-ledger-autoappend] OK
+
+> rest-express@1.0.0 verify:batch28_2:observation-window-precedence
+> tsx script/verify-x282.ts
+
+[verify:batch28_2:observation-window-precedence] OK
+
+> rest-express@1.0.0 verify:batch28_3:goal-pacing-copy-quality
+> tsx script/verify-b283-pacing-copy.ts
+
+[verify:batch28_3:goal-pacing-copy-quality] OK
+
+> rest-express@1.0.0 verify:batch29:pareto-multilevel
+> tsx script/verify-b29-multilevel.ts
+
+[verify:batch29:pareto-multilevel] OK
+
+> rest-express@1.0.0 verify:batch29_1:hidden-diamond-vs-money-pit
+> tsx script/verify-b291-pareto-ambiguous.ts
+
+[verify:batch29_1:hidden-diamond-vs-money-pit] OK
+
+> rest-express@1.0.0 verify:review-pack-contracts
+> npm run verify:batch97:docs-canonical-boundaries && npm run verify:batch97_1:completion-report-placement && npm run verify:batch97_2:manifest-contents-docs-alignment && npm run verify:batch98:homepage-command-v12 && npm run verify:batch98_1:homepage-command-hierarchy-v12 && npm run verify:batch98_2:homepage-truth-tier-salience-v12 && npm run verify:batch99:products-dormant-operational-v7 && npm run verify:batch99_1:fb-dormant-operational-v7 && npm run verify:batch99_2:ci-dormant-operational-v7 && npm run verify:batch99_3:dormant-command-language-v7 && npm run verify:batch100:judgment-focus-v12 && npm run verify:batch100_1:judgment-focus-minimality-v12 && npm run verify:batch100_2:judgment-operator-separation-v12 && npm run verify:batch101:truth-pack-tier-model-v2 && npm run verify:batch101_1:api-sample-tier-honesty && npm run verify:batch101_2:screenshot-data-tier-consistency-v2 && npm run verify:batch101_3:truth-pack-tier-model-v3 && npm run verify:batch102:routes-split-progress-a && npm run verify:batch102_1:schema-split-progress-a
+
+
+> rest-express@1.0.0 verify:batch97:docs-canonical-boundaries
+> tsx script/verify-batch97-docs-canonical-boundaries.ts
+
+[PASS] verify-batch97 docs-canonical-boundaries
+
+> rest-express@1.0.0 verify:batch97_1:completion-report-placement
+> tsx script/verify-batch97_1-completion-report-placement.ts
+
+[PASS] verify-batch97_1 completion-report-placement: 10 in active
+
+> rest-express@1.0.0 verify:batch97_2:manifest-contents-docs-alignment
+> tsx script/verify-batch97_2-manifest-contents-docs-alignment.ts
+
+[PASS] verify-batch97_2 manifest-contents-docs-alignment generator= batch16_2
+
+> rest-express@1.0.0 verify:batch98:homepage-command-v12
+> tsx script/verify-batch98-homepage-command-v12.ts
+
+[PASS] verify-batch98 homepage-command-v12
+
+> rest-express@1.0.0 verify:batch98_1:homepage-command-hierarchy-v12
+> tsx script/verify-batch98_1-homepage-command-hierarchy-v12.ts
+
+[PASS] verify-batch98_1 homepage-command-hierarchy-v12
+
+> rest-express@1.0.0 verify:batch98_2:homepage-truth-tier-salience-v12
+> tsx script/verify-batch98_2-homepage-truth-tier-salience-v12.ts
+
+[PASS] verify-batch98_2 homepage-truth-tier-salience-v12
+
+> rest-express@1.0.0 verify:batch99:products-dormant-operational-v7
+> tsx script/verify-batch99-products-dormant-operational-v7.ts
+
+[PASS] verify-batch99 products-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_1:fb-dormant-operational-v7
+> tsx script/verify-batch99_1-fb-dormant-operational-v7.ts
+
+[PASS] verify-batch99_1 fb-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_2:ci-dormant-operational-v7
+> tsx script/verify-batch99_2-ci-dormant-operational-v7.ts
+
+[PASS] verify-batch99_2 ci-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_3:dormant-command-language-v7
+> tsx script/verify-batch99_3-dormant-command-language-v7.ts
+
+[PASS] verify-batch99_3 dormant-command-language-v7
+
+> rest-express@1.0.0 verify:batch100:judgment-focus-v12
+> tsx script/verify-batch100-judgment-focus-v12.ts
+
+[PASS] verify-batch100 judgment-focus-v12
+
+> rest-express@1.0.0 verify:batch100_1:judgment-focus-minimality-v12
+> tsx script/verify-batch100_1-judgment-focus-minimality-v12.ts
+
+[PASS] verify-batch100_1 judgment-focus-minimality-v12
+
+> rest-express@1.0.0 verify:batch100_2:judgment-operator-separation-v12
+> tsx script/verify-batch100_2-judgment-operator-separation-v12.ts
+
+[PASS] verify-batch100_2 judgment-operator-separation-v12
+
+> rest-express@1.0.0 verify:batch101:truth-pack-tier-model-v2
+> tsx script/verify-batch101-truth-pack-tier-model-v2.ts
+
+[PASS] verify-batch101 truth-pack-tier-model-v2
+
+> rest-express@1.0.0 verify:batch101_1:api-sample-tier-honesty
+> tsx script/verify-batch101_1-api-sample-tier-honesty.ts
+
+[PASS] verify-batch101_1 api-sample-tier-honesty
+
+> rest-express@1.0.0 verify:batch101_2:screenshot-data-tier-consistency-v2
+> tsx script/verify-batch101_2-screenshot-data-tier-consistency-v2.ts
+
+[PASS] verify-batch101_2 screenshot-data-tier-consistency-v2
+
+> rest-express@1.0.0 verify:batch101_3:truth-pack-tier-model-v3
+> tsx script/verify-batch101_3-truth-pack-tier-model-v3.ts
+
+[PASS] verify-batch101_3 truth-pack-tier-model-v3
+
+> rest-express@1.0.0 verify:batch102:routes-split-progress-a
+> tsx script/verify-batch102-routes-split-progress-a.ts
+
+[PASS] verify-batch102 routes-split-progress-a
+
+> rest-express@1.0.0 verify:batch102_1:schema-split-progress-a
+> tsx script/verify-batch102_1-schema-split-progress-a.ts
+
+[PASS] verify-batch102_1 schema-split-progress-a
+
+> rest-express@1.0.0 verify:commercial-readiness
+> tsx script/verify-commercial-readiness-chain.ts && tsx script/verify-commercial-readiness-granular.ts all
+
+[verify-commercial-readiness] Batch 103 Publish MVP…
+[verify-commercial-readiness] Batch 104 Out-of-band…
+[verify-commercial-readiness] Batch 105 Execution audit…
+[verify-commercial-readiness] Batch 106 Meta errors…
+[verify-commercial-readiness] Batch 107 Data truth…
+[verify-commercial-readiness] Batch 108 Tier D…
+[verify-commercial-readiness] Batch 109 Learning guard…
+[verify-commercial-readiness] Batch 111 CI disclosure…
+[verify-commercial-readiness] Batch 112 Verify chain v2…
+[PASS] verify-commercial-readiness-chain (103–112)
+[granular] adjust-ledger-reconciliation…
+[PASS] adjust-ledger-reconciliation
+[granular] audit-accountability…
+[PASS] audit-accountability
+[granular] canonical-release-entrypoints…
+[PASS] canonical-release-entrypoints
+[granular] ci-low-confidence-demotion…
+[PASS] ci-low-confidence-demotion
+[granular] ci-statistical-disclosure…
+[PASS] ci-statistical-disclosure
+[granular] commercial-readiness-gemini-doc-surface…
+[PASS] commercial-readiness-gemini-doc-surface
+[granular] cross-surface-execution-links…
+[PASS] cross-surface-execution-links
+[granular] cross-surface-truth-consistency…
+[PASS] cross-surface-truth-consistency
+[granular] data-truth…
+[PASS] data-truth
+[granular] dormant-low-confidence…
+[PASS] dormant-low-confidence
+[granular] dormant-score-clamp…
+[PASS] dormant-score-clamp
+[granular] execution-history…
+[PASS] execution-history
+[granular] external-change-warning-surface…
+[PASS] external-change-warning-surface
+[granular] learning-phase-guard…
+[PASS] learning-phase-guard
+[granular] learning-phase-ui…
+[PASS] learning-phase-ui
+[granular] legacy-alias-compatibility…
+[PASS] legacy-alias-compatibility
+[granular] meta-error-ux…
+[PASS] meta-error-ux
+[granular] no-premature-kill…
+[PASS] no-premature-kill
+[granular] out-of-band-sync…
+[PASS] out-of-band-sync
+[granular] pacing-dirty-account-resilience…
+[PASS] pacing-dirty-account-resilience
+[granular] pareto-dirty-account-resilience…
+[PASS] pareto-dirty-account-resilience
+[granular] partial-no-data-separation…
+[PASS] partial-no-data-separation
+[granular] publish-apply-persistence…
+[PASS] publish-apply-persistence
+[granular] publish-meta-write-foundation…
+[PASS] publish-meta-write-foundation
+[granular] publish-mvp…
+[PASS] publish-mvp
+[granular] publish-ui-no-placeholder…
+[PASS] publish-ui-no-placeholder
+[granular] rate-limit-degradation…
+[PASS] rate-limit-degradation
+[granular] routes-split-meta-ops…
+[PASS] routes-split-meta-ops
+[granular] schema-split-publish…
+[PASS] schema-split-publish
+[granular] tier-d-pack…
+[PASS] tier-d-pack
+[granular] token-expiry-surface…
+[PASS] token-expiry-surface
+[granular] verify-chain-map…
+[PASS] verify-chain-map
+[PASS] verify-commercial-readiness-granular (all)
+
+--- stderr ---
+

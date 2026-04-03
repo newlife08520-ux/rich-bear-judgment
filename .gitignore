@@ -1,0 +1,22 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+.data
+.local
+*.zip
+scripts/fixture-*.mp4
+scripts/sample-*.mp4
+attached_assets/
+.data/
+.env
+.env.local
+.env.*
+
+# 本機驗證輸出（勿提交）
+verify-final-log.txt
+
+# Agent 批次任務產出的驗證腳本與證據報告，封存不上傳遠端
+_agent_batch_archives/

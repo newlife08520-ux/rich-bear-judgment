@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "purpose": "sanitized sample: action-center still feeds five zones when homepage is partial_data",
+    "relatedCapture": "docs/RUNTIME-QUERY-CAPTURES/dashboard-action-center.core.json"
+  },
+  "productLevel": [
+    {
+      "productName": "Redacted Product",
+      "spend": 500,
+      "revenue": 1200,
+      "roas": 2.4,
+      "hasRule": true,
+      "targetRoas": 2,
+      "breakEvenRoas": 1.5,
+      "evidenceLevel": "decision_ready"
+    }
+  ],
+  "budgetActionDecisionReady": [
+    {
+      "campaignId": "c_decision",
+      "productName": "Redacted Product",
+      "spend": 300,
+      "dataStatus": "decision_ready",
+      "suggestedAction": "先降"
+    }
+  ],
+  "budgetActionNoDelivery": [],
+  "dormantGemCandidates": []
+}

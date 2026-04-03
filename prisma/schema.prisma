@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model WorkbenchOwner {
+  id               String   @id @default(uuid())
+  productName      String   @unique
+  productOwnerId   String   @default("")
+  mediaOwnerId     String   @default("")
+  creativeOwnerId  String   @default("")
+  taskStatus       String   @default("unassigned")
+  updatedAt        DateTime @updatedAt
+}
+
+model WorkbenchTask {
+  id               String    @id @default(uuid())
+  productName      String?
+  creativeId       String?   // 生命週期對齊時存 campaignId（見 creative-identity.md）
+  draftId          String?   // 投放草稿 ID，深連結用
+  reviewSessionId  String?   // 審判官對話串 ID，用於深連結回該判讀
+  title            String
+  action          String
+  reason          String
+  assigneeId       String?
+  status          String    @default("unassigned")
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  notes           String    @default("")
+  taskSource      String?   // 審判官 | 素材生命週期 | 汰換建議 | 手動
+  priority        String?   // high | medium | low
+  dueDate         DateTime?
+  impactAmount    String?   // 影響金額描述或數值
+  taskType        String?   // 任務類型標籤
+}
+
+model WorkbenchAudit {
+  id         String   @id @default(uuid())
+  userId     String
+  entityType String
+  entityId   String
+  action     String
+  oldValue   String?  // JSON
+  newValue   String?  // JSON
+  at         DateTime @default(now())
+}
+
+model WorkbenchMapping {
+  id         String   @id @default(uuid())
+  entityType String   // creative | ad | adset | campaign
+  entityId   String
+  productName String
+  updatedAt  DateTime @updatedAt
+
+  @@unique([entityType, entityId])
+}
+
+model ThresholdVersion {
+  id          String    @id @default(uuid())
+  kind        String    // global | product
+  productId   String?   // null for global
+  config      String    // JSON
+  status      String    @default("draft") // draft | published
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PromptVersion {
+  id                String    @id @default(uuid())
+  mode              String    // boss | buyer | creative
+  content           String    @default("")
+  structuredOverlay String?   // JSON: 視角結構化欄位（Boss/投手/創意各 3-4 欄）
+  status            String    @default("draft")
+  publishedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// Execution Layer：dry-run → apply 一筆一 run，DB 為 source of truth（取代 .data/execution-logs.json）
+model ExecutionRun {
+  id           String    @id @default(cuid())
+  dryRunId     String    @unique
+  userId       String
+  actionType   String
+  status       String    // previewed | applied | failed | rollback_note
+  payloadJson  String?   // JSON 字串
+  previewJson  String?   // JSON 字串
+  resultJson   String?   // JSON 字串
+  errorJson    String?   // JSON 字串
+  rollbackNote String?
+  createdAt    DateTime  @default(now())
+  approvedAt   DateTime?
+  appliedAt    DateTime?
+
+  @@index([userId, createdAt])
+  @@index([actionType, createdAt])
+  @@index([status, createdAt])
+}
+
+// Publish 投放草稿與紀錄：DB 為 release-grade source of truth（取代 .data/publish-drafts.json / publish-logs.json）
+model PublishDraftRecord {
+  id                    String   @id
+  userId                String
+  batchId               String?
+  accountId             String
+  pageId                String?
+  igAccountId           String?
+  campaignObjective     String
+  campaignName         String
+  adSetName            String
+  adName               String
+  budgetDaily           Float?
+  budgetTotal           Float?
+  scheduleStart         String?
+  scheduleEnd           String?
+  audienceStrategy      String
+  placementStrategy     String
+  assetPackageId       String?
+  selectedVersionIdsJson String?
+  assetIdsJson         String?
+  primaryCopy          String?
+  headline             String?
+  note                 String?
+  cta                  String?
+  landingPageUrl       String?
+  status               String
+  createdAt            DateTime
+  updatedAt            DateTime
+  /** Meta publish stage1：最近一次 execution 狀態（success / failed / 等） */
+  lastExecutionStatus  String?
+  lastExecutionAt      DateTime?
+  lastExecutionSummary String?
+  metaCampaignId       String?
+  metaAdSetId          String?
+  metaAdId             String?
+  metaCreativeId       String?
+
+  @@index([userId, createdAt])
+  @@index([batchId])
+}
+
+model PublishLogRecord {
+  id         String   @id
+  userId     String
+  draftId    String?
+  status     String
+  message    String
+  metaJson   String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([draftId, createdAt])
+}
+
+// ========== Creative Intelligence（6.1–6.2）==========
+model CreativeReviewRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  assetVersionId  String
+  assetPackageId  String?
+  productName     String?
+  reviewSource    String
+  workflow        String
+  uiMode          String
+  reviewStatus    String
+  summary         String?
+  nextAction      String?
+  problemType     String?
+  confidence      String?
+  score           Float?
+  reasonsJson     String?
+  suggestionsJson String?
+  evidenceJson    String?
+  blockingJson    String?
+  pendingJson     String?
+  rawResultJson   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([assetVersionId, createdAt])
+}
+
+model CreativePatternTag {
+  id               String   @id @default(cuid())
+  creativeReviewId String
+  tagType          String
+  tagValue         String
+  weight           Float?
+  createdAt        DateTime @default(now())
+
+  @@index([creativeReviewId])
+  @@index([tagType, tagValue])
+}
+
+model CreativeExperimentLink {
+  id             String   @id @default(cuid())
+  userId         String
+  assetVersionId String
+  publishDraftId String?
+  campaignId     String?
+  adSetId        String?
+  adId           String?
+  creativeId     String?
+  productName    String?
+  linkedAt       DateTime @default(now())
+  /** 6.4-packaging：歸因主版本（Stage1 寫入 Meta id 者） */
+  isPrimary      Boolean  @default(false)
+  /** false = 已自草稿移除，不應再接收新 snapshot 歸因 */
+  isActive       Boolean  @default(true)
+  removedAt      DateTime?
+  /** 例如 primary_only | shared | historical */
+  attributionMode String?
+  /** 7.3：active | soft_inactive | superseded */
+  linkLifecycleState String @default("active")
+
+  @@unique([userId, publishDraftId, assetVersionId])
+  @@index([assetVersionId])
+  @@index([campaignId])
+  @@index([adId])
+  @@index([userId, publishDraftId])
+}
+
+model CreativeOutcomeSnapshot {
+  id                    String   @id @default(cuid())
+  userId                String
+  assetVersionId        String
+  campaignId            String?
+  productName           String?
+  spend                 Float    @default(0)
+  revenue               Float    @default(0)
+  roas                  Float    @default(0)
+  clicks                Int      @default(0)
+  addToCart             Int      @default(0)
+  purchases             Int      @default(0)
+  confidenceLevel       String?
+  lifecycleLabel        String?
+  qualityScore          Float?
+  evidenceJson          String?
+  snapshotDate          DateTime
+  createdAt             DateTime @default(now())
+  /** 6.4：同一 campaign 對到多版本 link 時為 true，patterns 不應當高信心歸因 */
+  ambiguousAttribution Boolean  @default(false)
+
+  @@index([assetVersionId, snapshotDate])
+  @@index([campaignId, snapshotDate])
+}
+
+// 6.5：素材審判背景佇列（避免長時間同步 HTTP）
+model CreativeReviewJob {
+  id             String    @id @default(cuid())
+  userId         String
+  assetVersionId String
+  reviewSource   String
+  status         String
+  errorMessage   String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  attemptCount   Int       @default(0)
+  maxAttempts    Int       @default(3)
+  requestedBy    String?
+  mode           String?
+  /** 7.4：image | pdf | video | other */
+  mediaKind      String?
+
+  @@index([userId, status, createdAt])
+  @@index([userId, createdAt])
+}
+
+// 6.3：今日調整節奏／觀察窗（可與商品或活動鍵對齊）
+model WorkbenchAdjustDaily {
+  id                     String    @id @default(cuid())
+  userId                 String
+  entityKey              String
+  dateKey                String
+  adjustCount            Int       @default(0)
+  lastAdjustAt           DateTime?
+  lastAdjustType         String?
+  observationWindowUntil DateTime?
+  updatedAt              DateTime  @updatedAt
+
+  @@unique([userId, entityKey, dateKey])
+  @@index([userId, dateKey])
+}
+
+// Commercial readiness：批次 ingest 時寫入，供 out-of-band 與 Graph 即時值比對
+model MetaCampaignBudgetSnapshot {
+  id               String   @id @default(cuid())
+  userId           String
+  campaignId       String
+  dailyBudgetMinor Int?
+  effectiveStatus  String?
+  metaUpdatedAt    String?
+  ingestedAt       DateTime @default(now())
+
+  @@unique([userId, campaignId])
+  @@index([userId])
+}

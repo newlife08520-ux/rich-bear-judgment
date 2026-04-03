@@ -1,0 +1,528 @@
+exit=0
+--- combined log ---
+
+> rest-express@1.0.0 create-review-zip:verified:inner:prep
+> npm run verify:release-candidate && node script/capture-verify-full-outputs.mjs
+
+
+> rest-express@1.0.0 verify:release-candidate
+> npm run verify:core-regression && npm run verify:product-restructure && npm run verify:ops && npm run verify:reviewer-trust
+
+
+> rest-express@1.0.0 verify:core-regression
+> tsx script/verify-final-regression.ts
+
+[verify:final] Running verify-phase2-acceptance.ts...
+# 階段二整合驗收（不需伺服器）
+
+--- job 建立/持久化、同 scope 去重、重啟恢復 (verify-phase2-refresh-job.ts) ---
+[Storage] Loaded persisted data: 1 settings, 1 synced account sets, 14 batches (0 rescored)
+[Storage] 將 2 個殘留 running refresh job 標記為 failed (recovery)
+# 階段二 Refresh Job 驗證結果
+
+- **通過**：建立 refresh job 後可透過 getRefreshJob 取得，status=pending。
+- **通過**：job 已持久化至 .data/refresh-jobs.json。
+
+- **通過**：同 scope 去重鎖有效，getRunningJobByScopeKey(scopeKey) 回傳該 job。
+- **通過**：running 狀態下同 scope 仍被鎖定。
+
+- **通過**：啟動時 loadRefreshJobs 將殘留 running job 標記為 failed，errorStage=recovery。
+
+---
+說明：原子切換與「失敗不污染 latest」需在整合測試或手動呼叫 POST/GET 驗證；本腳本僅驗證 job 儲存、去重鎖、重啟恢復。
+結果: 通過
+
+--- 失敗不污染 latest (verify-phase2-failure-no-pollute.ts) ---
+[Storage] Loaded persisted data: 1 settings, 1 synced account sets, 14 batches (0 rescored)
+[RefreshJob] started jobId=6135f19f-17a3-481d-88cc-97523bb97792 scopeKey=phase2-failure-test-user::all::7
+# 階段二：失敗不污染 latest 驗證
+
+- **通過**：job 最終為 failed
+- **通過**：errorStage=meta_fetch, errorMessage=驗收用注入失敗（FORCE_REFRESH_FAILURE_STAGE/PHASE2_INJECT_
+- **通過**：舊 latest batch 仍可讀，batchId 未變（null）
+
+---
+全部通過：失敗時 job 標為 failed、errorStage 有值、latest 未被覆蓋。
+結果: 通過
+
+---
+以上驗收皆通過。請在伺服器運行時執行 npx tsx script/verify-phase2-e2e.ts 驗證 lifecycle 輪詢與 dashboard precomputed。
+[verify:final] Running verify-phase2-lifecycle.ts...
+[Storage] Loaded persisted data: 1 settings, 1 synced account sets, 14 batches (0 rescored)
+[RefreshJob] started jobId=181506af-78e0-4054-b902-bfc076933521 scopeKey=phase2-lifecycle-test-user::all::7
+[AISummary] No API key, using deterministic fallback
+[RefreshJob] succeeded jobId=181506af-78e0-4054-b902-bfc076933521 batchId=ab87e082-bb9c-46cd-8366-4595df4561ac
+通過：lifecycle pending → running → succeeded，resultBatchKey=phase2-lifecycle-test-user::all::7
+[verify:final] Running verify-phase2-failure-no-pollute.ts...
+[Storage] Loaded persisted data: 1 settings, 1 synced account sets, 14 batches (0 rescored)
+[RefreshJob] started jobId=f376ed49-2342-4e2b-827c-14c9ae861d30 scopeKey=phase2-failure-test-user::all::7
+# 階段二：失敗不污染 latest 驗證
+
+- **通過**：job 最終為 failed
+- **通過**：errorStage=meta_fetch, errorMessage=驗收用注入失敗（FORCE_REFRESH_FAILURE_STAGE/PHASE2_INJECT_
+- **通過**：舊 latest batch 仍可讀，batchId 未變（null）
+
+---
+全部通過：失敗時 job 標為 failed、errorStage 有值、latest 未被覆蓋。
+[verify:final] Running verify-phase3-concurrency.ts...
+通過：concurrency 與 retry helper 存在且基本行為正確。
+[verify:final] Running verify-phase3-retry-integration.ts...
+通過：Retry 整合（429/500 重試、400 不重試）驗證完成。
+[verify:final] Running verify-phase3-no-memory-storage.ts...
+通過：repo 中已無 memoryStorage，上傳使用 disk + cleanup。
+[verify:final] Running verify-phase3-upload-cleanup.ts...
+通過：content-judgment 與 asset-package 上傳皆在成功/失敗路徑 cleanup temp。
+[verify:final] Running verify-phase3-workbench-bulk.ts...
+通過：workbench batch 使用 createWorkbenchTasksBatch，無 N+1 逐筆 create。
+[verify:final] Running verify-phase3-retry-wrapped.ts...
+通過：Meta/GA4 外部 fetch 路徑已套入 withExponentialBackoff。
+[verify:final] Running verify-phase3-event-loop-yield.ts...
+通過：Event loop 讓步已落地於 refresh-pipeline 大型迴圈。
+[verify:final] Running verify-phase4-gemini-fallback.ts...
+通過：Phase 4 結構化解析與 fallback 行為正確。
+[verify:final] Running verify-phase4-schema-validation.ts...
+通過：Phase 4 schema-based runtime validation 驗證完成。
+[verify:final] Running verify-phase5-prompt-guardrails.ts...
+通過：Phase 5 Prompt 護欄與 context 壓縮行為正確。
+[verify:final] Running verify-phase5-context-compression.ts...
+通過：context 壓縮有效，過長內容已截斷且尾段未進入 prompt。
+[verify:final] Running verify-phase5-rule-alignment.ts...
+通過：Output 由系統計算、Data Context 含建議動作，規則對齊已就緒。
+[verify:final] Running verify-phase5-no-contradictory-budget.ts...
+通過：Phase 5 無矛盾預算（deterministic alignment）驗證完成。
+[verify:final] Running verify-phase5-production-alignment-path.ts...
+通過：production path 對齊保護已驗證（parse -> align -> 對外輸出已覆寫）。
+[verify:final] Running verify-scope-integrity.ts...
+[OK] buildScopeKey includes custom range in key
+[OK] buildScopeKey preset-only key unchanged
+[OK] scope key differs by userId
+[INFO] AppScopeProvider userId: check client App.tsx passes user.id to AppScopeProvider
+[INFO] Storage per-user: check use-app-scope uses storageKey(userId) = app-scope:${userId}
+
+[verify-scope-integrity] passed: 3 failed: 0
+[verify:final] Running verify-dashboard-scope-unification.ts...
+[OK] dashboard.tsx uses useAppScope
+[OK] dashboard.tsx uses action-center API
+
+[verify-dashboard-scope-unification] failed: 0
+[verify:final] Running verify-no-mock-in-live-decision.ts...
+[OK] server/routes.ts does not use fetchMockGA4DataByProduct
+[OK] server/build-action-center-payload.ts does not use fetchMockGA4DataByProduct
+
+[verify-no-mock-in-live-decision] failed: 0
+[verify:final] Running verify-ai-contract-unification.ts...
+[OK] shared extract exists: server/lib/extract-json.ts
+[OK] parse-structured-judgment uses extract from lib/extract-json
+[OK] parse-structured-judgment uses StructuredJudgmentSchema
+[OK] gemini uses extract from lib/extract-json
+[OK] StructuredJudgmentSchema defined in gemini-response-schema
+
+[verify-ai-contract-unification] failed: 0
+[verify:final] Running verify-rule-alignment-production-paths.ts...
+[OK] All production paths that output structuredJudgment call validateJudgmentAgainstSystemAction before response
+[verify:final] All regression checks passed.
+
+> rest-express@1.0.0 verify:product-restructure
+> npm run verify:ui-core && npm run verify:intelligence && npm run verify:review-pack-contracts && npm run verify:commercial-readiness
+
+
+> rest-express@1.0.0 verify:ui-core
+> npm run check && tsx script/verify-dashboard-scope-unification.ts && tsx script/verify-scope-integrity.ts && tsx script/verify-no-mock-in-live-decision.ts && tsx script/verify-ai-contract-unification.ts && tsx script/verify-rule-alignment-production-paths.ts
+
+
+> rest-express@1.0.0 check
+> tsc
+
+[OK] dashboard.tsx uses useAppScope
+[OK] dashboard.tsx uses action-center API
+
+[verify-dashboard-scope-unification] failed: 0
+[OK] buildScopeKey includes custom range in key
+[OK] buildScopeKey preset-only key unchanged
+[OK] scope key differs by userId
+[INFO] AppScopeProvider userId: check client App.tsx passes user.id to AppScopeProvider
+[INFO] Storage per-user: check use-app-scope uses storageKey(userId) = app-scope:${userId}
+
+[verify-scope-integrity] passed: 3 failed: 0
+[OK] server/routes.ts does not use fetchMockGA4DataByProduct
+[OK] server/build-action-center-payload.ts does not use fetchMockGA4DataByProduct
+
+[verify-no-mock-in-live-decision] failed: 0
+[OK] shared extract exists: server/lib/extract-json.ts
+[OK] parse-structured-judgment uses extract from lib/extract-json
+[OK] parse-structured-judgment uses StructuredJudgmentSchema
+[OK] gemini uses extract from lib/extract-json
+[OK] StructuredJudgmentSchema defined in gemini-response-schema
+
+[verify-ai-contract-unification] failed: 0
+[OK] All production paths that output structuredJudgment call validateJudgmentAgainstSystemAction before response
+
+> rest-express@1.0.0 verify:intelligence
+> npm run verify:batch28_1:adjust-ledger-autoappend && npm run verify:batch28_2:observation-window-precedence && npm run verify:batch28_3:goal-pacing-copy-quality && npm run verify:batch29:pareto-multilevel && npm run verify:batch29_1:hidden-diamond-vs-money-pit
+
+
+> rest-express@1.0.0 verify:batch28_1:adjust-ledger-autoappend
+> tsx script/verify-x281.ts
+
+[verify:batch28_1:adjust-ledger-autoappend] OK
+
+> rest-express@1.0.0 verify:batch28_2:observation-window-precedence
+> tsx script/verify-x282.ts
+
+[verify:batch28_2:observation-window-precedence] OK
+
+> rest-express@1.0.0 verify:batch28_3:goal-pacing-copy-quality
+> tsx script/verify-b283-pacing-copy.ts
+
+[verify:batch28_3:goal-pacing-copy-quality] OK
+
+> rest-express@1.0.0 verify:batch29:pareto-multilevel
+> tsx script/verify-b29-multilevel.ts
+
+[verify:batch29:pareto-multilevel] OK
+
+> rest-express@1.0.0 verify:batch29_1:hidden-diamond-vs-money-pit
+> tsx script/verify-b291-pareto-ambiguous.ts
+
+[verify:batch29_1:hidden-diamond-vs-money-pit] OK
+
+> rest-express@1.0.0 verify:review-pack-contracts
+> npm run verify:batch97:docs-canonical-boundaries && npm run verify:batch97_1:completion-report-placement && npm run verify:batch97_2:manifest-contents-docs-alignment && npm run verify:batch98:homepage-command-v12 && npm run verify:batch98_1:homepage-command-hierarchy-v12 && npm run verify:batch98_2:homepage-truth-tier-salience-v12 && npm run verify:batch99:products-dormant-operational-v7 && npm run verify:batch99_1:fb-dormant-operational-v7 && npm run verify:batch99_2:ci-dormant-operational-v7 && npm run verify:batch99_3:dormant-command-language-v7 && npm run verify:batch100:judgment-focus-v12 && npm run verify:batch100_1:judgment-focus-minimality-v12 && npm run verify:batch100_2:judgment-operator-separation-v12 && npm run verify:batch101:truth-pack-tier-model-v2 && npm run verify:batch101_1:api-sample-tier-honesty && npm run verify:batch101_2:screenshot-data-tier-consistency-v2 && npm run verify:batch101_3:truth-pack-tier-model-v3 && npm run verify:batch102:routes-split-progress-a && npm run verify:batch102_1:schema-split-progress-a
+
+
+> rest-express@1.0.0 verify:batch97:docs-canonical-boundaries
+> tsx script/verify-batch97-docs-canonical-boundaries.ts
+
+[PASS] verify-batch97 docs-canonical-boundaries
+
+> rest-express@1.0.0 verify:batch97_1:completion-report-placement
+> tsx script/verify-batch97_1-completion-report-placement.ts
+
+[PASS] verify-batch97_1 completion-report-placement: 10 in active
+
+> rest-express@1.0.0 verify:batch97_2:manifest-contents-docs-alignment
+> tsx script/verify-batch97_2-manifest-contents-docs-alignment.ts
+
+[PASS] verify-batch97_2 manifest-contents-docs-alignment generator= batch16_2
+
+> rest-express@1.0.0 verify:batch98:homepage-command-v12
+> tsx script/verify-batch98-homepage-command-v12.ts
+
+[PASS] verify-batch98 homepage-command-v12
+
+> rest-express@1.0.0 verify:batch98_1:homepage-command-hierarchy-v12
+> tsx script/verify-batch98_1-homepage-command-hierarchy-v12.ts
+
+[PASS] verify-batch98_1 homepage-command-hierarchy-v12
+
+> rest-express@1.0.0 verify:batch98_2:homepage-truth-tier-salience-v12
+> tsx script/verify-batch98_2-homepage-truth-tier-salience-v12.ts
+
+[PASS] verify-batch98_2 homepage-truth-tier-salience-v12
+
+> rest-express@1.0.0 verify:batch99:products-dormant-operational-v7
+> tsx script/verify-batch99-products-dormant-operational-v7.ts
+
+[PASS] verify-batch99 products-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_1:fb-dormant-operational-v7
+> tsx script/verify-batch99_1-fb-dormant-operational-v7.ts
+
+[PASS] verify-batch99_1 fb-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_2:ci-dormant-operational-v7
+> tsx script/verify-batch99_2-ci-dormant-operational-v7.ts
+
+[PASS] verify-batch99_2 ci-dormant-operational-v7
+
+> rest-express@1.0.0 verify:batch99_3:dormant-command-language-v7
+> tsx script/verify-batch99_3-dormant-command-language-v7.ts
+
+[PASS] verify-batch99_3 dormant-command-language-v7
+
+> rest-express@1.0.0 verify:batch100:judgment-focus-v12
+> tsx script/verify-batch100-judgment-focus-v12.ts
+
+[PASS] verify-batch100 judgment-focus-v12
+
+> rest-express@1.0.0 verify:batch100_1:judgment-focus-minimality-v12
+> tsx script/verify-batch100_1-judgment-focus-minimality-v12.ts
+
+[PASS] verify-batch100_1 judgment-focus-minimality-v12
+
+> rest-express@1.0.0 verify:batch100_2:judgment-operator-separation-v12
+> tsx script/verify-batch100_2-judgment-operator-separation-v12.ts
+
+[PASS] verify-batch100_2 judgment-operator-separation-v12
+
+> rest-express@1.0.0 verify:batch101:truth-pack-tier-model-v2
+> tsx script/verify-batch101-truth-pack-tier-model-v2.ts
+
+[PASS] verify-batch101 truth-pack-tier-model-v2
+
+> rest-express@1.0.0 verify:batch101_1:api-sample-tier-honesty
+> tsx script/verify-batch101_1-api-sample-tier-honesty.ts
+
+[PASS] verify-batch101_1 api-sample-tier-honesty
+
+> rest-express@1.0.0 verify:batch101_2:screenshot-data-tier-consistency-v2
+> tsx script/verify-batch101_2-screenshot-data-tier-consistency-v2.ts
+
+[PASS] verify-batch101_2 screenshot-data-tier-consistency-v2
+
+> rest-express@1.0.0 verify:batch101_3:truth-pack-tier-model-v3
+> tsx script/verify-batch101_3-truth-pack-tier-model-v3.ts
+
+[PASS] verify-batch101_3 truth-pack-tier-model-v3
+
+> rest-express@1.0.0 verify:batch102:routes-split-progress-a
+> tsx script/verify-batch102-routes-split-progress-a.ts
+
+[PASS] verify-batch102 routes-split-progress-a
+
+> rest-express@1.0.0 verify:batch102_1:schema-split-progress-a
+> tsx script/verify-batch102_1-schema-split-progress-a.ts
+
+[PASS] verify-batch102_1 schema-split-progress-a
+
+> rest-express@1.0.0 verify:commercial-readiness
+> tsx script/verify-commercial-readiness-chain.ts && tsx script/verify-commercial-readiness-granular.ts all
+
+[verify-commercial-readiness] Batch 103 Publish MVP…
+[verify-commercial-readiness] Batch 104 Out-of-band…
+[verify-commercial-readiness] Batch 105 Execution audit…
+[verify-commercial-readiness] Batch 106 Meta errors…
+[verify-commercial-readiness] Batch 107 Data truth…
+[verify-commercial-readiness] Batch 108 Tier D…
+[verify-commercial-readiness] Batch 109 Learning guard…
+[verify-commercial-readiness] Batch 111 CI disclosure…
+[verify-commercial-readiness] Batch 112 Verify chain v2…
+[PASS] verify-commercial-readiness-chain (103–112)
+[granular] adjust-ledger-reconciliation…
+[PASS] adjust-ledger-reconciliation
+[granular] audit-accountability…
+[PASS] audit-accountability
+[granular] canonical-release-entrypoints…
+[PASS] canonical-release-entrypoints
+[granular] ci-low-confidence-demotion…
+[PASS] ci-low-confidence-demotion
+[granular] ci-statistical-disclosure…
+[PASS] ci-statistical-disclosure
+[granular] commercial-readiness-gemini-doc-surface…
+[PASS] commercial-readiness-gemini-doc-surface
+[granular] cross-surface-execution-links…
+[PASS] cross-surface-execution-links
+[granular] cross-surface-truth-consistency…
+[PASS] cross-surface-truth-consistency
+[granular] data-truth…
+[PASS] data-truth
+[granular] dormant-low-confidence…
+[PASS] dormant-low-confidence
+[granular] dormant-score-clamp…
+[PASS] dormant-score-clamp
+[granular] execution-history…
+[PASS] execution-history
+[granular] external-change-warning-surface…
+[PASS] external-change-warning-surface
+[granular] learning-phase-guard…
+[PASS] learning-phase-guard
+[granular] learning-phase-ui…
+[PASS] learning-phase-ui
+[granular] legacy-alias-compatibility…
+[PASS] legacy-alias-compatibility
+[granular] meta-error-ux…
+[PASS] meta-error-ux
+[granular] no-premature-kill…
+[PASS] no-premature-kill
+[granular] out-of-band-sync…
+[PASS] out-of-band-sync
+[granular] pacing-dirty-account-resilience…
+[PASS] pacing-dirty-account-resilience
+[granular] pareto-dirty-account-resilience…
+[PASS] pareto-dirty-account-resilience
+[granular] partial-no-data-separation…
+[PASS] partial-no-data-separation
+[granular] publish-apply-persistence…
+[PASS] publish-apply-persistence
+[granular] publish-meta-write-foundation…
+[PASS] publish-meta-write-foundation
+[granular] publish-mvp…
+[PASS] publish-mvp
+[granular] publish-ui-no-placeholder…
+[PASS] publish-ui-no-placeholder
+[granular] rate-limit-degradation…
+[PASS] rate-limit-degradation
+[granular] routes-split-meta-ops…
+[PASS] routes-split-meta-ops
+[granular] schema-split-publish…
+[PASS] schema-split-publish
+[granular] tier-d-pack…
+[PASS] tier-d-pack
+[granular] token-expiry-surface…
+[PASS] token-expiry-surface
+[granular] verify-chain-map…
+[PASS] verify-chain-map
+[PASS] verify-commercial-readiness-granular (all)
+
+> rest-express@1.0.0 verify:ops
+> npm run verify:precompute && npm run verify:baseline
+
+
+> rest-express@1.0.0 verify:precompute
+> tsx script/verify-precompute-persistence.ts && tsx script/verify-precompute-consistency.ts
+
+=== 預計算完整性保護檢查 ===
+
+已檢查 14 個 batch，其中 9 個具 precompute 標記且結構完整。
+完整性保護檢查通過：無假完成、無部分污染、無 payload 結構不完整。
+=== 預計算結果一致性驗證 ===
+
+[OK] action-center unscoped (1): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1): 契約與關鍵值一致
+[OK] action-center unscoped (1::all::7:2026-02-24~202…): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::all::7:2026-02-24~202…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::all::7:2026-02-24~202…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::all::7:2026-02-24~202…): 契約與關鍵值一致
+[OK] action-center unscoped (1::1722059011831454::7:2…): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::1722059011831454::7:2…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::1722059011831454::7:2…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::1722059011831454::7:2…): 契約與關鍵值一致
+[OK] action-center unscoped (1::all::1:2026-03-02~202…): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::all::1:2026-03-02~202…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::all::1:2026-03-02~202…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::all::1:2026-03-02~202…): 契約與關鍵值一致
+[OK] action-center unscoped (1::352143498::7:2026-02-…): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::352143498::7:2026-02-…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::352143498::7:2026-02-…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::352143498::7:2026-02-…): 契約與關鍵值一致
+[OK] action-center unscoped (1::1722059011831454|3521…): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::1722059011831454|3521…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::1722059011831454|3521…): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::1722059011831454|3521…): 契約與關鍵值一致
+[OK] action-center unscoped (1::1722059011831454::3): 契約與關鍵值一致
+[OK] action-center scopeAccountIds (1::1722059011831454::3): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] action-center scopeProducts (1::1722059011831454::3): 契約一致（scoped 數量因 filter/build 邊界可略異，僅驗契約）
+[OK] scorecard (1::1722059011831454::3): 契約與關鍵值一致
+[OK] action-center unscoped (phase2-lifecycle-test-us…): 契約與關鍵值一致
+[OK] scorecard (phase2-lifecycle-test-us…): 契約與關鍵值一致
+[OK] action-center unscoped (phase2-lifecycle-test-us…): 契約與關鍵值一致
+[OK] scorecard (phase2-lifecycle-test-us…): 契約與關鍵值一致
+
+全部情境：precomputed 與 fallback 關鍵輸出一致。
+
+> rest-express@1.0.0 verify:baseline
+> tsx script/verify-baseline.ts
+
+verify-baseline @ 2026-04-03T14:40:36.917Z
+cwd: D:\AI審判官\Du-She-Shen-Pan-Guan
+
+--- npm run check ---
+$ npm run check
+> rest-express@1.0.0 check
+> tsc
+[OK] npm run check
+
+--- npm run build ---
+$ npm run build
+> rest-express@1.0.0 build
+> prisma generate && tsx script/build.ts
+
+
+✔ Generated Prisma Client (v7.4.2) to .\node_modules\@prisma\client in 249ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+running prisma generate...
+
+✔ Generated Prisma Client (v7.4.2) to .\node_modules\@prisma\client in 238ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 2807 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                              2.19 kB │ gzip:   0.92 kB
+../dist/public/assets/index-TfSwh4cA.css             131.44 kB │ gzip:  20.43 kB
+../dist/public/assets/purify.es-Bzr520pe.js           22.45 kB │ gzip:   8.63 kB
+../dist/public/assets/index.es-CjfD1_Sh.js           158.62 kB │ gzip:  52.95 kB
+../dist/public/assets/html2canvas.esm-DXEQVQnt.js    201.04 kB │ gzip:  47.43 kB
+../dist/public/assets/jspdf.es.min-BK9flO6b.js       385.86 kB │ gzip: 126.13 kB
+../dist/public/assets/index-A7LfYfhn.js            1,381.18 kB │ gzip: 406.41 kB
+✓ built in 14.96s
+building server...
+[build-version] written dist/version.json: {
+  commit: '54ef3311dd8a33f67696b25c1668ea9472eac700',
+  branch: 'main',
+  timestamp: '2026-04-03T14:41:09.787Z'
+}
+[OK] npm run build
+
+[verify:baseline] All passed (check + build).
+
+> rest-express@1.0.0 verify:reviewer-trust
+> npm run verify:batch96:verify-chain-canonical-map && npm run verify:batch96_1:legacy-alias-compatibility && npm run verify:batch96_2:canonical-release-entrypoints
+
+
+> rest-express@1.0.0 verify:batch96:verify-chain-canonical-map
+> tsx script/verify-batch96-verify-chain-canonical-map.ts
+
+[PASS] verify-batch96 verify-chain-canonical-map
+
+> rest-express@1.0.0 verify:batch96_1:legacy-alias-compatibility
+> tsx script/verify-batch96_1-legacy-alias-compatibility.ts
+
+[PASS] verify-batch96_1 legacy-alias-compatibility
+
+> rest-express@1.0.0 verify:batch96_2:canonical-release-entrypoints
+> tsx script/verify-batch96_2-canonical-release-entrypoints.ts
+
+[PASS] verify-batch96_2 canonical-release-entrypoints
+[capture-verify-full-outputs] 01-verify-product-restructure -> D:\AI審判官\Du-She-Shen-Pan-Guan\docs\VERIFY-FULL-OUTPUTS\01-verify-product-restructure.log.txt exit 0
+[capture-verify-full-outputs] 02-verify-release-candidate -> D:\AI審判官\Du-She-Shen-Pan-Guan\docs\VERIFY-FULL-OUTPUTS\02-verify-release-candidate.log.txt exit 0
+[capture-verify-full-outputs] Done
+[RefreshJob] failed jobId=6135f19f-17a3-481d-88cc-97523bb97792 stage=meta_fetch message=驗收用注入失敗（FORCE_REFRESH_FAILURE_STAGE/PHASE2_INJECT_FAILURE）
+[RefreshJob] failed jobId=f376ed49-2342-4e2b-827c-14c9ae861d30 stage=meta_fetch message=驗收用注入失敗（FORCE_REFRESH_FAILURE_STAGE/PHASE2_INJECT_FAILURE）
+[Retry] provider=mock operation=fetch attempt=1 willRetry=true statusCode=429 errorName=Error
+[Retry] provider=provider operation=request attempt=1 willRetry=true statusCode=500 errorName=Error
+[Gemini] Failed to extract JSON from response
+[Gemini] Schema validation failed: {
+  formErrors: [],
+  fieldErrors: { detail: [ 'Expected string, received number' ] }
+}
+[Gemini] Schema validation failed: {
+  formErrors: [],
+  fieldErrors: { detail: [ 'Expected array, received string' ] }
+}
+[Gemini] Failed to extract JSON from response
+[Gemini] Failed to extract JSON from content judgment response
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+  dist\index.cjs  506.5kb
+
+Done in 89ms
+(node:81512) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+--- packaged review zip (canonical) ---
+phase-batch16_2-complete-20260403-2245.zip

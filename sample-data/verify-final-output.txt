@@ -1,0 +1,58 @@
+﻿
+> rest-express@1.0.0 verify:final
+> tsx script/verify-final-regression.ts
+
+[verify:final] Running verify-phase2-acceptance.ts...
+# ?挾鈭???塚?銝?隡箸??剁?
+
+--- job 撱箇?/???? scope ?駁????敺?(verify-phase2-refresh-job.ts) ---
+[Storage] 撠?2 ????running refresh job 璅???failed (recovery)
+# ?挾鈭?Refresh Job 撽?蝯?
+
+- **??**嚗遣蝡?refresh job 敺?? getRefreshJob ??嚗tatus=pending??- **??**嚗ob 撌脫?銋???.data/refresh-jobs.json??
+- **??**嚗? scope ?駁?????getRunningJobByScopeKey(scopeKey) ?閰?job??- **??**嚗unning ?????scope 隞◤????
+- **??**嚗??? loadRefreshJobs 撠???running job 璅???failed嚗rrorStage=recovery??
+---
+隤芣?嚗?摮????仃??瘙⊥? latest???冽?葫閰行????澆 POST/GET 撽?嚗?單??霅?job ?脣???????敺押?蝯?: ??
+
+--- 憭望?銝情??latest (verify-phase2-failure-no-pollute.ts) ---
+[RefreshJob] started jobId=e5a70172-121f-439b-9e6a-e91d99fd90b7 scopeKey=phase2-failure-test-user::all::7
+# ?挾鈭?憭望?銝情??latest 撽?
+
+- **??**嚗ob ?蝯 failed
+- **??**嚗rrorStage=meta_fetch, errorMessage=撽?冽釣?亙仃??FORCE_REFRESH_FAILURE_STAGE/PHASE2_INJECT_
+- **??**嚗? latest batch 隞霈嚗atchId ?芾?嚗ull嚗?
+---
+?券??嚗仃?? job 璅 failed?rrorStage ?潦atest ?芾◤閬???蝯?: ??
+
+---
+隞乩?撽?????其撩????銵?npx tsx script/verify-phase2-e2e.ts 撽? lifecycle 頛芾岷??dashboard precomputed??[verify:final] Running verify-phase2-lifecycle.ts...
+[RefreshJob] started jobId=4e5d5200-3531-47b8-96e2-d6ffb8b8aa9a scopeKey=phase2-lifecycle-test-user::all::7
+[AISummary] No API key, using deterministic fallback
+node.exe : [RefreshJob] failed jobId=e5a70172-121f-439b-9e6a-e91d99fd90b7 stage=meta_fetch message=撽?冽釣?亙仃??FORCE_RE
+FRESH_FAILURE_STAGE/PHASE2_INJECT_FAILURE嚗?[RefreshJob] failed jobId=4e5d5200-3531-47b8-96e2-d6ffb8b8aa9a stage=precomp
+ute message=
+位於 線路:1 字元:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([RefreshJob] fa...ompute message=:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Invalid `prisma.workbenchMapping.findMany()` invocation in
+D:\AI撖拙摰Du-She-Shen-Pan-Guan-review\server\workbench-db.ts:318:46
+
+  315 
+  316 /** ?????mapping overrides嚗?澆?蝮質圾?ey = entityType:entityId, value = productName */
+  317 export async function getWorkbenchMappingOverrides(): Promise<Map<string, string>> {
+??318   const rows = await prisma.workbenchMapping.findMany(
+The table `main.WorkbenchMapping` does not exist in the current database.
+?芷?嚗ixture 璅∪???succeeded嚗祕??failed precompute 
+Invalid `prisma.workbenchMapping.findMany()` invocation in
+D:\AI撖拙摰Du-She-Shen-Pan-Guan-review\server\workbench-db.ts:318:46
+
+  315 
+  316 /** ?????mapping overrides嚗?澆?蝮質圾?ey = entityType:entityId, value = productName */
+  317 export async function getWorkbenchMappingOverrides(): Promise<Map<string, string>> {
+??318   const rows = await prisma.workbenchMapping.findMany(
+The table `main.WorkbenchMapping` does not exist in the current database.
+[verify:final] verify-phase2-lifecycle.ts failed

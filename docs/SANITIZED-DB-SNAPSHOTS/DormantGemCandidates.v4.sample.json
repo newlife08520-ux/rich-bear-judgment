@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "purpose": "Batch 15.6 v4: operational taxonomy + revivalPriorityScore",
+    "truthTier": "Tier B",
+    "sourceShape": "action-center payload fragment"
+  },
+  "dormantGemCandidates": [
+    {
+      "campaignId": "camp_v4_paused_winner",
+      "campaignName": "Redacted Paused Winner",
+      "accountId": "act_sanitized",
+      "productName": "Redacted SKU",
+      "status": "PAUSED",
+      "primarySpend": 0,
+      "trailingSpend7d": 120,
+      "trailingSpend14d": 260,
+      "roas7d": 2.1,
+      "visibilityTier": "paused_winner_bucket",
+      "revivalPriorityScore": 245,
+      "reasonSummary": "暫停贏家桶：與 zero-spend noise／no_delivery 分離。",
+      "reviveRecommendation": "復活：小幅重啟測試。"
+    },
+    {
+      "campaignId": "camp_v4_dormant_gem",
+      "campaignName": "Redacted Dormant Gem",
+      "accountId": "act_sanitized",
+      "productName": "Redacted SKU B",
+      "status": "ACTIVE",
+      "primarySpend": 0,
+      "trailingSpend7d": 42,
+      "visibilityTier": "dormant_gem_bucket",
+      "revivalPriorityScore": 118,
+      "reasonSummary": "沉睡高潛桶。",
+      "reviveRecommendation": "復活：排除 no_delivery 後試投。"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "captureMeta": {
+    "source": "supertest-route-response",
+    "generatedAt": "2026-03-31T17:39:44.403Z",
+    "note": "Captured via script/capture-runtime-query-captures.ts; sanitized"
+  },
+  "body": {
+    "generatedAt": "2026-03-31T17:39:45.119Z",
+    "patternTaxonomyVersion": "7.9-phase4",
+    "hookTopWinners": [],
+    "hookTopLosers": [],
+    "productWinningPatterns": {},
+    "productLosingHooks": {},
+    "formatSummary": {
+      "hook": [],
+      "pain": [],
+      "proof": [],
+      "cta": [],
+      "format": [],
+      "angle": [],
+      "scene": [],
+      "visual_motif": [],
+      "pacing_motif": [],
+      "visual": [],
+      "pacing": []
+    },
+    "losingMotifs": [],
+    "hiddenDiamondVersionIds": [],
+    "luckyVersionIds": [],
+    "ambiguousSnapshotCount": 0,
+    "snapshotCount": 0,
+    "reviewCount": 0,
+    "reviewQueue": {
+      "queued": 0,
+      "processing": 0,
+      "failed": 0,
+      "succeeded": 0,
+      "pending": 0,
+      "running": 0,
+      "completed": 0
+    },
+    "attributionNote": "Experiment link：僅 isPrimary 且 isActive 的連結會優先承載 Meta campaign 歸因；多版本同 campaign 時 snapshot 標為 ambiguous。",
+    "tagFamilies": {
+      "hook": {
+        "winners": [],
+        "losers": []
+      },
+      "pain": {
+        "winners": [],
+        "losers": []
+      },
+      "proof": {
+        "winners": [],
+        "losers": []
+      },
+      "cta": {
+        "winners": [],
+        "losers": []
+      },
+      "format": {
+        "winners": [],
+        "losers": []
+      },
+      "angle": {
+        "winners": [],
+        "losers": []
+      },
+      "scene": {
+        "winners": [],
+        "losers": []
+      },
+      "visual": {
+        "winners": [],
+        "losers": []
+      },
+      "visual_motif": {
+        "winners": [],
+        "losers": []
+      },
+      "pacing": {
+        "winners": [],
+        "losers": []
+      },
+      "pacing_motif": {
+        "winners": [],
+        "losers": []
+      },
+      "brand": {
+        "winners": [],
+        "losers": []
+      }
+    },
+    "tagFamilyOrder": [
+      "hook",
+      "pain",
+      "proof",
+      "cta",
+      "format",
+      "angle",
+      "scene",
+      "visual",
+      "visual_motif",
+      "pacing",
+      "pacing_motif",
+      "brand"
+    ],
+    "hiddenDiamondEvidence": [],
+    "workbenchProducts": []
+  }
+}

@@ -1,0 +1,50 @@
+verify-baseline @ 2026-04-03T14:44:31.632Z
+cwd: D:\AI審判官\Du-She-Shen-Pan-Guan
+
+--- npm run check ---
+$ npm run check
+> rest-express@1.0.0 check
+> tsc
+[OK] npm run check
+
+--- npm run build ---
+$ npm run build
+> rest-express@1.0.0 build
+> prisma generate && tsx script/build.ts
+
+
+✔ Generated Prisma Client (v7.4.2) to .\node_modules\@prisma\client in 289ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+running prisma generate...
+
+✔ Generated Prisma Client (v7.4.2) to .\node_modules\@prisma\client in 275ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 2807 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                              2.19 kB │ gzip:   0.92 kB
+../dist/public/assets/index-TfSwh4cA.css             131.44 kB │ gzip:  20.43 kB
+../dist/public/assets/purify.es-Bzr520pe.js           22.45 kB │ gzip:   8.63 kB
+../dist/public/assets/index.es-CjfD1_Sh.js           158.62 kB │ gzip:  52.95 kB
+../dist/public/assets/html2canvas.esm-DXEQVQnt.js    201.04 kB │ gzip:  47.43 kB
+../dist/public/assets/jspdf.es.min-BK9flO6b.js       385.86 kB │ gzip: 126.13 kB
+../dist/public/assets/index-A7LfYfhn.js            1,381.18 kB │ gzip: 406.41 kB
+✓ built in 13.21s
+building server...
+[build-version] written dist/version.json: {
+  commit: '54ef3311dd8a33f67696b25c1668ea9472eac700',
+  branch: 'main',
+  timestamp: '2026-04-03T14:45:04.576Z'
+}
+[OK] npm run build
+
+[verify:baseline] All passed (check + build).

@@ -1,0 +1,1234 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/workbench-goal-pacing.sample.json",
+    "route": "GET /api/workbench/goal-pacing",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/workbench-goal-pacing.sample.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/workbench-goal-pacing.sample.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "goalPacingByProduct": {
+      "1204": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "1223": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0228": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0225": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0224": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0227": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {}
+      },
+      "(原始)0223": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "0223": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0221": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0213": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "0212": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0215": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "0211": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0211": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {}
+      },
+      "0210": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0214": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0209": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0205": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "0205": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0207": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0204": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0208": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "0203": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0203": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0130": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0129": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0131": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0126": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "0122": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0121": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0122": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0120": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0116": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0113": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0111": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "0115": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "keep_goal",
+        "confidence": "medium",
+        "why": [
+          "落在穩定觀察區間（HOLD_STABLE）"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "沒有強烈訊號時維持與小幅實驗優於頻繁大動。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "acceptable_hold",
+        "operatorExplainability": {}
+      },
+      "(原始)0109": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0107": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0106": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0105": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "0102": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)0102": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1229": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1220": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1217": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1210": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1208": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1212": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1204": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1201": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1127": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1126": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1124": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1120": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1114": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1113": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      },
+      "(原始)1107": {
+        "pacingLabel": "HOLD_STABLE",
+        "recommendedAction": "hold",
+        "confidence": "low",
+        "why": [
+          "樣本不足／資料不完整，僅供低信心參考"
+        ],
+        "todayAdjustCount": 0,
+        "observationWindowUntil": null,
+        "copyHints": [
+          "資料不足時請勿過度解讀 ROAS。"
+        ],
+        "ingestionGaps": [
+          "吃滿度：Graph 未回傳 adset daily_budget 或無法計算",
+          "出價策略：未回傳 bid_strategy",
+          "目標成果數值：目前管線未寫入（非猜測）"
+        ],
+        "operatorPacingState": "engine_default",
+        "operatorExplainability": {
+          "whyHold": "訊號不足時的 Hold：不代表安全無事，而是避免在資料薄時硬調。"
+        }
+      }
+    }
+  }
+}

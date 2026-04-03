@@ -1,0 +1,275 @@
+{
+  "captureMeta": {
+    "source": "seeded-runtime-http",
+    "trustTier": "seeded-runtime-explicit-provenance-v3",
+    "provenanceSchemaVersion": "v3",
+    "stagingRuntimeCapture": false,
+    "environment": "local-supertest",
+    "generatedAt": "2026-03-31T17:39:46.077Z",
+    "sanitized": true,
+    "captureMethod": "derive-from-RUNTIME-QUERY-CAPTURES",
+    "derivedFrom": "docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.has-data.json",
+    "route": "GET /api/dashboard/cross-account-summary",
+    "note": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.has-data.json; payload = HTTP JSON body after supertest sanitize.",
+    "notes": "Derived from docs/RUNTIME-QUERY-CAPTURES/dashboard-cross-account-summary.has-data.json; payload = HTTP JSON body after supertest sanitize."
+  },
+  "payload": {
+    "homepageDataTruth": "summary_ok",
+    "dataStatus": "has_data",
+    "hasSummary": true,
+    "hasDecisionSignals": true,
+    "message": "摘要與決策資料已就緒。",
+    "coverageNote": null,
+    "summary": {
+      "executiveSummary": "[近 7 天] 監測 1 個帳號，總花費 NT$3,265,515，營收 NT$7,979,798，整體 ROAS 2.4。其中 1 個帳號處於危險狀態，需要立即處理。主要風險集中在森淨居所養家糊口的CTR 顯著下降。",
+      "topPriorityAccounts": [
+        {
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "platform": "meta",
+          "priorityScore": 79,
+          "healthStatus": "danger",
+          "spend": 3265515,
+          "revenue": 7979798,
+          "roas": 2.443656819827807,
+          "conversionRate": 2.0729474171244617,
+          "checkoutAbandonment": 0,
+          "anomalyCount": 12,
+          "topProblem": "CTR 顯著下降",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        }
+      ],
+      "urgentActions": [
+        {
+          "order": 1,
+          "action": "素材可能已疲勞，建議更換新素材或嘗試新角度",
+          "reason": "CTR 顯著下降",
+          "impact": "止血效果高",
+          "accountName": "Account Redacted"
+        }
+      ],
+      "riskyCampaigns": [
+        {
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "campaignId": "campaign_redacted_1",
+          "campaignName": "Campaign Redacted",
+          "riskType": "high_spend_low_efficiency",
+          "spend": 2882,
+          "revenue": 1825,
+          "roas": 0.6332408049965302,
+          "suggestion": "stop",
+          "suggestionLabel": "建議停損",
+          "problemDescription": "花費 NT$2,882 但 ROAS 僅 0.6，虧損嚴重"
+        }
+      ],
+      "scaleOpportunities": [],
+      "anomalies": [
+        {
+          "id": "id_redacted_2",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "轉換次數--(原始)0213-奇蹟雪泡-緊急網址-J 的 CTR 從 3.10% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 3.101593,
+          "changePercent": -100,
+          "relatedCampaign": "轉換次數--(原始)0213-奇蹟雪泡-緊急網址-J",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_3",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "轉換次數--(原始)0221-潔廁慕斯-緊急網址-J 的 CTR 從 1.68% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 1.68289,
+          "changePercent": -100,
+          "relatedCampaign": "轉換次數--(原始)0221-潔廁慕斯-緊急網址-J",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_4",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "cpc_spike",
+          "category": "ads",
+          "severity": "high",
+          "title": "CPC 飆升",
+          "description": "高效速成--0212-瞬鮮晶萃--T 的 CPC 從 13.0 升至 19.2 (48%)",
+          "currentValue": 19.227981,
+          "previousValue": 13.015718,
+          "changePercent": 47.728930513091946,
+          "relatedCampaign": "高效速成--0212-瞬鮮晶萃--T",
+          "suggestedAction": "檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        },
+        {
+          "id": "id_redacted_5",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "cpc_spike",
+          "category": "ads",
+          "severity": "high",
+          "title": "CPC 飆升",
+          "description": "高效速成--0211-極淨晶露--T 的 CPC 從 5.6 升至 8.4 (49%)",
+          "currentValue": 8.365698,
+          "previousValue": 5.62871,
+          "changePercent": 48.62549323024281,
+          "relatedCampaign": "高效速成--0211-極淨晶露--T",
+          "suggestedAction": "檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        },
+        {
+          "id": "id_redacted_6",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "cpc_spike",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CPC 飆升",
+          "description": "轉換次數--(原始)0211-奇蹟雪泡--6影K+買1文--F 的 CPC 從 3.7 升至 7.9 (116%)",
+          "currentValue": 7.920319,
+          "previousValue": 3.661546,
+          "changePercent": 116.31078784753761,
+          "relatedCampaign": "轉換次數--(原始)0211-奇蹟雪泡--6影K+買1文--F",
+          "suggestedAction": "檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        },
+        {
+          "id": "id_redacted_7",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "轉換次數--(原始)0214-瞬鮮晶萃--2影I+解決文--F 的 CTR 從 10.30% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 10.300177,
+          "changePercent": -100,
+          "relatedCampaign": "轉換次數--(原始)0214-瞬鮮晶萃--2影I+解決文--F",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_8",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "轉換次數--(原始)0207-潔廁慕斯--6影Q+黃垢文--F 的 CTR 從 4.16% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 4.1633,
+          "changePercent": -100,
+          "relatedCampaign": "轉換次數--(原始)0207-潔廁慕斯--6影Q+黃垢文--F",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_9",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "high",
+          "title": "CTR 顯著下降",
+          "description": "(TEST)高效速成--0203--潔廁慕斯--J3 的 CTR 從 3.76% 降至 2.43% (-35%)",
+          "currentValue": 2.434277,
+          "previousValue": 3.763715,
+          "changePercent": -35.322493865768266,
+          "relatedCampaign": "(TEST)高效速成--0203--潔廁慕斯--J3",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_10",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "(TEST)高效速成--0203--奇蹟雪泡--J1 的 CTR 從 33.33% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 33.333333,
+          "changePercent": -100,
+          "relatedCampaign": "(TEST)高效速成--0203--奇蹟雪泡--J1",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_11",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "ctr_drop",
+          "category": "ads",
+          "severity": "critical",
+          "title": "CTR 顯著下降",
+          "description": "(TEST)高效速成--0203--奇蹟雪泡--J2 的 CTR 從 4.29% 降至 0.00% (-100%)",
+          "currentValue": 0,
+          "previousValue": 4.285384,
+          "changePercent": -100,
+          "relatedCampaign": "(TEST)高效速成--0203--奇蹟雪泡--J2",
+          "suggestedAction": "素材可能已疲勞，建議更換新素材或嘗試新角度"
+        },
+        {
+          "id": "id_redacted_12",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "cpc_spike",
+          "category": "ads",
+          "severity": "high",
+          "title": "CPC 飆升",
+          "description": "高效速成--0122-瞬鮮晶萃--T 的 CPC 從 11.5 升至 17.3 (50%)",
+          "currentValue": 17.270089,
+          "previousValue": 11.527742,
+          "changePercent": 49.813285203641776,
+          "relatedCampaign": "高效速成--0122-瞬鮮晶萃--T",
+          "suggestedAction": "檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        },
+        {
+          "id": "id_redacted_13",
+          "accountId": "act_redacted",
+          "accountName": "Account Redacted",
+          "type": "cpc_spike",
+          "category": "ads",
+          "severity": "medium",
+          "title": "CPC 飆升",
+          "description": "(AABS)(BAU)(勿動)高效速成--0115--潔廁慕斯--T 的 CPC 從 13.3 升至 17.7 (33%)",
+          "currentValue": 17.709184,
+          "previousValue": 13.278575,
+          "changePercent": 33.36659995519098,
+          "relatedCampaign": "(AABS)(BAU)(勿動)高效速成--0115--潔廁慕斯--T",
+          "suggestedAction": "檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        }
+      ],
+      "weeklyRecommendations": {
+        "today": [
+          "[森淨居所養家糊口] 素材可能已疲勞，建議更換新素材或嘗試新角度",
+          "[森淨居所養家糊口] 素材可能已疲勞，建議更換新素材或嘗試新角度",
+          "[森淨居所養家糊口] 檢查素材疲勞度與受眾重疊，考慮更新素材或調整受眾"
+        ],
+        "thisWeek": [
+          "暫停 森淨居所養家糊口 的 轉換次數--(原始)0225-瞬鮮晶萃--4影K+解決文--F (ROAS 0.6)"
+        ],
+        "budgetAdvice": []
+      },
+      "dataLastUpdatedAt": "2026-03-02T08:16:11.267Z",
+      "aiLastGeneratedAt": "2026-03-02T08:16:11.665Z",
+      "aiModelUsed": "gemini-3.1-pro-preview",
+      "dataScope": "meta_only",
+      "analysisBatchId": "batch-4c78629e",
+      "dateLabel": "近 7 天",
+      "problemDiagnosis": {
+        "adIssues": "12 個廣告端異常：森淨居所養家糊口 CTR 顯著下降、森淨居所養家糊口 CTR 顯著下降、森淨居所養家糊口 CPC 飆升",
+        "pageIssues": "無明顯頁面端異常",
+        "trackingIssues": "追蹤正常",
+        "marketFactors": "未偵測到明顯市場因素"
+      }
+    },
+    "batchValidity": "valid"
+  }
+}
