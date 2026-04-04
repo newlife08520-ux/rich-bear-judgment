@@ -5,20 +5,32 @@ import { useToast } from "@/hooks/use-toast";
 import { useReportMetaApiError } from "@/context/meta-api-error-context";
 import { mapMetaOrNetworkErrorToActionability } from "@/lib/meta-error-actionability";
 import { useAppScope } from "@/hooks/use-app-scope";
+import { useProductViewScope } from "@/hooks/use-product-view-scope";
+import { useWorkbenchFilter } from "@/lib/workbench-filter-context";
+import type { ParetoResult } from "@shared/pareto-engine";
+import { useEmployee } from "@/lib/employee-context";
 import type { RefreshStatus } from "@shared/schema";
 import type { GoalPacingEvaluation } from "@shared/goal-pacing-engine";
 import type { FbAdCreative, FbAccountOverview, FbAIDirectorSummary } from "@shared/schema";
 import type { ActionCenterData } from "@/pages/dashboard/dashboard-types";
 
 export function useFbAdsWorkbench() {
+  const { filter } = useWorkbenchFilter();
   const scope = useAppScope();
+  const { employee } = useEmployee();
+  const { mode: productViewMode, setMode: setProductViewMode, scopeProductsForApi } = useProductViewScope();
+  const effectiveScopeProducts =
+    scopeProductsForApi ??
+    (employee.assignedProducts?.length ? employee.assignedProducts : undefined);
+
   const scopeQ = scope.scopeKey ? `scope=${encodeURIComponent(scope.scopeKey)}` : "";
   const goalPacingParams = useMemo(() => {
     const p = new URLSearchParams();
     if (scope.scopeKey) p.set("scope", scope.scopeKey);
     if (scope.selectedAccountIds?.length) p.set("scopeAccountIds", scope.selectedAccountIds.join(","));
+    if (effectiveScopeProducts?.length) p.set("scopeProducts", effectiveScopeProducts.join(","));
     return p.toString();
-  }, [scope.scopeKey, scope.selectedAccountIds]);
+  }, [scope.scopeKey, scope.selectedAccountIds, effectiveScopeProducts]);
 
   const actionCenterParams = goalPacingParams;
   const [search, setSearch] = useState("");
@@ -101,12 +113,20 @@ export function useFbAdsWorkbench() {
     },
   });
 
-  const { data: overview, isLoading: overviewLoading } = useQuery<FbAccountOverview>({
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewIsError,
+    error: overviewError,
+    refetch: refetchOverview,
+  } = useQuery<FbAccountOverview>({
     queryKey: ["/api/fb-ads/overview", scope.scopeKey ?? ""],
     queryFn: async () => {
       const url = scopeQ ? `/api/fb-ads/overview?${scopeQ}` : "/api/fb-ads/overview";
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入預算控制資料（${res.status}）`);
+      }
       return res.json();
     },
   });
@@ -123,7 +143,7 @@ export function useFbAdsWorkbench() {
     },
   });
 
-  const { data: creatives, isLoading: creativesLoading } = useQuery<FbAdCreative[]>({
+  const { data: creativesFromApi, isLoading: creativesLoading } = useQuery<FbAdCreative[]>({
     queryKey: ["/api/fb-ads/creatives", scope.scopeKey ?? "", search],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -135,7 +155,13 @@ export function useFbAdsWorkbench() {
     },
   });
 
-  const { data: actionCenterData } = useQuery<ActionCenterData>({
+  const {
+    data: actionCenterData,
+    isLoading: actionCenterLoading,
+    isError: actionCenterIsError,
+    error: actionCenterError,
+    refetch: refetchActionCenter,
+  } = useQuery<ActionCenterData>({
     queryKey: ["/api/dashboard/action-center", scope.scopeKey ?? "", actionCenterParams],
     queryFn: async () => {
       const url = actionCenterParams
@@ -143,21 +169,115 @@ export function useFbAdsWorkbench() {
         : "/api/dashboard/action-center";
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) {
-        return {
-          productLevel: [],
-          creativeLeaderboard: [],
-          hiddenGems: [],
-          urgentStop: [],
-          riskyCampaigns: [],
-          failureRatesByTag: {},
-        } satisfies ActionCenterData;
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入決策資料（${res.status}）`);
       }
       return res.json();
     },
   });
 
+  const { data: paretoPayload } = useQuery<{ pareto?: ParetoResult } | null>({
+    queryKey: ["/api/pareto/by-product", scope.scopeKey ?? "", actionCenterParams],
+    queryFn: async () => {
+      const url = actionCenterParams
+        ? `/api/pareto/by-product?${actionCenterParams}`
+        : "/api/pareto/by-product";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  const creatives = useMemo(() => {
+    const list = creativesFromApi ?? [];
+    const p = paretoPayload?.pareto;
+    const paretoMarked =
+      p &&
+      new Set([
+        ...p.top20PctIds,
+        ...p.bottom20PctIds,
+        ...p.hiddenDiamondCandidates,
+        ...p.dragCandidates,
+      ]);
+    const productNames = (actionCenterData?.productLevel ?? [])
+      .map((x) => x.productName)
+      .filter(Boolean) as string[];
+
+    function guessProductName(c: FbAdCreative): string | null {
+      const parsed = c.parsedProductName?.trim();
+      if (parsed) return parsed;
+      const blob = `${c.name} ${c.adName} ${c.campaign}`.toLowerCase();
+      let best: string | null = null;
+      let bestLen = 0;
+      for (const n of productNames) {
+        const ln = n.toLowerCase();
+        if (ln && blob.includes(ln) && n.length > bestLen) {
+          best = n;
+          bestLen = n.length;
+        }
+      }
+      return best;
+    }
+
+    function needsAttention(c: FbAdCreative): boolean {
+      if (c.recommendationLevel === "immediate" || c.recommendationLevel === "this_week") return true;
+      if (c.roas < 1 && c.spend >= 80) return true;
+      if (/關閉|暫停|降|停損|止血/.test(c.suggestedAction || "")) return true;
+      return false;
+    }
+
+    const mode = filter.paretoListMode ?? "needs_attention";
+    if (mode === "all") return list;
+    if (mode === "needs_attention") return list.filter(needsAttention);
+    if (mode === "pareto_marked" && paretoMarked && paretoMarked.size > 0) {
+      return list.filter((c) => {
+        const pn = guessProductName(c);
+        return pn != null && paretoMarked.has(pn);
+      });
+    }
+    return list;
+  }, [creativesFromApi, filter.paretoListMode, paretoPayload, actionCenterData?.productLevel]);
+
+  const {
+    data: crossAccountPayload,
+    isLoading: crossAccountLoading,
+    isError: crossAccountIsError,
+    error: crossAccountError,
+    refetch: refetchCrossAccount,
+  } = useQuery<{
+    dataStatus?: string;
+  }>({
+    queryKey: ["/api/dashboard/cross-account-summary", scope.scopeKey ?? ""],
+    queryFn: async () => {
+      const url = scope.scopeKey
+        ? `/api/dashboard/cross-account-summary?scope=${encodeURIComponent(scope.scopeKey)}`
+        : "/api/dashboard/cross-account-summary";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入摘要（${res.status}）`);
+      }
+      return res.json();
+    },
+  });
+
+  const fbMainLoading = crossAccountLoading || overviewLoading || actionCenterLoading;
+  const fbMainError = crossAccountIsError
+    ? crossAccountError
+    : overviewIsError
+      ? overviewError
+      : actionCenterIsError
+        ? actionCenterError
+        : null;
+  const refetchFbMain = () => {
+    void refetchCrossAccount();
+    void refetchOverview();
+    void refetchActionCenter();
+  };
+
   return {
     actionCenterData,
+    productViewMode,
+    setProductViewMode,
+    dashboardDataStatus: crossAccountPayload?.dataStatus,
     goalPacingByProduct: goalPacingResp?.goalPacingByProduct ?? {},
     scope,
     scopeQ,
@@ -176,5 +296,9 @@ export function useFbAdsWorkbench() {
     overviewLoading,
     creatives,
     creativesLoading,
+    paretoPayload,
+    fbMainLoading,
+    fbMainError,
+    refetchFbMain,
   };
 }

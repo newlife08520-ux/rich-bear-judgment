@@ -1,0 +1,3 @@
+# Nixpacks：確保 Node 建置環境含 ffmpeg（影片／轉檔相關流程）
+[phases.setup]
+nixPkgs = ["ffmpeg"]

@@ -13,7 +13,7 @@ type VersionPayload = {
   };
 };
 
-/** 7.3：單版本 drilldown；7.8：補齊 link 摘要與信心敘述 */
+/** 依素材版本 ID 載入歸因摘要（進階檢視）。 */
 export function AttributionVersionProbe() {
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,7 +55,7 @@ export function AttributionVersionProbe() {
     <div className="space-y-3" data-testid="ci-attribution-version-probe">
       <div className="flex flex-wrap gap-2 items-center">
         <Input
-          placeholder="assetVersionId"
+          placeholder="素材版本 ID"
           value={id}
           onChange={(e) => setId(e.target.value)}
           className="max-w-md"

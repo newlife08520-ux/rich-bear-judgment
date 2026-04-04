@@ -15,3 +15,9 @@
 
 - 首頁第一屏 testid 升級為 `section-homepage-first-screen-command-v7`；審判 Focus strip 為 `judgment-focus-strip-v8`。
 - API 樣本檔頂部增加四分節標（Illustrative / Canonical runtime-aligned / Seeded LIVE JSON / Staging placeholder）。
+
+## Phase 5 更新（Batch 16.x）
+
+- 首頁 Command Panel 已升級至 v12；V7~V11 檔案已刪除。
+- 上述 testid 引用（v7、v8）已過時，canonical testid 為 `*-v12`。
+- 詳見 `client/src/pages/dashboard/widgets/HomepageCommandPanelV12.tsx`。

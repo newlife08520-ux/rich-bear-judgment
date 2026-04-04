@@ -40,7 +40,7 @@ export function ProductProfitOverviewSection({ overview }: { overview: ProductOv
 
   return (
     <section data-testid="section-product-profit-overview">
-      <Card className="border-border/80">
+      <Card className="border-border/80 hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">

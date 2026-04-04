@@ -31,7 +31,7 @@ export function JudgmentHistorySidebar(props: {
     onTriggerFileSelect,
   } = props;
   return (
-    <aside className="w-64 border-r border-gray-200 bg-white shrink-0 flex flex-col min-h-0 no-print">
+    <aside className="w-64 border-r border-border bg-background shrink-0 flex flex-col min-h-0 no-print">
       <div className="p-2 border-b shrink-0">
         <Input
           type="search"
@@ -75,7 +75,7 @@ export function JudgmentHistorySidebar(props: {
               ))
             )}
           </ul>
-          <div className="p-2 border-t border-gray-200 dark:border-slate-700 mt-auto space-y-2">
+          <div className="p-2 border-t border-border mt-auto space-y-2">
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">常用審判模式</p>
               <div className="flex flex-wrap gap-1">

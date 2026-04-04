@@ -83,7 +83,7 @@ export function FbRiskLevelBadge({ level }: { level?: RiskLevel }) {
   if (!level) return null;
   const config = riskLevelConfig[level];
   return (
-    <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 border-transparent ${config.bg} ${config.text}`} data-testid={`badge-risk-${level}`}>
+    <Badge variant="secondary" className={`text-xs px-1.5 py-0 border-transparent ${config.bg} ${config.text}`} data-testid={`badge-risk-${level}`}>
       {config.label}
     </Badge>
   );
@@ -103,7 +103,7 @@ export function FbTriScoreMini({ triScore }: { triScore?: TriScore }) {
           <div className="w-1.5 h-4 rounded-sm bg-muted overflow-hidden flex flex-col-reverse">
             <div className={`w-full rounded-sm ${item.color}`} style={{ height: `${item.value}%` }} />
           </div>
-          <span className="text-[10px] text-muted-foreground">{item.value}</span>
+          <span className="text-xs text-muted-foreground">{item.value}</span>
         </div>
       ))}
     </div>

@@ -1,18 +1,12 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import * as fs from "fs";
-import * as path from "path";
-import multer from "multer";
 import session from "express-session";
 import { storage } from "./storage";
-import { loginSchema, settingsSchema, contentJudgmentInputSchema, contentJudgmentChatRequestSchema, type Workflow, META_ACCOUNT_STATUS_MAP, resolveDateRange, buildScopeKey, detectContentType, contentTypeToJudgmentType } from "@shared/schema";
-import type { MetaAdAccount, SyncedAccount, CampaignMetrics, GA4FunnelMetrics, AnalysisBatch, DataSourceStatus, DataFlowStatus, ContentJudgmentResult, PrecomputedActionCenterPayload, PrecomputedScorecardPayload, RefreshJob } from "@shared/schema";
+import { loginSchema, META_ACCOUNT_STATUS_MAP, resolveDateRange, buildScopeKey } from "@shared/schema";
+import type { MetaAdAccount, SyncedAccount, CampaignMetrics, GA4FunnelMetrics, AnalysisBatch, ContentJudgmentResult, PrecomputedActionCenterPayload, PrecomputedScorecardPayload } from "@shared/schema";
 import { BATCH_COMPUTATION_VERSION } from "@shared/schema";
-import { randomUUID } from "crypto";
-import { callGeminiContentJudgment, callGeminiChat } from "./gemini";
-import { buildContentJudgmentUserPrompt } from "./prompt-builder";
-import { enrichContentWithUrls } from "./url-scraper";
-import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { callGeminiChat } from "./gemini";
 import { syncMetaAccounts, syncGA4Properties } from "./account-sync";
 import { fetchMetaCampaignData, fetchMultiWindowMetrics, fetchMetaAdSetAndAdData } from "./meta-data-fetcher";
 import { fetchGA4FunnelData, fetchGA4PageData } from "./ga4-data-fetcher";
@@ -25,14 +19,12 @@ import {
   buildRealGA4Pages,
   buildRealOpportunities, buildPageRecommendationsArray, buildFunnelDrillDown,
 } from "./real-data-transformers";
-import { assetRouter } from "./modules/asset/asset-routes";
-import { assetPackageRouter } from "./modules/asset/asset-package-routes";
-import { assetVersionRouter } from "./modules/asset/asset-version-routes";
-import { resolveFilePathForRequest, ensureUploadProviderReady } from "./modules/asset/upload-provider";
-import { createDiskStorage, cleanupUploadTempFile } from "./lib/upload-temp";
+import { ensureUploadProviderReady } from "./modules/asset/upload-provider";
+import { registerAssetApiRoutes } from "./routes/asset-api-routes";
+import { registerSettingsRoutes } from "./routes/settings-routes";
 import { publishRouter } from "./modules/publish/publish-routes";
 import { executionRouter } from "./modules/execution/execution-routes";
-import { syncRouter } from "./modules/sync/sync-routes";
+import { registerSyncRefreshRoutes } from "./routes/sync-refresh-routes";
 import { registerMetaConnectRoutes } from "./routes/meta-connect-routes";
 import { registerWorkbenchRoutes } from "./routes/workbench-routes";
 import { registerDashboardTruthRoutes, getBatchFromRequest } from "./routes/dashboard-truth-routes";
@@ -40,6 +32,8 @@ import { registerFbAdsApiRoutes } from "./routes/fb-ads-api-routes";
 import { registerCreativeIntelligenceRoutes } from "./routes/creative-intelligence-routes";
 import { registerParetoRoutes } from "./routes/pareto-routes";
 import { registerJudgmentReviewRoutes } from "./routes/judgment-review-routes";
+import { registerJudgmentApiRoutes } from "./routes/judgment-api-routes";
+import { registerStatusFlowRoutes } from "./routes/status-flow-routes";
 import { incrementActionCenterFallback, incrementScorecardFallback } from "./precompute-metrics";
 import { registerHealthAndDebugRoutes } from "./routes/health-and-debug-routes";
 import {
@@ -63,17 +57,21 @@ import {
   getPublishedThresholdConfig,
   getPublishedPrompt,
 } from "./workbench-db";
-import { getAssembledSystemPrompt, buildDataContextSection, suggestUIModeFromJudgmentType, type UIMode, type JudgmentType as AssemblyJudgmentType } from "./rich-bear-prompt-assembly";
+import {
+  buildDataContextSection,
+  getAssembledSystemPrompt,
+  suggestUIModeFromJudgmentType,
+  type UIMode,
+  type JudgmentType as AssemblyJudgmentType,
+} from "./rich-bear-prompt-assembly";
 import { filterActionCenterPayloadByScope } from "./build-action-center-payload";
-import { parseStructuredJudgmentFromResponse } from "./parse-structured-judgment";
-import { validateJudgmentAgainstSystemAction } from "./lib/judgment-alignment";
 import {
   stitchFunnelData,
   runFunnelDiagnostics,
+  fetchMockGA4DataByProduct,
 } from "@shared/funnel-stitching";
 import { classifyMaterialTier } from "@shared/material-tier";
 import { SCORE_DEFINITIONS } from "@shared/score-definitions";
-import { runRefreshJob } from "./refresh-job-runner";
 import {
   breakEvenRoas,
   targetRoas,
@@ -90,8 +88,8 @@ import {
 import { getBatchValidity } from "@shared/batch-validity";
 import { homepageTruthFieldsForDataConfidence } from "@shared/homepage-data-truth";
 import { computeScaleReadiness, getBudgetRecommendation as getScaleBudgetRecommendation, getTrendABC, creativeEdge } from "@shared/scale-score-engine";
-import { getProductProfitRules, getProductProfitRule, getProductProfitRuleExplicit, setProductProfitRule } from "./profit-rules-store";
-import { getInitialVerdict, setInitialVerdict } from "./initial-verdicts-store";
+import { getProductProfitRule, getProductProfitRuleExplicit } from "./profit-rules-store";
+import { getInitialVerdict } from "./initial-verdicts-store";
 import { getCampaignDecision, setCampaignDecision, type DecisionAction } from "./campaign-decisions-store";
 import {
   computeRoiFunnel,
@@ -106,7 +104,7 @@ import {
 import { computeLifecycleStage, FIRST_DECISION_SPEND_MIN, FIRST_DECISION_SPEND_MAX } from "@shared/lifecycle-spec";
 import { registerAuthRoutes } from "./routes/auth-routes";
 import { registerFacebookWebhookRoutes } from "./routes/facebook-webhook-routes";
-import { SqliteSessionStore } from "./session/sqlite-session-store";
+import connectPgSimple from "connect-pg-simple";
 import { getSessionCookieName } from "./session-constants";
 import { resolveSessionSecretForApp } from "./session/production-session-secret";
 
@@ -123,40 +121,11 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-/** 取得 req.params 單一 string（Express 可能給 string | string[]） */
-function getParam(req: Request, key: string): string {
-  const v = req.params[key];
-  return Array.isArray(v) ? v[0] ?? "" : (v ?? "");
-}
-
-/** 從 batch.precomputedActionCenter 依 campaignId 取得伺服器端系統判定，供 alignment 使用；無法取得時回傳 null（不信任 request body）。 */
-function getSystemActionFromBatch(
-  batch: AnalysisBatch,
-  campaignId: string
-): { suggestedAction: string; suggestedPct: number | "關閉" } | null {
-  const payload = batch.precomputedActionCenter as (Record<string, unknown> & {
-    todayRescue?: Array<{ campaignId?: string; suggestedAction?: string; suggestedPct?: number | "關閉" }>;
-    todayScaleUp?: Array<{ campaignId?: string; suggestedAction?: string; suggestedPct?: number | "關閉" }>;
-    tableNoMisjudge?: Array<{ campaignId?: string; suggestedAction?: string; suggestedPct?: number | "關閉" }>;
-  }) | null | undefined;
-  if (!payload || !campaignId) return null;
-  const rows = [
-    ...(payload.todayRescue ?? []),
-    ...(payload.todayScaleUp ?? []),
-    ...(payload.tableNoMisjudge ?? []),
-  ];
-  const rec = rows.find((r) => (r.campaignId ?? "") === campaignId);
-  if (!rec || rec.suggestedAction == null) return null;
-  return {
-    suggestedAction: String(rec.suggestedAction),
-    suggestedPct: rec.suggestedPct ?? "關閉",
-  };
-}
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  await storage.hydratePersistentStoresFromDatabase();
   ensureUploadProviderReady();
   const isProd = process.env.NODE_ENV === "production";
   const trustProxy =
@@ -168,8 +137,11 @@ export async function registerRoutes(
   }
   const sessionCookieName = getSessionCookieName();
   const secret = resolveSessionSecretForApp();
-  const sessionDb = path.join(process.cwd(), ".data", "sessions.sqlite");
-  const sessionStore = new SqliteSessionStore(sessionDb);
+  const PgSession = connectPgSimple(session);
+  const sessionStore = new PgSession({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+  });
   app.use(
     session({
       name: sessionCookieName,
@@ -182,7 +154,7 @@ export async function registerRoutes(
         secure: isProd,
         httpOnly: true,
         sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       },
     })
   );
@@ -195,601 +167,21 @@ export async function registerRoutes(
 
   registerFacebookWebhookRoutes(app);
 
-  app.use("/api/assets", requireAuth, assetRouter);
-  app.use("/api/asset-packages", requireAuth, assetPackageRouter);
-  app.use("/api/asset-versions", requireAuth, assetVersionRouter);
+  registerAssetApiRoutes(app, requireAuth);
+  registerSettingsRoutes(app, requireAuth);
   app.use("/api/publish", requireAuth, publishRouter);
   app.use("/api/execution", requireAuth, executionRouter);
-  app.use("/api/sync", requireAuth, syncRouter);
+  registerSyncRefreshRoutes(app, requireAuth);
   registerMetaConnectRoutes(app, requireAuth);
   registerWorkbenchRoutes(app, requireAuth);
   registerDashboardTruthRoutes(app, requireAuth);
   registerCreativeIntelligenceRoutes(app, requireAuth);
   registerParetoRoutes(app, requireAuth);
   registerJudgmentReviewRoutes(app, requireAuth);
-
-  app.get("/api/uploads/:userId/:filename", requireAuth, (req, res) => {
-    const sessionUserId = req.session.userId;
-    const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
-    const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
-    if (!userId || !filename) {
-      return res.status(404).json({ message: "?????" });
-    }
-    if (sessionUserId !== userId) {
-      return res.status(403).json({ message: "????????" });
-    }
-    let decodedFilename = filename;
-    try {
-      decodedFilename = decodeURIComponent(filename);
-    } catch {
-      decodedFilename = filename;
-    }
-    const filePath = resolveFilePathForRequest(userId, filename);
-    const targetPathSimple = path.resolve(process.cwd(), ".data", "uploads", userId, decodedFilename);
-    console.log("\n--- [???????Debug] ---");
-    console.log("1. ?????? URL:", req.originalUrl);
-    console.log("2. ??????? userId:", userId, "| filename (decoded):", decodedFilename);
-    console.log("3. ?? resolveFilePathForRequest ??????:", filePath ?? "(null)");
-    console.log("4. ?????? .data/uploads/userId/filename:", targetPathSimple);
-    console.log("5. resolveFilePathForRequest ???????? (fs.existsSync)?:", filePath ? fs.existsSync(filePath) : false);
-    console.log("6. ????????????", fs.existsSync(targetPathSimple));
-    console.log("------------------------\n");
-    if (!filePath) {
-      return res.status(404).json({ message: "?????" });
-    }
-    res.sendFile(filePath, { dotfiles: "allow" }, (err: unknown) => {
-      if (err) {
-        console.error("sendFile error:", err);
-        if (!res.headersSent) {
-          const status = (err as { status?: number }).status ?? 500;
-          res.status(status).end();
-        }
-      }
-    });
-  });
-
-  app.post("/api/settings/test-connection", requireAuth, async (req, res) => {
-    const userId = req.session.userId!;
-    const type = req.body?.type;
-    const valueRaw = req.body?.value;
-    const value = typeof valueRaw === "string" ? valueRaw : String(valueRaw ?? "");
-    const checkedAt = new Date().toISOString();
-    const storageType = type === "ga4" || type === "fb" || type === "ai" ? type : undefined;
-
-    const persistVerification = (success: boolean, lastError?: string | null) => {
-      if (storageType) storage.patchVerificationStatus(userId, storageType, { status: success ? "success" : "error", verifiedAt: checkedAt, lastError: success ? null : (lastError ?? null) }, value);
-    };
-
-    const sendError = (payload: { message: string; errorCode: string; statusCode?: number; testedModel?: string; productionModel?: string; providerErrorMessage?: string; [k: string]: unknown }) => {
-      if (storageType) persistVerification(false, payload.message);
-      const statusCode = payload.statusCode && payload.statusCode >= 400 ? payload.statusCode : 200;
-      res.status(statusCode).json({
-        success: false,
-        status: "error",
-        checkedAt,
-        statusCode,
-        ...payload,
-      });
-    };
-
-    if (!type || !["ga4", "fb", "ai"].includes(type)) {
-      return sendError({ message: "????????????", errorCode: "INVALID_TYPE", statusCode: 400 });
-    }
-    if (!value.trim()) {
-      const emptyMessages: Record<string, string> = {
-        ai: "???? API Key????????AI ?????API ???",
-        fb: "???? Access Token????????Facebook API ??????",
-        ga4: "???? Property ID????????GA4 ??? ID",
-      };
-      return sendError({ message: emptyMessages[type] || "????????", errorCode: "EMPTY_VALUE" });
-    }
-
-    try {
-      if (type === "ai") {
-        const productionModel = process.env.GEMINI_MODEL || "gemini-3.1-pro-preview";
-        const testModel = productionModel;
-        try {
-          const { GoogleGenerativeAI } = await import("@google/generative-ai");
-          const genAI = new GoogleGenerativeAI(value.trim());
-          const model = genAI.getGenerativeModel({ model: testModel });
-          const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 15000));
-          const result = await Promise.race([model.generateContent("hi"), timeoutPromise]);
-          const text = result.response.text();
-          if (text && text.length > 0) {
-            persistVerification(true);
-            return res.json({ success: true, status: "success", message: `API Key ???????????????? Gemini API?????????????? ${productionModel}`, testedModel: testModel, productionModel, checkedAt });
-          }
-          return sendError({ message: "???????????????? API Key ???????", errorCode: "EMPTY_RESPONSE", testedModel: testModel, productionModel });
-        } catch (err: any) {
-          const errMsg = err?.message ?? String(err);
-          const providerErrorMessage = errMsg.slice(0, 500);
-          if (errMsg === "TIMEOUT") {
-            return sendError({ message: "????????????15 ????????????", errorCode: "TIMEOUT", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          if (errMsg.includes("API_KEY_INVALID") || errMsg.includes("API key not valid")) {
-            return sendError({ message: "API Key ????????????????????", errorCode: "API_KEY_INVALID", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          if (errMsg.includes("not found") || errMsg.includes("is not found")) {
-            return sendError({ message: `??? ${testModel} ?????????????????????`, errorCode: "MODEL_NOT_FOUND", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          if (errMsg.includes("permission") || errMsg.includes("PERMISSION_DENIED")) {
-            return sendError({ message: "API Key ???????? Gemini API", errorCode: "PERMISSION_DENIED", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          if (errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
-            return sendError({ message: "API ??????????????????????????", errorCode: "QUOTA_EXHAUSTED", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          if (errMsg.includes("billing") || errMsg.includes("BILLING")) {
-            return sendError({ message: "?????????????? Google Cloud ?????", errorCode: "BILLING_ERROR", testedModel: testModel, productionModel, providerErrorMessage });
-          }
-          return sendError({ message: `AI ??????: ${errMsg.slice(0, 200)}`, errorCode: "AI_ERROR", testedModel: testModel, productionModel, providerErrorMessage });
-        }
-      }
-
-      if (type === "fb") {
-        try {
-          const fbRes = await fetch(`https://graph.facebook.com/v19.0/me?access_token=${encodeURIComponent(value.trim())}`);
-          const fbData = await fbRes.json();
-          if (fbRes.ok && fbData.id) {
-            const name = fbData.name || fbData.id;
-            let accountPreview: { totalCount: number; topNames: string[] } | undefined;
-            try {
-              const acctRes = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?fields=account_id,name,account_status&limit=100&access_token=${encodeURIComponent(value.trim())}`);
-              const acctData = await acctRes.json();
-              if (acctRes.ok && acctData.data) {
-                const accounts = acctData.data as any[];
-                accountPreview = {
-                  totalCount: accounts.length,
-                  topNames: accounts.slice(0, 3).map((a: any) => a.name || a.account_id || "???"),
-                };
-              }
-            } catch {}
-            persistVerification(true);
-            const acctMsg = accountPreview
-              ? `????? ${accountPreview.totalCount} ???${accountPreview.topNames.length > 0 ? ` (${accountPreview.topNames.join("?")}${accountPreview.totalCount > 3 ? "..." : ""})` : ""}`
-              : "";
-            return res.json({ success: true, status: "success", message: `Facebook ??????????? ${name} (ID: ${fbData.id})${acctMsg}`, accountPreview, checkedAt });
-          }
-          const fbError = fbData.error;
-          if (fbError) {
-            if (fbError.code === 190) {
-              const subcode = fbError.error_subcode;
-              if (subcode === 463 || subcode === 467) {
-                persistVerification(false, "Facebook Access Token ??????????????????Token");
-                return res.json({ success: false, status: "error", message: "Facebook Access Token ??????????????????Token", errorCode: "FB_TOKEN_EXPIRED", checkedAt });
-              }
-              persistVerification(false, `Facebook Access Token ????: ${fbError.message}`);
-              return res.json({ success: false, status: "error", message: `Facebook Access Token ????: ${fbError.message}`, errorCode: "FB_TOKEN_INVALID", checkedAt });
-            }
-            if (fbError.code === 10 || fbError.code === 200) {
-              persistVerification(false, `Facebook Token ?????: ${fbError.message}`);
-              return res.json({ success: false, status: "error", message: `Facebook Token ?????: ${fbError.message}`, errorCode: "FB_PERMISSION_DENIED", checkedAt });
-            }
-            persistVerification(false, `Facebook API ???: ${fbError.message}`);
-            return res.json({ success: false, status: "error", message: `Facebook API ???: ${fbError.message}`, errorCode: "FB_API_ERROR", checkedAt });
-          }
-          persistVerification(false, "Facebook API ???????????????");
-          return res.json({ success: false, status: "error", message: "Facebook API ???????????????", errorCode: "FB_UNKNOWN", checkedAt });
-        } catch (err: any) {
-          const errMsg = err?.message ?? String(err);
-          const providerErrorMessage = errMsg.slice(0, 500);
-          if (err.code === "ENOTFOUND" || err.code === "ECONNREFUSED" || err.message?.includes("fetch")) {
-            persistVerification(false, "?????????Facebook API??????????");
-            return res.json({ success: false, status: "error", message: "?????????Facebook API??????????", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
-          }
-          persistVerification(false, `Facebook ??????: ${errMsg.slice(0, 200)}`);
-          return res.json({ success: false, status: "error", message: `Facebook ??????: ${errMsg.slice(0, 200)}`, errorCode: "FB_ERROR", statusCode: 200, providerErrorMessage, checkedAt });
-        }
-      }
-
-      if (type === "ga4") {
-        const trimmed = value.trim();
-        if (!/^\d+$/.test(trimmed)) {
-          persistVerification(false, "GA4 Property ID ?????????????????? (???: 123456789)");
-          return res.json({ success: false, status: "error", message: "GA4 Property ID ?????????????????? (???: 123456789)", errorCode: "GA4_FORMAT_INVALID", checkedAt });
-        }
-        const saKeyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-        if (!saKeyJson) {
-          persistVerification(false, "??????? Service Account ????");
-          return res.json({
-            success: false,
-            status: "error",
-            message: `Property ID ${trimmed} ?????????????????? Service Account ???????????????????? GOOGLE_SERVICE_ACCOUNT_KEY?????JSON ???????`,
-            errorCode: "GA4_NO_AUTH",
-            ga4Detail: { propertyId: trimmed, authConfigured: false },
-            checkedAt,
-          });
-        }
-        let credentials: any;
-        try {
-          credentials = JSON.parse(saKeyJson);
-        } catch {
-          persistVerification(false, "Service Account ??????????JSON ????????");
-          return res.json({ success: false, status: "error", message: "Service Account ??????????JSON ??????????????? GOOGLE_SERVICE_ACCOUNT_KEY ?????????JSON", errorCode: "GA4_CRED_PARSE_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: false }, checkedAt });
-        }
-        try {
-          const { GoogleAuth } = await import("google-auth-library");
-          const auth = new GoogleAuth({
-            credentials,
-            scopes: ["https://www.googleapis.com/auth/analytics.readonly"],
-          });
-          const client = await auth.getClient();
-          const tokenRes = await client.getAccessToken();
-          const accessToken = typeof tokenRes === "string" ? tokenRes : tokenRes?.token;
-          if (!accessToken) {
-            persistVerification(false, "???????? Access Token");
-            return res.json({ success: false, status: "error", message: "Service Account ??????????????????? Access Token?????????????????", errorCode: "GA4_TOKEN_FAILED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-          }
-          const ga4Res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${trimmed}:runReport`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              dateRanges: [{ startDate: "yesterday", endDate: "today" }],
-              metrics: [{ name: "activeUsers" }],
-              limit: 1,
-            }),
-          });
-          const ga4Data = await ga4Res.json();
-          if (ga4Res.ok) {
-            persistVerification(true);
-            const activeUsers = ga4Data.rows?.[0]?.metricValues?.[0]?.value || "0";
-            return res.json({
-              success: true,
-              status: "success",
-              message: `GA4 Property ${trimmed} ??????? (Service Account: ${credentials.client_email})?????????? ${activeUsers}`,
-              ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email },
-              checkedAt,
-            });
-          }
-          const ga4Error = ga4Data.error;
-          if (ga4Error) {
-            if (ga4Error.status === "UNAUTHENTICATED" || ga4Error.code === 401) {
-              persistVerification(false, "Service Account ?????????????????????????");
-              return res.json({ success: false, status: "error", message: "Service Account ?????????????????????????", errorCode: "GA4_UNAUTHENTICATED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-            }
-            if (ga4Error.status === "PERMISSION_DENIED" || ga4Error.code === 403) {
-              const msg = (ga4Error.message || "").toLowerCase();
-              if (msg.includes("api not enabled") || msg.includes("has not been used") || msg.includes("analyticsdata")) {
-                persistVerification(false, "Google Analytics Data API ?????");
-                return res.json({ success: false, status: "error", message: `Google Analytics Data API ???????????Google Cloud Console ??? "Google Analytics Data API" (???: ${credentials.project_id})`, errorCode: "GA4_API_NOT_ENABLED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-              }
-              persistVerification(false, `Service Account ??? GA4 Property ${trimmed} ??????????`);
-              return res.json({ success: false, status: "error", message: `Service Account (${credentials.client_email}) ??? GA4 Property ${trimmed} ???????????????GA4 ????? > Property Access Management ??????Service Account ?????Viewer ??`, errorCode: "GA4_PERMISSION_DENIED", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-            }
-            if (ga4Error.status === "NOT_FOUND" || ga4Error.code === 404) {
-              persistVerification(false, `GA4 Property ID ${trimmed} ?????`);
-              return res.json({ success: false, status: "error", message: `GA4 Property ID ${trimmed} ???????????Property ID ???????`, errorCode: "GA4_NOT_FOUND", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-            }
-            if (ga4Error.status === "INVALID_ARGUMENT" || ga4Error.code === 400) {
-              persistVerification(false, `GA4 API ??????: ${ga4Error.message}`);
-              return res.json({ success: false, status: "error", message: `GA4 API ??????: ${ga4Error.message}`, errorCode: "GA4_INVALID_ARGUMENT", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-            }
-            persistVerification(false, `GA4 API ???: ${ga4Error.message || ga4Error.status}`);
-            return res.json({ success: false, status: "error", message: `GA4 API ???: ${ga4Error.message || ga4Error.status}`, errorCode: "GA4_API_ERROR", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-          }
-          persistVerification(false, "GA4 API ???????????????");
-          return res.json({ success: false, status: "error", message: "GA4 API ???????????????", errorCode: "GA4_UNKNOWN", ga4Detail: { propertyId: trimmed, authConfigured: true, serviceAccount: credentials.client_email }, checkedAt });
-        } catch (err: any) {
-          const errMsg = err?.message ?? String(err);
-          const providerErrorMessage = errMsg.slice(0, 500);
-          if (errMsg.includes("ENOTFOUND") || errMsg.includes("ECONNREFUSED") || errMsg.includes("network")) {
-            persistVerification(false, "?????????Google Analytics API??????????");
-            return res.json({ success: false, status: "error", message: "?????????Google Analytics API??????????", errorCode: "NETWORK_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
-          }
-          if (errMsg.includes("invalid_grant") || errMsg.includes("Invalid JWT")) {
-            persistVerification(false, "Service Account ????????????????????????????");
-            return res.json({ success: false, status: "error", message: "Service Account ????????????????????????????", errorCode: "GA4_INVALID_CRED", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
-          }
-          persistVerification(false, `GA4 ??????: ${errMsg.slice(0, 200)}`);
-          return res.json({ success: false, status: "error", message: `GA4 ??????: ${errMsg.slice(0, 200)}`, errorCode: "GA4_ERROR", statusCode: 200, providerErrorMessage, ga4Detail: { propertyId: trimmed, authConfigured: true }, checkedAt });
-        }
-      }
-    } catch (err: any) {
-      const errMsg = err?.message ?? String(err);
-      return res.status(500).json({
-        success: false,
-        status: "error",
-        message: `???????? ${errMsg.slice(0, 200)}`,
-        errorCode: "SERVER_ERROR",
-        statusCode: 500,
-        providerErrorMessage: errMsg.slice(0, 500),
-        checkedAt,
-      });
-    }
-  });
-
-  app.post("/api/upload", requireAuth, (req, res) => {
-    const fileName = req.body?.fileName || `upload-${Date.now()}.png`;
-    const fileType = req.body?.fileType || "image/png";
-    const size = req.body?.size || Math.round(Math.random() * 5000000);
-    const id = randomUUID().slice(0, 8);
-    res.json({
-      id,
-      fileName,
-      fileType,
-      url: `https://mock-cdn.example.com/uploads/${id}/${fileName}`,
-      size,
-    });
-  });
-
-  app.post("/api/content-judgment/start", requireAuth, async (req, res) => {
-    const result = contentJudgmentInputSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "?????", errors: result.error.flatten() });
-    }
-
-    const userId = req.session.userId!;
-    const input = result.data;
-    const settings = storage.getSettings(userId);
-    const apiKey = settings.aiApiKey;
-
-    if (!apiKey || apiKey.trim().length === 0) {
-      return res.status(400).json({
-        message: "????? AI API Key??????????????????Gemini API Key ?????????",
-        errorCode: "NO_API_KEY",
-      });
-    }
-
-    const contentType = input.detectedType || detectContentType({
-      url: input.url || undefined,
-      text: input.text || undefined,
-    });
-    const judgmentType = contentTypeToJudgmentType(contentType);
-    const uiMode = suggestUIModeFromJudgmentType(judgmentType as AssemblyJudgmentType);
-    const hasUrl = /https?:\/\/\S+/i.test((input.url ?? "").trim());
-    const textLen = (input.text ?? "").trim().length;
-    const inputSufficient = hasUrl || textLen >= 30;
-    if (!inputSufficient) {
-      return res.status(400).json({
-        message: "?????? 30 ?????????????",
-        errorCode: "INPUT_INSUFFICIENT_FOR_AUDIT",
-      });
-    }
-    const publishedMain = await getPublishedPrompt(uiMode);
-    const systemPrompt = getAssembledSystemPrompt({
-      uiMode,
-      customMainPrompt: publishedMain,
-      judgmentType: judgmentType as AssemblyJudgmentType,
-      workflow: "audit",
-    });
-    const userPrompt = buildContentJudgmentUserPrompt(settings, input, contentType, judgmentType);
-
-    console.log(`[ContentJudgment] type=${contentType}, judgmentType=${judgmentType}, uiMode=${uiMode}, workflow=audit, purpose=${input.purpose}, depth=${input.depth}`);
-
-    const contentResult = await callGeminiContentJudgment(
-      apiKey,
-      settings,
-      input,
-      contentType,
-      judgmentType,
-      userId,
-      { systemPrompt, userPrompt },
-    );
-
-    if (!contentResult) {
-      return res.status(502).json({
-        message: "AI ????????????? API Key ????????????????",
-        errorCode: "AI_CALL_FAILED",
-      });
-    }
-
-    const report = {
-      id: `cj-${randomUUID().slice(0, 8)}`,
-      contentType,
-      judgmentType,
-      purpose: input.purpose,
-      depth: input.depth,
-      createdAt: new Date().toISOString(),
-      userId,
-      result: contentResult,
-    };
-
-    res.json(report);
-  });
-
-  const contentJudgmentFileUpload = multer({
-    storage: createDiskStorage({ allowedMimePrefixes: ["image/", "video/", "application/pdf", "text/", "application/octet-stream"] }),
-    limits: { fileSize: 200 * 1024 * 1024 },
-  }).single("file");
-
-  app.post("/api/content-judgment/upload-file", requireAuth, contentJudgmentFileUpload, async (req: Request, res: Response) => {
-    const userId = req.session.userId!;
-    const settings = storage.getSettings(userId);
-    const apiKey = settings.aiApiKey?.trim();
-    if (!apiKey) {
-      return res.status(400).json({ message: "請先設定 AI API Key", errorCode: "NO_API_KEY" });
-    }
-    const file = (req as Request & { file?: Express.Multer.File & { path?: string; buffer?: Buffer } }).file;
-    if (!file) {
-      return res.status(400).json({ message: "請選擇檔案" });
-    }
-    const tempPath = (file as Express.Multer.File & { path?: string }).path;
-    let buffer: Buffer;
-    try {
-      buffer = file.buffer ?? (tempPath ? await fs.promises.readFile(tempPath) : (null as any));
-    } catch {
-      if (tempPath) await cleanupUploadTempFile(tempPath);
-      return res.status(400).json({ message: "無法讀取上傳檔案" });
-    }
-    if (!buffer || !Buffer.isBuffer(buffer)) {
-      if (tempPath) await cleanupUploadTempFile(tempPath);
-      return res.status(400).json({ message: "請選擇檔案" });
-    }
-    const mimeType = file.mimetype || "application/octet-stream";
-    const name = file.originalname || `upload-${Date.now()}`;
-    try {
-      const fileManager = new GoogleAIFileManager(apiKey);
-      const result = await fileManager.uploadFile(buffer, { mimeType, name });
-      const fileUri = result.file.name || result.file.uri;
-      if (!fileUri) {
-        return res.status(502).json({ message: "File API 未回傳 URI" });
-      }
-      res.json({ fileUri, mimeType, name: result.file.displayName || name });
-    } catch (e: any) {
-      console.error("[ContentJudgment] upload-file error:", e?.message || e);
-      return res.status(502).json({
-        message: e?.message?.includes("quota") ? "API 配額不足" : "上傳失敗",
-        errorCode: "UPLOAD_FAILED",
-      });
-    } finally {
-      if (tempPath) await cleanupUploadTempFile(tempPath);
-    }
-  });
-
-  /** ?????????????????????????? workflow ?????????????5 ?????clarify|create|audit|strategy|task */
-  function inferWorkflow(content: string): Workflow {
-    const t = content.trim().toLowerCase();
-    if (/審判|判斷|審核|評估|看|診斷|分析|audit/.test(t)) return "audit";
-    if (/創建|產生|製作|產出|生成|寫|建立/.test(t)) return "create";
-    if (/策略|方向|建議|怎麼做|戰略|規劃/.test(t)) return "strategy";
-    if (/任務|待辦|執行|步驟|清單/.test(t)) return "task";
-    return "clarify";
-  }
-
-  /** audit ???????????????????URL????????????????????????????????????*/
-  function isInputSufficientForAudit(message: { content: string; attachments?: { type: string; url?: string; name?: string }[] }): boolean {
-    const hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
-    const hasUrl = /https?:\/\/\S+/i.test(message.content.trim());
-    const minLength = 30;
-    const sufficientLength = message.content.trim().length >= minLength;
-    return hasAttachments || hasUrl || sufficientLength;
-  }
-
-  app.post("/api/content-judgment/chat", requireAuth, async (req, res) => {
-    const parsed = contentJudgmentChatRequestSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: "請求無效", errors: parsed.error.flatten() });
-    }
-
-    const userId = req.session.userId!;
-    const settings = storage.getSettings(userId);
-    const apiKey = settings.aiApiKey;
-    if (!apiKey || !apiKey.trim()) {
-      return res.status(400).json({
-        message: "????? AI API Key??????????????????Gemini API Key",
-        errorCode: "NO_API_KEY",
-      });
-    }
-
-    try {
-      const { sessionId, message, uiMode, workflow: bodyWorkflow, systemAction: bodySystemAction, systemPct: bodySystemPct, contextCampaignId } = parsed.data;
-      const effectiveMode: UIMode = uiMode && ["boss", "buyer", "creative"].includes(uiMode) ? (uiMode as UIMode) : "creative";
-      const publishedMain = await getPublishedPrompt(effectiveMode);
-      const effectiveWorkflow: Workflow = bodyWorkflow && ["clarify", "create", "audit", "strategy", "task"].includes(bodyWorkflow) ? bodyWorkflow : inferWorkflow(message.content);
-
-      if (effectiveWorkflow === "audit" && !isInputSufficientForAudit(message)) {
-        const needMoreMsg = "請提供足夠內容（至少 30 字、連結或附檔）以便審判。";
-        let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
-        if (sessionId && !session) {
-          return res.status(404).json({ message: "找不到該工作階段" });
-        }
-        if (session && session.userId !== userId) {
-          return res.status(403).json({ message: "無權存取該工作階段" });
-        }
-        const now = new Date().toISOString();
-        const userMsgId = `msg-${randomUUID().slice(0, 8)}`;
-        const userMessage = { id: userMsgId, role: "user" as const, content: message.content, attachments: message.attachments?.map((a) => ({ type: a.type, url: "", name: a.name })), createdAt: now };
-        if (!session) {
-          session = { id: `rs-${randomUUID().slice(0, 8)}`, userId, title: message.content.slice(0, 50).trim() || "????", messages: [], createdAt: now, updatedAt: now };
-        }
-        session.messages.push(userMessage);
-        const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
-        session.messages.push({ id: assistantMsgId, role: "assistant" as const, content: needMoreMsg, createdAt: now });
-        session.updatedAt = now;
-        storage.saveReviewSession(session);
-        return res.json({ session, userMessage, assistantMessage: session.messages[session.messages.length - 1], needMoreInput: true, workflow: "audit" });
-      }
-
-      const systemPrompt = getAssembledSystemPrompt({
-        uiMode: effectiveMode,
-        customMainPrompt: publishedMain,
-        workflow: effectiveWorkflow,
-      });
-
-      let session = sessionId ? storage.getReviewSession(sessionId) : undefined;
-      if (sessionId && !session) {
-        return res.status(404).json({ message: "找不到該工作階段" });
-      }
-      if (session && session.userId !== userId) {
-        return res.status(403).json({ message: "無權存取該工作階段" });
-      }
-
-      const now = new Date().toISOString();
-      const userMsgId = `msg-${randomUUID().slice(0, 8)}`;
-      const userMessage = {
-        id: userMsgId,
-        role: "user" as const,
-        content: message.content,
-        attachments: message.attachments?.map((a) => ({ type: a.type, url: "", name: a.name })),
-        createdAt: now,
-      };
-
-      if (!session) {
-        const title = message.content.slice(0, 50).trim() || "????";
-        session = {
-          id: `rs-${randomUUID().slice(0, 8)}`,
-          userId,
-          title,
-          messages: [],
-          createdAt: now,
-          updatedAt: now,
-        };
-      }
-
-      session.messages.push(userMessage);
-      const contentForAi = await enrichContentWithUrls(message.content);
-      const assistantText = await callGeminiChat(
-        apiKey,
-        systemPrompt,
-        session.messages.slice(0, -1),
-        contentForAi,
-        message.attachments,
-      );
-
-      if (assistantText == null) {
-        session.messages.pop();
-        return res.status(502).json({
-          message: "AI 呼叫失敗或 API Key 無效，請檢查 Gemini API Key",
-          errorCode: "AI_CALL_FAILED",
-        });
-      }
-
-      const assistantMsgId = `msg-${randomUUID().slice(0, 8)}`;
-      let structuredJudgment = effectiveWorkflow === "audit" ? parseStructuredJudgmentFromResponse(assistantText) : undefined;
-      // 僅在能從 server-side 取得系統判定時才做 alignment，不以 request body 的 systemAction/systemPct 為可信依據（信任邊界見 docs/final-hardening-report.md）
-      const batch = getBatchFromRequest(req);
-      const serverRec = contextCampaignId && batch ? getSystemActionFromBatch(batch, contextCampaignId) : null;
-      if (structuredJudgment && serverRec != null && serverRec.suggestedAction.trim() !== "") {
-        const aligned = validateJudgmentAgainstSystemAction(serverRec.suggestedAction, serverRec.suggestedPct, structuredJudgment.nextAction);
-        if (aligned.violated) {
-          structuredJudgment = { ...structuredJudgment, nextAction: aligned.alignedNextAction };
-        }
-      }
-      const assistantMessage = {
-        id: assistantMsgId,
-        role: "assistant" as const,
-        content: assistantText,
-        createdAt: new Date().toISOString(),
-        ...(structuredJudgment && { structuredJudgment }),
-      };
-      session.messages.push(assistantMessage);
-      session.updatedAt = new Date().toISOString();
-      storage.saveReviewSession(session);
-
-      res.json({ session, userMessage, assistantMessage, workflow: effectiveWorkflow });
-    } catch (err) {
-      console.error("[POST /api/content-judgment/chat]", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      res.status(500).json({
-        message: msg || "伺服器錯誤",
-        errorCode: "SERVER_ERROR",
-      });
-    }
-  });
+  registerJudgmentApiRoutes(app, requireAuth, getBatchFromRequest);
 
   registerFbAdsApiRoutes(app, requireAuth, getBatchFromRequest);
+  registerStatusFlowRoutes(app, requireAuth, getBatchFromRequest);
 
   app.get("/api/ga4/pages", requireAuth, (req, res) => {
     const batch = getBatchFromRequest(req);
@@ -840,249 +232,74 @@ export async function registerRoutes(
     res.json(buildRealGA4PriorityFixes(batch.ga4Metrics));
   });
 
-  app.get("/api/status/data-sources", requireAuth, (req, res) => {
-    const userId = req.session.userId!;
-    const settings = storage.getSettings(userId);
-    const syncedAccounts = storage.getSyncedAccounts(userId);
+  /** FB 商品聚合 × GA4（依產品名縫合）；預設 GA4 側為空（僅 FB），?mockGa4=1 可啟用假數據供 UI 驗證 */
+  app.get("/api/ga4/product-funnel-stitch", requireAuth, async (req, res) => {
     const batch = getBatchFromRequest(req);
-    const refreshStatus = storage.getRefreshStatus(userId);
+    const scopeAccountIds = typeof req.query.scopeAccountIds === "string"
+      ? req.query.scopeAccountIds.split(",").map((s) => s.trim()).filter(Boolean)
+      : undefined;
+    const scopeProducts = typeof req.query.scopeProducts === "string"
+      ? req.query.scopeProducts.split(",").map((s) => s.trim()).filter(Boolean)
+      : undefined;
+    const useOverrides = req.query.useOverrides !== "false";
+    const mockGa4 = req.query.mockGa4 === "1" || req.query.mockGa4 === "true";
 
-    const metaAccounts = syncedAccounts.filter(a => a.platform === "meta");
-    const ga4Accounts = syncedAccounts.filter(a => a.platform === "ga4");
-
-    const metaSelected = batch?.selectedAccountIds || [];
-    const ga4Selected = batch?.selectedPropertyIds || [];
-
-    const metaHasToken = !!settings.fbAccessToken?.trim();
-    const ga4HasProperty = !!settings.ga4PropertyId?.trim();
-
-    const metaLastSync = metaAccounts.length > 0
-      ? metaAccounts.reduce((latest, a) => a.lastSyncedAt > latest ? a.lastSyncedAt : latest, "")
-      : null;
-    const ga4LastSync = ga4Accounts.length > 0
-      ? ga4Accounts.reduce((latest, a) => a.lastSyncedAt > latest ? a.lastSyncedAt : latest, "")
-      : null;
-
-    const metaStatus: DataSourceStatus = {
-      platform: "meta",
-      connectionStatus: metaHasToken ? "connected" : "not_configured",
-      syncStatus: metaAccounts.length > 0 ? "synced" : (metaHasToken ? "never_synced" : "never_synced"),
-      selectionStatus: metaSelected.length > 0 ? "selected" : "none_selected",
-      analysisStatus: batch && batch.campaignMetrics.length > 0 ? "analyzed" : "never_analyzed",
-      lastSyncedAt: metaLastSync || null,
-      lastAnalyzedAt: refreshStatus.lastAnalysisAt || null,
-      accountCount: metaAccounts.length,
-      selectedCount: metaSelected.length,
-      message: !metaHasToken
-        ? "請先設定 Facebook Access Token"
-        : metaAccounts.length === 0
-          ? "請先同步 Token 或選擇帳號"
-          : metaSelected.length === 0
-            ? `請選擇要分析的帳號（共 ${metaAccounts.length} 個）`
-            : `已選 ${metaSelected.length} 個帳號`,
-    };
-
-    const ga4Status: DataSourceStatus = {
-      platform: "ga4",
-      connectionStatus: ga4HasProperty ? "connected" : "not_configured",
-      syncStatus: ga4Accounts.length > 0 ? "synced" : (ga4HasProperty ? "never_synced" : "never_synced"),
-      selectionStatus: ga4Selected.length > 0 ? "selected" : "none_selected",
-      analysisStatus: batch && batch.ga4Metrics.length > 0 ? "analyzed" : "never_analyzed",
-      lastSyncedAt: ga4LastSync || null,
-      lastAnalyzedAt: refreshStatus.lastAnalysisAt || null,
-      accountCount: ga4Accounts.length,
-      selectedCount: ga4Selected.length,
-      message: !ga4HasProperty
-        ? "????? GA4 Property ID"
-        : ga4Accounts.length === 0
-          ? "請先設定 Property ID 或選擇資源"
-          : ga4Selected.length === 0
-            ? `請選擇要分析的資源（共 ${ga4Accounts.length} 個）`
-            : `????${ga4Selected.length} ????????????`,
-    };
-
-    res.json([metaStatus, ga4Status]);
-  });
-
-  app.get("/api/status/unified", requireAuth, (req, res) => {
-    const userId = req.session.userId!;
-    const settings = storage.getSettings(userId);
-    const syncedAccounts = storage.getSyncedAccounts(userId);
-    const batch = getBatchFromRequest(req);
-
-    const metaAccounts = syncedAccounts.filter(a => a.platform === "meta" && a.status === "active");
-    const ga4Accounts = syncedAccounts.filter(a => a.platform === "ga4" && a.status === "active");
-
-    const metaHasToken = !!settings.fbAccessToken?.trim();
-    let ga4HasKey = false;
-    try {
-      ga4HasKey = !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    } catch {}
-    const ga4HasProperty = !!settings.ga4PropertyId?.trim();
-
-    const hasMeta = metaHasToken && metaAccounts.length > 0;
-    const hasGA4 = (ga4HasKey || ga4HasProperty) && ga4Accounts.length > 0;
-
-    const dataCoverage: DataFlowStatus["dataCoverage"] =
-      hasMeta && hasGA4 ? "both" :
-      hasMeta ? "meta_only" :
-      hasGA4 ? "ga4_only" : "none";
-
-    const status: DataFlowStatus = {
-      connectionStatus: { meta: metaHasToken, ga4: ga4HasKey || ga4HasProperty },
-      syncStatus: { metaCount: metaAccounts.length, ga4Count: ga4Accounts.length },
-      selectionStatus: {
-        metaSelected: batch?.selectedAccountIds?.length || 0,
-        ga4Selected: batch?.selectedPropertyIds?.length || 0,
-      },
-      analysisStatus: {
-        lastBatchAt: batch?.generatedAt || null,
-        lastBatchScope: batch
-          ? buildScopeKey(
-              userId,
-              batch.selectedAccountIds || [],
-              batch.selectedPropertyIds || [],
-              batch.dateRange.preset,
-              batch.dateRange.preset === "custom" ? batch.dateRange.startDate : undefined,
-              batch.dateRange.preset === "custom" ? batch.dateRange.endDate : undefined
-            )
-          : null,
-        isStale: batch ? (Date.now() - new Date(batch.generatedAt).getTime()) > 24 * 60 * 60 * 1000 : true,
-      },
-      dataCoverage,
-    };
-
-    res.json(status);
-  });
-
-  app.get("/api/settings", requireAuth, (req, res) => {
-    const settings = storage.getSettings(req.session.userId!);
-    res.json(settings);
-  });
-
-  app.get("/api/profit-rules", requireAuth, (_req, res) => {
-    res.json(getProductProfitRules());
-  });
-
-  app.put("/api/profit-rules", requireAuth, (req, res) => {
-    const { productName, ...rule } = req.body as { productName: string; costRatio?: number; targetNetMargin?: number; minSpend?: number; minClicks?: number; minATC?: number; minPurchases?: number };
-    if (!productName || typeof productName !== "string") {
-      return res.status(400).json({ message: "?????productName" });
-    }
-    const updated = setProductProfitRule(productName, rule);
-    res.json(updated);
-  });
-
-  app.get("/api/profit-rules/calculations", requireAuth, (req, res) => {
-    const productName = req.query.productName as string;
-    const rule = productName ? getProductProfitRule(productName) : null;
-    if (!rule) return res.json({ breakEvenRoas: null, targetRoas: null });
-    res.json({
-      breakEvenRoas: breakEvenRoas(rule.costRatio),
-      targetRoas: targetRoas(rule.costRatio, rule.targetNetMargin),
-      costRatio: rule.costRatio,
-      targetNetMargin: rule.targetNetMargin,
-    });
-  });
-
-  app.put("/api/settings", requireAuth, (req, res) => {
-    const result = settingsSchema.safeParse(req.body);
-    if (!result.success) {
-      const errPayload = { message: "?????????????", errors: result.error.flatten() };
-      console.error("[PUT /api/settings] validation failed", JSON.stringify(result.error.flatten(), null, 2));
-      return res.status(400).json(errPayload);
-    }
-    const settings = storage.saveSettings(req.session.userId!, result.data);
-    res.json(settings);
-  });
-
-  app.post("/api/refresh", requireAuth, async (req, res) => {
-    const userId = req.session.userId!;
-    const datePreset = (req.body.datePreset as string) || "7";
-    const customStart = req.body.customStart as string | undefined;
-    const customEnd = req.body.customEnd as string | undefined;
-    const selectedAccountIds: string[] = req.body.selectedAccountIds || [];
-    const selectedPropertyIds: string[] = req.body.selectedPropertyIds || [];
-
-    const scopeKey = buildScopeKey(
-      userId,
-      selectedAccountIds,
-      selectedPropertyIds,
-      datePreset,
-      datePreset === "custom" ? customStart : undefined,
-      datePreset === "custom" ? customEnd : undefined
-    );
-    const existing = storage.getRunningJobByScopeKey(scopeKey);
-    if (existing) {
-      return res.json({
-        jobId: existing.jobId,
-        status: existing.status,
-        scopeKey,
-        message: "????????????????? jobId ????",
-      });
+    if (!batch?.campaignMetrics?.length) {
+      return res.json({ rows: [] });
     }
 
-    const jobId = randomUUID();
-    const createdAt = new Date().toISOString();
-    const job: RefreshJob = {
-      jobId,
-      userId,
-      scopeKey,
-      lockKey: scopeKey,
-      status: "pending",
-      createdAt,
-      startedAt: null,
-      finishedAt: null,
-      errorMessage: null,
-      errorStage: null,
-      resultBatchKey: null,
-      attemptCount: 1,
-      triggerSource: "manual_refresh",
-      progressStep: null,
-      progressMessage: null,
-      datePreset,
-      customStart,
-      customEnd,
-      selectedAccountIds,
-      selectedPropertyIds,
-    };
-    storage.createRefreshJob(job);
-    storage.setRefreshStatus(userId, { isRefreshing: true, currentStep: "?????...", progress: 5 });
+    const normalizeAccountId = (id: string) => (id || "").replace(/^act_/, "");
+    const accountIdSet =
+      scopeAccountIds && scopeAccountIds.length > 0
+        ? new Set(scopeAccountIds.map(normalizeAccountId))
+        : null;
 
-    res.json({ jobId, status: job.status, scopeKey });
+    let rows = batch.campaignMetrics.map((c: CampaignMetrics) => ({
+      campaignId: c.campaignId,
+      campaignName: c.campaignName,
+      accountId: c.accountId,
+      spend: c.spend,
+      revenue: c.revenue,
+      roas: c.roas,
+      impressions: c.impressions,
+      clicks: c.clicks,
+      conversions: c.conversions,
+      frequency: c.frequency,
+      roasPrev: c.roasPrev,
+      biddingType: c.biddingType,
+      targetOutcomeValue: c.targetOutcomeValue,
+      spendFullness: c.spendFullness,
+      todayAdjustCount: c.todayAdjustCount,
+      observationWindowUntil: c.observationWindowUntil,
+      lastAdjustType: c.lastAdjustType,
+    }));
 
-    // ????????job ??????????? loadRefreshJobs ???running?failed????? setTimeout ????
-    void runRefreshJob(jobId).catch((err) => {
-      console.error("[Refresh] runRefreshJob error:", err);
-    });
-  });
-
-  app.get("/api/refresh/status", requireAuth, (req, res) => {
-    const status = storage.getRefreshStatus(req.session.userId!);
-    res.json(status);
-  });
-
-  /** 查詢單一 refresh job 狀態。授權：僅允許查詢「自己」的 job，否則等同資訊洩漏（別人可憑 jobId 看到你的 errorMessage、scopeKey、進度）。不可刪除下方 userId 比對。 */
-  app.get("/api/refresh/:jobId/status", requireAuth, (req, res) => {
-    const userId = req.session.userId!;
-    const jobId = getParam(req, "jobId");
-    const job = storage.getRefreshJob(jobId);
-    if (!job || job.userId !== userId) {
-      return res.status(404).json({ error: "job not found" });
+    if (accountIdSet && accountIdSet.size > 0) {
+      rows = rows.filter((r) => accountIdSet!.has(normalizeAccountId(r.accountId)));
     }
-    res.json({
-      jobId: job.jobId,
-      status: job.status,
-      createdAt: job.createdAt,
-      startedAt: job.startedAt,
-      finishedAt: job.finishedAt,
-      errorStage: job.errorStage,
-      errorMessage: job.errorMessage,
-      resultBatchKey: job.resultBatchKey,
-      progressStep: job.progressStep,
-      progressMessage: job.progressMessage,
-      scopeKey: job.scopeKey,
-    });
+
+    const overrides = useOverrides ? await getWorkbenchMappingOverrides() : new Map<string, string>();
+    const resolveProduct = (row: { campaignId: string; campaignName: string }) =>
+      resolveProductWithOverrides(
+        row,
+        overrides,
+        (name) => parseCampaignNameToTags(name)?.productName ?? null
+      );
+
+    const productLevel = aggregateByProductWithResolver(rows, resolveProduct, scopeProducts);
+    const fbRows = productLevel.map((p) => ({
+      productName: p.productName,
+      spend: p.spend,
+      revenue: p.revenue,
+      roas: p.roas,
+      impressions: p.impressions,
+      clicks: p.clicks,
+      conversions: p.conversions,
+    }));
+    const productNames = productLevel.map((p) => p.productName);
+    const ga4Rows = mockGa4 ? fetchMockGA4DataByProduct(productNames) : [];
+    const stitched = stitchFunnelData(fbRows, ga4Rows);
+    res.json({ rows: stitched });
   });
 
   app.get("/api/scoring/definitions", requireAuth, (_req, res) => {
@@ -1363,21 +580,6 @@ export async function registerRoutes(
       firstDecisionSpendMin: FIRST_DECISION_SPEND_MIN,
       firstDecisionSpendMax: FIRST_DECISION_SPEND_MAX,
     });
-  });
-
-  /** 儲存創意生命週期首次審判 verdict，需 campaignId */
-  app.post("/api/judgment/save-initial-verdict", requireAuth, (req, res) => {
-    const body = req.body as { campaignId?: string; score?: number; summary?: string; recommendTest?: boolean; reason?: string };
-    const campaignId = body.campaignId?.trim();
-    if (!campaignId) {
-      return res.status(400).json({ message: "請提供 campaignId" });
-    }
-    const score = typeof body.score === "number" ? body.score : 0;
-    const summary = typeof body.summary === "string" ? body.summary.trim() : "";
-    const recommendTest = !!body.recommendTest;
-    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
-    setInitialVerdict(campaignId, { score, summary, recommendTest, reason });
-    res.json({ success: true, campaignId });
   });
 
   /** ???????????????????????/???/????/?????????????????????????????*/
@@ -1898,11 +1100,6 @@ export async function registerRoutes(
     const productLevel: ProductLevelMetrics[] = aggregateByProductWithResolver(rows, resolveProduct, scopeProducts);
     const creativeRaw: CreativeTagLevelMetrics[] = aggregateByCreativeTagsWithResolver(rows, resolveProduct, scopeProducts);
     const totalRevenue = productLevel.reduce((s, p) => s + p.revenue, 0);
-    const seedHash = (s: string) => {
-      let h = 0;
-      for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-      return Math.abs(h);
-    };
     const totalAccountSpend = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.spend, 0);
     const totalAccountRevenue = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.revenue, 0);
     const campaignList = accountIdSet
@@ -2004,8 +1201,7 @@ export async function registerRoutes(
     /** ?????????????> 0????????????????????Phase 2A ??evidenceLevel?????????????????*/
     const creativeRawDecisionReady = creativeRaw.filter((c) => c.spend > 0);
     const creativeLeaderboardRaw = creativeRawDecisionReady.map((c) => {
-      const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
-      const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
+      const thumbnailUrl = null as string | null;
       const budgetSuggestion = getBudgetRecommendation(c.spend, c.roas) ?? undefined;
       const materialTier = classifyMaterialTier(
         c.spend,

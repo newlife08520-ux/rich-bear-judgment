@@ -27,6 +27,11 @@ export interface User {
   workRole?: WorkRole;
   /** 負責商品名稱列表，與 Campaign 解析出的產品名對齊；空陣列表示 ADMIN 看全部 */
   assignedProductNames?: string[];
+  /**
+   * 登入使用者自訂「我的看板」商品範圍（與 Prisma User.defaultProductScope 對齊）。
+   * null／undefined = 未限制；非空 = 只看這些商品（搭配前端「我的／全部」切換）。
+   */
+  defaultProductScope?: string[] | null;
 }
 
 export type SafeUser = Omit<User, "password" | "passwordHash">;

@@ -25,7 +25,7 @@ interface CreativeStatusDerived {
 function CreativeItem({ c, label }: { c: CreativeLeaderboardItem | CreativeRowMinimal; label?: string }) {
   return (
     <li className="rounded-lg border border-border/60 bg-muted/20 p-2 text-sm">
-      {label && <span className="text-[10px] text-muted-foreground uppercase mr-1">{label}</span>}
+      {label && <span className="text-xs text-muted-foreground uppercase mr-1">{label}</span>}
       <p className="font-medium truncate">{c.productName} · {c.materialStrategy}</p>
       <p className="text-xs text-muted-foreground truncate mt-0.5">{c.headlineSnippet}</p>
       <p className="text-xs text-muted-foreground mt-0.5">
@@ -50,7 +50,7 @@ export function CreativeStatusSection({ status }: { status: CreativeStatusDerive
 
   return (
     <section data-testid="section-creative-status">
-      <Card className="border-border/80">
+      <Card className="border-border/80 hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">

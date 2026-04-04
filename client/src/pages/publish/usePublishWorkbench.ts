@@ -67,6 +67,20 @@ export function usePublishWorkbench() {
   const { toast } = useToast();
   const reportMetaApiError = useReportMetaApiError();
 
+  const { data: guardCheck } = useQuery<{
+    metaWritesAllowed: boolean;
+    message: string | null;
+  }>({
+    queryKey: ["/api/publish/guard-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/publish/guard-check", { credentials: "include" });
+      if (!res.ok) {
+        return { metaWritesAllowed: false, message: "無法取得 Meta 投放權限狀態。" };
+      }
+      return res.json();
+    },
+  });
+
   const { data: packages = [], isLoading: packagesLoading } = useQuery<AssetPackage[]>({
     queryKey: ["/api/asset-packages"],
   });
@@ -705,6 +719,7 @@ export function usePublishWorkbench() {
     isLoading,
     hasDraftsError,
     toast,
+    guardCheck,
   };
 }
 

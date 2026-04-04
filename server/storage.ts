@@ -37,6 +37,7 @@ import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import type { WorkbenchProductOwners, WorkbenchTask, WorkbenchAuditEntry } from "@shared/workbench-types";
+import { prisma } from "./db";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
@@ -46,6 +47,20 @@ function valueFingerprint(value: string): string {
   const s = (value ?? "").trim();
   if (!s) return "";
   return `${s.length}:${s.slice(0, 2)}:${s.slice(-2)}`;
+}
+
+function parseDefaultProductScopeFromDb(raw: string | null | undefined): string[] | null {
+  if (raw == null || raw === "") return null;
+  try {
+    const j = JSON.parse(raw) as unknown;
+    if (!Array.isArray(j)) return null;
+    const names = j
+      .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+      .map((s) => s.trim());
+    return names.length > 0 ? names : null;
+  } catch {
+    return null;
+  }
 }
 
 const DEFAULT_VERIFICATION = {
@@ -243,19 +258,20 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPasswordHash(userId: string, passwordHash: string): Promise<void>;
+  updateUserDefaultProductScope(userId: string, productNames: string[] | null): Promise<User | undefined>;
   storeJudgmentReport(report: JudgmentReport, input: JudgmentInput): void;
   getJudgmentHistory(userId: string): JudgmentRecord[];
   getJudgmentReport(id: string): JudgmentReport | undefined;
   getSettings(userId: string): UserSettings;
-  saveSettings(userId: string, settings: SettingsInput): UserSettings;
-  patchVerificationStatus(userId: string, type: "fb" | "ga4" | "ai", payload: { status: "success" | "error"; verifiedAt: string; lastError?: string | null }, value: string): UserSettings;
+  saveSettings(userId: string, settings: SettingsInput): Promise<UserSettings>;
+  patchVerificationStatus(userId: string, type: "fb" | "ga4" | "ai", payload: { status: "success" | "error"; verifiedAt: string; lastError?: string | null }, value: string): Promise<UserSettings>;
   getReviewSessions(userId: string): ReviewSession[];
   getReviewSession(id: string): ReviewSession | undefined;
-  saveReviewSession(session: ReviewSession): ReviewSession;
+  saveReviewSession(session: ReviewSession): Promise<ReviewSession>;
   getFbFavoriteAccounts(userId: string): string[];
   saveFbFavoriteAccounts(userId: string, accountIds: string[]): string[];
   getSyncedAccounts(userId: string): SyncedAccount[];
-  saveSyncedAccounts(userId: string, accounts: SyncedAccount[]): void;
+  saveSyncedAccounts(userId: string, accounts: SyncedAccount[]): Promise<void>;
   getLatestBatch(userId: string, scopeKey?: string): AnalysisBatch | null;
   getBatchForScope(
     userId: string,
@@ -265,22 +281,22 @@ export interface IStorage {
     customStart?: string,
     customEnd?: string
   ): AnalysisBatch | null;
-  saveBatch(userId: string, batch: AnalysisBatch): void;
+  saveBatch(userId: string, batch: AnalysisBatch): Promise<void>;
   getRefreshStatus(userId: string): RefreshStatus;
   setRefreshStatus(userId: string, status: Partial<RefreshStatus>): void;
-  createRefreshJob(job: RefreshJob): void;
+  createRefreshJob(job: RefreshJob): Promise<void>;
   getRefreshJob(jobId: string): RefreshJob | null;
-  updateRefreshJob(jobId: string, updates: Partial<RefreshJob>): void;
+  updateRefreshJob(jobId: string, updates: Partial<RefreshJob>): Promise<void>;
   listRefreshJobsByUser(userId: string): RefreshJob[];
   getRunningJobByScopeKey(scopeKey: string): RefreshJob | null;
-  persistRefreshJobs(): void;
+  persistRefreshJobs(): Promise<void>;
   loadRefreshJobs(): void;
+  hydratePersistentStoresFromDatabase(): Promise<void>;
 }
 
 
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
   private judgments: Map<string, JudgmentReport>;
   private judgmentRecords: JudgmentRecord[];
   private settingsStore: Map<string, UserSettings>;
@@ -296,7 +312,6 @@ export class MemStorage implements IStorage {
   private workbenchMapping: Record<string, string>; // campaignId -> productName
 
   constructor() {
-    this.users = new Map();
     this.judgments = new Map();
     this.judgmentRecords = [];
     this.settingsStore = new Map();
@@ -311,33 +326,6 @@ export class MemStorage implements IStorage {
     this.workbenchAudit = [];
     this.workbenchMapping = {};
 
-    const mockUsers: User[] = [
-      {
-        id: "1",
-        username: "admin",
-        password: "",
-        passwordHash: "$2b$12$JHw8FZAhhpuDXbwwAA0/muDT6PwK5dxvU83pWhFafOBNCzVUXEUAu",
-        role: "admin",
-        displayName: "系統管理員",
-      },
-      {
-        id: "2",
-        username: "manager",
-        password: "",
-        passwordHash: "$2b$12$RQ5mGUPgUTGLkXx3ON31desJNsJD4s9FRCnnpimPjKRq32CmH/he6",
-        role: "manager",
-        displayName: "行銷總監",
-      },
-      {
-        id: "3",
-        username: "user",
-        password: "",
-        passwordHash: "$2b$12$b7CbCoWkLJagdZLB8pWncueUoF.BNpK5oefsVXfVERzTqo6K2qHCy",
-        role: "user",
-        displayName: "行銷專員",
-      },
-    ];
-    mockUsers.forEach((u) => this.users.set(u.id, u));
     this.loadPersistedData();
   }
 
@@ -403,10 +391,7 @@ export class MemStorage implements IStorage {
     }
 
     if (rescoredCount > 0) {
-      const obj: Record<string, AnalysisBatch> = {};
-      this.batchStore.forEach((v, k) => { obj[k] = v; });
-      saveJsonFile(BATCH_FILE, obj);
-      console.log(`[Storage] Persisted ${rescoredCount} rescored batches back to disk`);
+      console.log(`[Storage] Rescored ${rescoredCount} batches in memory (batch JSON 寫入已停用)`);
     }
 
     this.workbenchOwners = loadJsonFile<WorkbenchProductOwners>(WORKBENCH_OWNERS_FILE, {});
@@ -437,33 +422,36 @@ export class MemStorage implements IStorage {
       this.refreshJobsStore.set(id, job as RefreshJob);
     }
     if (recovered > 0) {
-      this.persistRefreshJobs();
+      void this.persistRefreshJobs().catch((e) => console.error("[Storage] persistRefreshJobs after recovery:", e));
       console.log(`[Storage] 將 ${recovered} 個殘留 running refresh job 標記為 failed (recovery)`);
     }
   }
 
-  persistRefreshJobs(): void {
-    ensureDataDir();
-    const obj: Record<string, RefreshJob> = {};
-    this.refreshJobsStore.forEach((v, k) => { obj[k] = v; });
-    saveJsonFile(REFRESH_JOBS_FILE, obj);
+  async persistRefreshJobs(): Promise<void> {
+    for (const [jobId, job] of this.refreshJobsStore) {
+      await prisma.memRefreshJob.upsert({
+        where: { jobId },
+        update: { userId: job.userId, jobJson: JSON.stringify(job), updatedAt: new Date() },
+        create: { jobId, userId: job.userId, jobJson: JSON.stringify(job) },
+      });
+    }
   }
 
-  createRefreshJob(job: RefreshJob): void {
+  async createRefreshJob(job: RefreshJob): Promise<void> {
     this.refreshJobsStore.set(job.jobId, job);
-    this.persistRefreshJobs();
+    await this.persistRefreshJobs();
   }
 
   getRefreshJob(jobId: string): RefreshJob | null {
     return this.refreshJobsStore.get(jobId) ?? null;
   }
 
-  updateRefreshJob(jobId: string, updates: Partial<RefreshJob>): void {
+  async updateRefreshJob(jobId: string, updates: Partial<RefreshJob>): Promise<void> {
     const job = this.refreshJobsStore.get(jobId);
     if (!job) return;
     const next = { ...job, ...updates };
     this.refreshJobsStore.set(jobId, next);
-    this.persistRefreshJobs();
+    await this.persistRefreshJobs();
   }
 
   listRefreshJobsByUser(userId: string): RefreshJob[] {
@@ -496,49 +484,80 @@ export class MemStorage implements IStorage {
     saveJsonFile(WORKBENCH_MAPPING_FILE, this.workbenchMapping);
   }
 
-  private persistSettings(): void {
-    const obj: Record<string, UserSettings> = {};
-    this.settingsStore.forEach((v, k) => { obj[k] = v; });
-    saveJsonFile(SETTINGS_FILE, obj);
-  }
-
-  private persistSyncedAccounts(): void {
-    const obj: Record<string, SyncedAccount[]> = {};
-    this.syncedAccountsStore.forEach((v, k) => { obj[k] = v; });
-    saveJsonFile(SYNCED_ACCOUNTS_FILE, obj);
-  }
-
   private persistFavorites(): void {
     const obj: Record<string, string[]> = {};
     this.fbFavoriteAccounts.forEach((v, k) => { obj[k] = v; });
     saveJsonFile(FAVORITES_FILE, obj);
   }
 
-  private persistReviewSessions(): void {
-    const arr = Array.from(this.reviewSessionsStore.values());
-    saveJsonFile(REVIEW_SESSIONS_FILE, arr);
+  async getUser(id: string): Promise<User | undefined> {
+    const row = await prisma.user.findUnique({ where: { id } });
+    if (!row) return undefined;
+    return {
+      id: row.id,
+      username: row.username,
+      password: "",
+      passwordHash: row.passwordHash,
+      role: row.role as User["role"],
+      displayName: row.displayName,
+      defaultProductScope: parseDefaultProductScopeFromDb(row.defaultProductScope),
+    };
   }
 
-  async getUser(id: string) { return this.users.get(id); }
-  async getUserByUsername(username: string) { return Array.from(this.users.values()).find((u) => u.username === username); }
-  async createUser(insertUser: InsertUser) {
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const row = await prisma.user.findUnique({ where: { username } });
+    if (!row) return undefined;
+    return {
+      id: row.id,
+      username: row.username,
+      password: "",
+      passwordHash: row.passwordHash,
+      role: row.role as User["role"],
+      displayName: row.displayName,
+      defaultProductScope: parseDefaultProductScopeFromDb(row.defaultProductScope),
+    };
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const { hashPassword } = await import("./auth/passwords");
-    const hash = await hashPassword(insertUser.password);
-    const user: User = {
-      ...insertUser,
-      id,
+    const hash = insertUser.password ? await hashPassword(insertUser.password) : "";
+    const created = await prisma.user.create({
+      data: {
+        id,
+        username: insertUser.username,
+        passwordHash: hash,
+        role: insertUser.role ?? "user",
+        displayName: insertUser.displayName ?? "",
+      },
+    });
+    return {
+      id: created.id,
+      username: created.username,
       password: "",
-      passwordHash: hash,
+      passwordHash: created.passwordHash,
+      role: created.role as User["role"],
+      displayName: created.displayName,
     };
-    this.users.set(id, user);
-    return user;
   }
 
   async updateUserPasswordHash(userId: string, passwordHash: string): Promise<void> {
-    const u = this.users.get(userId);
-    if (!u) return;
-    this.users.set(userId, { ...u, passwordHash, password: "" });
+    await prisma.user.updateMany({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+  }
+
+  async updateUserDefaultProductScope(userId: string, productNames: string[] | null): Promise<User | undefined> {
+    const json =
+      productNames == null || productNames.length === 0
+        ? null
+        : JSON.stringify([...new Set(productNames.map((s) => s.trim()).filter(Boolean))]);
+    await prisma.user.updateMany({
+      where: { id: userId },
+      data: { defaultProductScope: json },
+    });
+    return this.getUser(userId);
   }
 
   storeJudgmentReport(report: JudgmentReport, input: JudgmentInput): void {
@@ -597,7 +616,7 @@ export class MemStorage implements IStorage {
     return withVerificationDefaults(withEnums) as UserSettings;
   }
 
-  saveSettings(userId: string, input: SettingsInput): UserSettings {
+  async saveSettings(userId: string, input: SettingsInput): Promise<UserSettings> {
     const existing = this.settingsStore.get(userId);
     const nextFb = input.fbAccessToken ?? existing?.fbAccessToken ?? "";
     const nextGa = input.ga4PropertyId ?? existing?.ga4PropertyId ?? "";
@@ -637,17 +656,21 @@ export class MemStorage implements IStorage {
       aiValidatedValueHash: clearAiVerification ? null : (existing?.aiValidatedValueHash ?? null),
     });
     this.settingsStore.set(userId, settings);
-    this.persistSettings();
+    await prisma.userSettingsRecord.upsert({
+      where: { userId },
+      update: { settingsJson: JSON.stringify(settings) },
+      create: { userId, settingsJson: JSON.stringify(settings) },
+    });
     return settings;
   }
 
   /** 更新單一連線類型的驗證狀態（由 test-connection 呼叫後寫入）；value 用於計算 fingerprint，欄位變更時 saveSettings 會失效 */
-  patchVerificationStatus(
+  async patchVerificationStatus(
     userId: string,
     type: "fb" | "ga4" | "ai",
     payload: { status: "success" | "error"; verifiedAt: string; lastError?: string | null },
     value: string
-  ): UserSettings {
+  ): Promise<UserSettings> {
     const existing = this.getSettings(userId);
     const next: UserSettings = { ...existing };
     const valueHash = valueFingerprint(value);
@@ -668,7 +691,11 @@ export class MemStorage implements IStorage {
       next.aiValidatedValueHash = payload.status === "success" ? valueHash : null;
     }
     this.settingsStore.set(userId, next);
-    this.persistSettings();
+    await prisma.userSettingsRecord.upsert({
+      where: { userId },
+      update: { settingsJson: JSON.stringify(next) },
+      create: { userId, settingsJson: JSON.stringify(next) },
+    });
     return next;
   }
 
@@ -681,9 +708,21 @@ export class MemStorage implements IStorage {
     return this.reviewSessionsStore.get(id);
   }
 
-  saveReviewSession(session: ReviewSession): ReviewSession {
+  async saveReviewSession(session: ReviewSession): Promise<ReviewSession> {
     this.reviewSessionsStore.set(session.id, session);
-    this.persistReviewSessions();
+    await prisma.reviewSessionRecord.upsert({
+      where: { id: session.id },
+      update: {
+        userId: session.userId,
+        sessionJson: JSON.stringify(session),
+        updatedAt: new Date(),
+      },
+      create: {
+        id: session.id,
+        userId: session.userId,
+        sessionJson: JSON.stringify(session),
+      },
+    });
     return session;
   }
 
@@ -701,9 +740,13 @@ export class MemStorage implements IStorage {
     return this.syncedAccountsStore.get(userId) || [];
   }
 
-  saveSyncedAccounts(userId: string, accounts: SyncedAccount[]): void {
+  async saveSyncedAccounts(userId: string, accounts: SyncedAccount[]): Promise<void> {
     this.syncedAccountsStore.set(userId, accounts);
-    this.persistSyncedAccounts();
+    await prisma.memSyncedAccounts.upsert({
+      where: { userId },
+      update: { accountsJson: JSON.stringify(accounts), updatedAt: new Date() },
+      create: { userId, accountsJson: JSON.stringify(accounts) },
+    });
   }
 
   getLatestBatch(userId: string, scopeKey?: string): AnalysisBatch | null {
@@ -733,7 +776,7 @@ export class MemStorage implements IStorage {
     return this.batchStore.get(key) || null;
   }
 
-  saveBatch(userId: string, batch: AnalysisBatch): void {
+  async saveBatch(userId: string, batch: AnalysisBatch): Promise<void> {
     const scopeKey = buildScopeKey(
       userId,
       batch.selectedAccountIds || [],
@@ -745,19 +788,32 @@ export class MemStorage implements IStorage {
     this.batchStore.set(scopeKey, batch);
     this.batchStore.set(userId, batch);
 
-    const allKeys = Array.from(this.batchStore.keys()).filter(k => k.startsWith(`${userId}::`));
+    const allKeys = Array.from(this.batchStore.keys()).filter((k) => k.startsWith(`${userId}::`));
+    const removedKeys: string[] = [];
     if (allKeys.length > 10) {
       const sorted = allKeys
-        .map(k => ({ key: k, time: this.batchStore.get(k)!.generatedAt }))
+        .map((k) => ({ key: k, time: this.batchStore.get(k)!.generatedAt }))
         .sort((a, b) => a.time.localeCompare(b.time));
       for (let i = 0; i < sorted.length - 10; i++) {
-        this.batchStore.delete(sorted[i].key);
+        const k = sorted[i]!.key;
+        this.batchStore.delete(k);
+        removedKeys.push(k);
       }
     }
 
-    const obj: Record<string, AnalysisBatch> = {};
-    this.batchStore.forEach((v, k) => { obj[k] = v; });
-    saveJsonFile(BATCH_FILE, obj);
+    if (removedKeys.length > 0) {
+      await prisma.memAnalysisBatch.deleteMany({ where: { storageKey: { in: removedKeys } } });
+    }
+    const now = new Date();
+    const upsertOne = async (key: string, b: AnalysisBatch) => {
+      await prisma.memAnalysisBatch.upsert({
+        where: { storageKey: key },
+        update: { userId, batchJson: JSON.stringify(b), updatedAt: now },
+        create: { storageKey: key, userId, batchJson: JSON.stringify(b) },
+      });
+    };
+    await upsertOne(scopeKey, batch);
+    await upsertOne(userId, batch);
   }
 
   getRefreshStatus(userId: string): RefreshStatus {
@@ -842,6 +898,102 @@ export class MemStorage implements IStorage {
   setWorkbenchMappingOverride(campaignId: string, productName: string): void {
     this.workbenchMapping[campaignId] = productName;
     this.persistWorkbenchMapping();
+  }
+
+  async hydratePersistentStoresFromDatabase(): Promise<void> {
+    const settingsRows = await prisma.userSettingsRecord.findMany();
+    for (const row of settingsRows) {
+      try {
+        const parsed = JSON.parse(row.settingsJson) as Partial<UserSettings> & { userId?: string };
+        const withEnums = {
+          ...parsed,
+          userId: row.userId,
+          severity: (parsed.severity ?? "moderate") as UserSettings["severity"],
+          outputLength: (parsed.outputLength ?? "standard") as UserSettings["outputLength"],
+          brandTone: (parsed.brandTone ?? "professional") as UserSettings["brandTone"],
+          analysisBias: (parsed.analysisBias ?? "conversion") as UserSettings["analysisBias"],
+        };
+        this.settingsStore.set(row.userId, withVerificationDefaults(withEnums as UserSettings) as UserSettings);
+      } catch (e) {
+        console.error(`[Storage] hydrate settings userId=${row.userId}:`, (e as Error).message);
+      }
+    }
+
+    const sessionRows = await prisma.reviewSessionRecord.findMany();
+    for (const row of sessionRows) {
+      try {
+        const session = JSON.parse(row.sessionJson) as ReviewSession;
+        this.reviewSessionsStore.set(session.id, session);
+      } catch (e) {
+        console.error(`[Storage] hydrate review session id=${row.id}:`, (e as Error).message);
+      }
+    }
+
+    const syncedRows = await prisma.memSyncedAccounts.findMany();
+    for (const row of syncedRows) {
+      try {
+        const accounts = JSON.parse(row.accountsJson) as SyncedAccount[];
+        this.syncedAccountsStore.set(row.userId, Array.isArray(accounts) ? accounts : []);
+      } catch (e) {
+        console.error(`[Storage] hydrate synced userId=${row.userId}:`, (e as Error).message);
+      }
+    }
+
+    const batchRows = await prisma.memAnalysisBatch.findMany();
+    for (const row of batchRows) {
+      try {
+        const batch = JSON.parse(row.batchJson) as AnalysisBatch;
+        this.batchStore.set(row.storageKey, batch);
+      } catch (e) {
+        console.error(`[Storage] hydrate batch key=${row.storageKey}:`, (e as Error).message);
+      }
+    }
+
+    const jobRows = await prisma.memRefreshJob.findMany();
+    for (const row of jobRows) {
+      try {
+        let job = JSON.parse(row.jobJson) as RefreshJob;
+        if (job.status === "running") {
+          job = {
+            ...job,
+            status: "failed",
+            finishedAt: new Date().toISOString(),
+            errorStage: "recovery" as RefreshJobErrorStage,
+            errorMessage: "服務重啟中斷，job 無法恢復",
+          };
+        }
+        this.refreshJobsStore.set(job.jobId, job);
+      } catch (e) {
+        console.error(`[Storage] hydrate refresh job id=${row.jobId}:`, (e as Error).message);
+      }
+    }
+
+    if (batchRows.length > 0) {
+      const byUserId = new Map<string, AnalysisBatch>();
+      for (const batch of this.batchStore.values()) {
+        const uid = batch?.userId;
+        if (!uid) continue;
+        const existing = byUserId.get(uid);
+        const hasPre = batch.precomputedActionCenter != null && batch.precomputedScorecard != null;
+        const existingHasPre = existing?.precomputedActionCenter != null && existing?.precomputedScorecard != null;
+        const preAt = batch.precomputeCompletedAt ?? "";
+        const existingPreAt = existing?.precomputeCompletedAt ?? "";
+        const genAt = batch.generatedAt ?? "";
+        const existingGenAt = existing?.generatedAt ?? "";
+        const pickThis =
+          !existing ||
+          (hasPre && !existingHasPre) ||
+          (hasPre === existingHasPre && (preAt > existingPreAt || (preAt === existingPreAt && genAt > existingGenAt)));
+        if (pickThis) byUserId.set(uid, batch);
+      }
+      for (const [uid, batch] of byUserId) {
+        if (!this.batchStore.has(uid)) this.batchStore.set(uid, batch);
+      }
+    }
+
+    console.log(
+      `[Storage] Hydrated from DB: ${settingsRows.length} settings, ${sessionRows.length} review sessions, ${syncedRows.length} synced-account rows, ${batchRows.length} batch rows, ${jobRows.length} refresh jobs`
+    );
   }
 }
 

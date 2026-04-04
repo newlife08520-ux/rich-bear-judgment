@@ -57,6 +57,8 @@ export interface DecisionCardsInput {
   funnelWarnings: Array<{ message?: string; productName?: string }>;
   urgentStop: Array<{ campaignName: string; spend: number; message?: string }>;
   failureRatesByTag: Record<string, number>;
+  /** 例如「近 7 天」，會附在證據指標後方便使用者理解時間窗 */
+  analysisWindowLabel?: string;
 }
 
 interface DerivedProduct {
@@ -131,9 +133,15 @@ function formatCurrency(n: number): string {
   return `NT$ ${Math.round(n).toLocaleString()}`;
 }
 
+function evidenceWindowSuffix(label?: string): string {
+  const t = label?.trim();
+  return t ? `（${t}）` : "";
+}
+
 /** 產出 8 張決策卡，無 placeholder；P2 可傳入 published threshold config */
 export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: ThresholdConfig | null): DecisionCardBlock[] {
   const { productLevel, creativeLeaderboard, funnelWarnings, urgentStop, failureRatesByTag } = input;
+  const win = evidenceWindowSuffix(input.analysisWindowLabel);
   const products = productLevel.map((p) => deriveProduct(p, thresholdConfig ?? null));
   const totalSpend = products.reduce((s, p) => s + p.spend, 0);
   const totalRevenue = products.reduce((s, p) => s + p.revenue, 0);
@@ -151,7 +159,7 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
       immediateItems.push({
         title: `【停損】${p.productName}`,
         rule: "花費達門檻且 ROAS 低於目標",
-        evidence: `花費 ${formatCurrency(p.spend)}、ROAS ${p.roas.toFixed(2)}`,
+        evidence: `花費 ${formatCurrency(p.spend)}${win}、ROAS ${p.roas.toFixed(2)}${win}`,
         action: `立即停損或關閉，建議幅度 100%`,
         impact: `可節省約 ${formatCurrency(p.spend)}`,
       });
@@ -160,7 +168,7 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
     immediateItems.push({
       title: `【高花費無轉換】${u.campaignName}`,
       rule: "花費 ≥ 500 且轉換數 0",
-      evidence: `花費 ${formatCurrency(u.spend)}`,
+      evidence: `花費 ${formatCurrency(u.spend)}${win}`,
       action: "止血或暫停",
       impact: `可節省約 ${formatCurrency(u.spend)}`,
     });
@@ -185,7 +193,7 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
     .sort((a, b) => b.spend - a.spend)
     .map(
       (p) =>
-        `• ${p.productName}：${p.productStatus === "stop" ? "停損" : p.productStatus === "danger" ? "危險" : "加碼"} — ${p.aiSuggestion}（花費 ${formatCurrency(p.spend)}、ROAS ${p.roas.toFixed(2)}）`
+        `• ${p.productName}：${p.productStatus === "stop" ? "停損" : p.productStatus === "danger" ? "危險" : "加碼"} — ${p.aiSuggestion}（花費 ${formatCurrency(p.spend)}${win}、ROAS ${p.roas.toFixed(2)}${win}）`
     );
 
   const fatigueCreatives = creativeLeaderboard.filter((c) => {
@@ -195,7 +203,7 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
   const lowRoasCreatives = creativeLeaderboard.filter((c) => c.spend >= 200 && c.roas < (thresholdConfig?.roasTargetMin ?? DEFAULT_THRESHOLDS.roasTargetMin));
   const creativeVerdicts = [
     ...fatigueCreatives.slice(0, 5).map((c) => `• ${c.productName} / ${c.materialStrategy}：疲勞或歷史陣亡率高，建議關閉或重製`),
-    ...lowRoasCreatives.slice(0, 5).map((c) => `• ${c.productName} / ${c.materialStrategy}：ROAS ${c.roas.toFixed(2)}，花費 ${formatCurrency(c.spend)}，建議關閉`),
+    ...lowRoasCreatives.slice(0, 5).map((c) => `• ${c.productName} / ${c.materialStrategy}：ROAS ${c.roas.toFixed(2)}${win}，花費 ${formatCurrency(c.spend)}${win}，建議關閉`),
   ].slice(0, 8);
 
   const budgetScale = products.filter((p) => p.productStatus === "scale").sort((a, b) => b.roas - a.roas);
@@ -252,7 +260,8 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
       label: "商品判決",
       conclusion: productVerdicts.length > 0 ? productVerdicts.join("\n") : "無需判決商品（皆為觀察）。",
       triggerRule: "花費達門檻 + ROAS 低於目標 → 停損/危險；ROAS≥2.5 且花費>1000 → 加碼",
-      evidenceMetrics: products.map((p) => `${p.productName}: 花費 ${formatCurrency(p.spend)} ROAS ${p.roas.toFixed(2)}`).join("；") || "—",
+      evidenceMetrics:
+        products.map((p) => `${p.productName}: 花費 ${formatCurrency(p.spend)}${win} ROAS ${p.roas.toFixed(2)}${win}`).join("；") || "—",
       suggestedAction: productVerdicts.length > 0 ? "依上列判決執行停損/縮預算/加碼，幅度見立即處理與預算建議" : "持續觀察",
       impactAmount: totalSpend > 0 ? `總盤約 ${formatCurrency(totalSpend)}，依判決執行可顯著影響` : "—",
       confidence: confidenceSummary,
@@ -262,7 +271,8 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
       label: "素材判決",
       conclusion: creativeVerdicts.length > 0 ? creativeVerdicts.join("\n") : "無明顯疲勞或低效素材需立即處理。",
       triggerRule: "疲勞：歷史陣亡率≥60%；低效：花費≥200 且 ROAS<1",
-      evidenceMetrics: creativeLeaderboard.length > 0 ? `共 ${creativeLeaderboard.length} 支素材；疲勞/低效見上列` : "無素材維度資料",
+      evidenceMetrics:
+        creativeLeaderboard.length > 0 ? `共 ${creativeLeaderboard.length} 支素材${win}；疲勞/低效見上列` : "無素材維度資料",
       suggestedAction: creativeVerdicts.length > 0 ? "關閉或重製標示素材，補新素材替換" : "持續觀察",
       impactAmount: fatigueCreatives.length + lowRoasCreatives.length > 0 ? "依關閉數量可節省燒損並釋出預算" : "—",
       confidence: creativeLeaderboard.length > 0 ? "medium" : "data_insufficient",
@@ -282,7 +292,7 @@ export function buildDecisionCards(input: DecisionCardsInput, thresholdConfig?: 
       label: "owner 建議",
       conclusion: "請至「商品中心」為高花費商品與素材指派商品 owner、投手 owner、素材 owner；未指派任務請在「行動紀錄」分配。",
       triggerRule: "依花費與狀態優先指派",
-      evidenceMetrics: `商品數 ${products.length}、高花費（>1000）${products.filter((p) => p.spend > 1000).length} 個`,
+      evidenceMetrics: `商品數 ${products.length}、高花費（>1000）${products.filter((p) => p.spend > 1000).length} 個${win}`,
       suggestedAction: "在商品中心設定三種 owner，並在行動紀錄指派待辦",
       impactAmount: "—",
       confidence: "medium",

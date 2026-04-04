@@ -47,13 +47,25 @@ export async function scrapePageText(url: string): Promise<string> {
 /**
  * 若輸入含網址，抓取並回傳「網頁內容摘要」字串，可拼進 prompt。
  */
+function isUrlFetchFailure(scraped: string): boolean {
+  const t = scraped.trim();
+  return t.startsWith("[無法讀取:") || t.startsWith("[抓取失敗:");
+}
+
 export async function enrichContentWithUrls(content: string): Promise<string> {
   const urls = extractUrls(content);
   if (urls.length === 0) return content;
   const parts: string[] = [content];
+  let anyFailed = false;
   for (const url of urls.slice(0, 3)) {
     const text = await scrapePageText(url);
+    if (isUrlFetchFailure(text)) anyFailed = true;
     parts.push(`\n\n--- 以下為網址 ${url} 的頁面文字摘要 ---\n${text}\n--- 以上 ---`);
   }
-  return parts.join("\n");
+  let out = parts.join("\n");
+  if (anyFailed) {
+    out +=
+      "\n\n[系統提示] 無法讀取此網址內容（可能被阻擋、逾時或不存在）。以下判斷僅基於 URL 和你提供的描述。";
+  }
+  return out;
 }

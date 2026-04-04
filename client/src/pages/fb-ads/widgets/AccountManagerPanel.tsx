@@ -217,7 +217,7 @@ export function AccountManagerPanel({
               ? `已選 ${selectedAccountIds.length} 個帳號`
               : "選擇廣告帳號"}
           </span>
-          <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+          <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
             {accounts.length}
           </Badge>
           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}

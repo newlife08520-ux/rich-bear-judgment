@@ -42,6 +42,12 @@ export interface GoalPacingEvaluation {
   };
 }
 
+export interface GoalPacingOptions {
+  luckyNoiseMaxSpend?: number;
+  luckyNoiseMinRoas?: number;
+  luckyNoiseMaxConversions?: number;
+}
+
 export interface GoalPacingInput {
   spend: number;
   revenue: number;
@@ -68,7 +74,10 @@ function inObservationWindow(iso: string | null | undefined): boolean {
   return Number.isFinite(t) && t > Date.now();
 }
 
-export function evaluateGoalAndPacing(input: GoalPacingInput): GoalPacingEvaluation {
+export function evaluateGoalAndPacing(input: GoalPacingInput, options?: GoalPacingOptions): GoalPacingEvaluation {
+  const luckyNoiseMaxSpend = options?.luckyNoiseMaxSpend ?? 150;
+  const luckyNoiseMinRoas = options?.luckyNoiseMinRoas ?? 2.8;
+  const luckyNoiseMaxConversions = options?.luckyNoiseMaxConversions ?? 3;
   const why: string[] = [];
   const copyHints: string[] = [];
   const todayAdjustCount = input.todayAdjustCount ?? 0;
@@ -128,7 +137,10 @@ export function evaluateGoalAndPacing(input: GoalPacingInput): GoalPacingEvaluat
   const degrading = roasPrev > 0 && roas < roasPrev * 0.85 && input.spend > 200;
   const underspent =
     fullness != null && fullness < 0.75 && input.spend > 0;
-  const lucky = input.spend < 150 && roas >= 2.8 && (input.conversionsHint ?? 0) < 3;
+  const lucky =
+    input.spend < luckyNoiseMaxSpend &&
+    roas >= luckyNoiseMinRoas &&
+    (input.conversionsHint ?? 0) < luckyNoiseMaxConversions;
 
   if (input.lowSample) {
     why.push("樣本不足／資料不完整，僅供低信心參考");
@@ -145,12 +157,15 @@ export function evaluateGoalAndPacing(input: GoalPacingInput): GoalPacingEvaluat
   }
 
   if (lucky) {
+    why.push(
+      "低樣本幸運噪音：花費低且轉換極少，ROAS 可能不穩定。建議觀察至少 5 筆轉換再做結論。"
+    );
     why.push("花費低且 ROAS 偏高，可能是運氣樣本（Lucky）");
     copyHints.push("Lucky：先補量驗證，不直接當 Winner 放大。");
     return {
       pacingLabel: "LUCKY_NOISE",
       recommendedAction: "increase_budget",
-      confidence: "medium",
+      confidence: "low",
       why,
       whyNotMore: "補量時小幅加，並保留觀察窗。",
       todayAdjustCount,

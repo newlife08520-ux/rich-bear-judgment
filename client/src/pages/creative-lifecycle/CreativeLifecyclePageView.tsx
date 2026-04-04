@@ -42,7 +42,7 @@ export function CreativeLifecyclePageView({ wb }: { wb: CreativeLifecycleWorkben
       <header className="flex flex-wrap items-center gap-3 p-4 border-b shrink-0">
         <SidebarTrigger />
         <div>
-          <h1 className="page-title">素材生命週期中心 1.0</h1>
+          <h1 className="page-title">素材生命週期</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             7 階段：待初審 → 待驗證 → 第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）→ 存活池 → 拉升池 → 死亡池 → 靈感池。
           </p>
@@ -116,7 +116,7 @@ export function CreativeLifecyclePageView({ wb }: { wb: CreativeLifecycleWorkben
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-medium truncate" title={i.name}>{i.name}</span>
                           <div className="flex items-center gap-1 shrink-0">
-                            {i.stage && <Badge variant="outline" className="text-[10px]">{i.stage}</Badge>}
+                            {i.stage && <Badge variant="outline" className="text-xs">{i.stage}</Badge>}
                             <LabelBadge label={i.label} />
                           </div>
                         </div>

@@ -18,7 +18,38 @@ import { Link } from "wouter";
 import { ExecutionLogDialog } from "@/components/ExecutionLogDialog";
 import { ExternalMetaDriftBanner } from "@/components/sync/ExternalMetaDriftBanner";
 import { Plus, Pencil, Send, Copy, History, Rocket, ClipboardList } from "lucide-react";
-import { audienceStrategyLabels, publishStatusLabels } from "@shared/schema";
+import { audienceStrategyLabels, type PublishStatus } from "@shared/schema";
+import { cn } from "@/lib/utils";
+
+function publishListStatusLabel(status: PublishStatus): string {
+  switch (status) {
+    case "draft":
+      return "草稿";
+    case "ready":
+      return "待發佈";
+    case "published":
+      return "已送出";
+    case "failed":
+      return "送出失敗";
+    default:
+      return status;
+  }
+}
+
+function publishListStatusBadgeClass(status: PublishStatus): string {
+  switch (status) {
+    case "draft":
+      return "bg-muted text-muted-foreground border-transparent font-normal";
+    case "ready":
+      return "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100 border-transparent font-normal";
+    case "published":
+      return "bg-emerald-600 text-white hover:bg-emerald-600 border-transparent font-normal";
+    case "failed":
+      return "bg-destructive/15 text-destructive border-destructive/50 font-normal";
+    default:
+      return "";
+  }
+}
 import { usePublishWorkbench } from "./usePublishWorkbench";
 import { PublishWizardDialog } from "./widgets/PublishWizardDialog";
 
@@ -35,6 +66,7 @@ export function PublishPageView({ wb }: { wb: ReturnType<typeof usePublishWorkbe
     openCopy,
     openCopyAsVariant,
     requestMetaPublishPreview,
+    guardCheck,
   } = wb;
 
   return (
@@ -46,6 +78,21 @@ export function PublishPageView({ wb }: { wb: ReturnType<typeof usePublishWorkbe
       <ExternalMetaDriftBanner surface="publish" />
       <div className="min-h-full p-4 page-container-fluid">
         <div className="max-w-5xl mx-auto flex flex-col gap-4">
+          {guardCheck?.metaWritesAllowed === false && (
+            <div
+              role="status"
+              className="rounded-lg border-2 border-amber-500/80 bg-amber-50 dark:bg-amber-950/50 px-4 py-4 text-sm shadow-sm"
+              data-testid="publish-meta-write-guard-banner"
+            >
+              <p className="font-semibold text-amber-950 dark:text-amber-50">🔒 Meta 投放功能未啟用</p>
+              <p className="text-muted-foreground mt-1.5 leading-relaxed">
+                草稿可建立與編輯，但無法送出至 Meta。需要管理員啟用 Meta 寫入權限。
+              </p>
+              {guardCheck?.message ? (
+                <p className="text-xs text-amber-900/80 dark:text-amber-100/80 mt-2">{guardCheck.message}</p>
+              ) : null}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Button onClick={openCreate}>
               <Plus className="w-4 h-4 mr-2" />
@@ -112,9 +159,14 @@ export function PublishPageView({ wb }: { wb: ReturnType<typeof usePublishWorkbe
                         {audienceStrategyLabels[d.audienceStrategy]}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">
-                          {publishStatusLabels[d.status]}
-                        </Badge>
+                        <div className="flex flex-col gap-1 items-start max-w-[240px]">
+                          <Badge variant="outline" className={cn("w-fit", publishListStatusBadgeClass(d.status))}>
+                            {publishListStatusLabel(d.status)}
+                          </Badge>
+                          {d.status === "failed" && d.lastExecutionSummary ? (
+                            <p className="text-xs text-destructive break-words leading-snug">{d.lastExecutionSummary}</p>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {formatDate(d.updatedAt)}
@@ -150,12 +202,16 @@ export function PublishPageView({ wb }: { wb: ReturnType<typeof usePublishWorkbe
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !guardCheck?.metaWritesAllowed}
                             onClick={() => void requestMetaPublishPreview(d.id)}
-                            title="經 execution 層：dry-run → 核准 → apply（Meta foundation）"
+                            title={
+                              guardCheck?.metaWritesAllowed
+                                ? "經 execution 層：dry-run → 核准 → apply（Meta foundation）"
+                                : (guardCheck?.message ?? "Meta 寫入未啟用")
+                            }
                           >
                             <Rocket className="w-4 h-4 mr-1" />
-                            送往 Meta（預覽）
+                            {guardCheck?.metaWritesAllowed ? "確認送出至 Meta（預覽）" : "Meta 寫入未啟用"}
                           </Button>
                         </div>
                       </TableCell>

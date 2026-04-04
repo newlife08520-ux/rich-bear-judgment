@@ -1,14 +1,36 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const dbFile = process.env.DATABASE_URL?.replace(/^file:/, "") ?? path.join(process.cwd(), ".data", "workbench.db");
-const dbPath = path.isAbsolute(dbFile) ? dbFile : path.resolve(process.cwd(), dbFile);
-const dir = path.dirname(dbPath);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
+/** 從專案根目錄 .env 載入變數（tsx 腳本／測試未經 prisma.config 時仍可用） */
+function loadDotenvFromProjectRoot(): void {
+  const envPath = path.join(process.cwd(), ".env");
+  if (!fs.existsSync(envPath)) return;
+  const raw = fs.readFileSync(envPath, "utf8");
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    process.env[key] = val;
+  }
 }
 
-const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+loadDotenvFromProjectRoot();
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required (PostgreSQL connection string). See .env.example and docs/DEPLOYMENT.md.");
+}
+
+const adapter = new PrismaPg(connectionString);
 export const prisma = new PrismaClient({ adapter });

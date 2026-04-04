@@ -4,6 +4,7 @@
  * 會強制將相對路徑改為絕對路徑（開頭補 /），避免請求變成 /assets/api/uploads/... 導致 404。
  */
 import { useState, useRef, useEffect } from "react";
+import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** 將 fileUrl/thumbnailUrl 轉成絕對 URL，路徑必須以 / 開頭（如 /api/uploads/...） */
@@ -20,7 +21,7 @@ export function AssetThumbnailImg({
   className,
 }: {
   versionId: string;
-  url: string;
+  url: string | null | undefined;
   className?: string;
 }) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -60,6 +61,19 @@ export function AssetThumbnailImg({
       }
     };
   }, [url, versionId]);
+
+  if (!url?.trim()) {
+    return (
+      <div
+        className={cn(
+          "w-[120px] h-[90px] bg-muted rounded flex items-center justify-center shrink-0",
+          className
+        )}
+      >
+        <ImageIcon className="w-6 h-6 text-muted-foreground" aria-hidden />
+      </div>
+    );
+  }
 
   if (failed) {
     return (

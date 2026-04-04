@@ -1,8 +1,3 @@
-/**
- * Batch 9.7 / 10.9：首頁統一指揮語 digest（與 COMMAND-LANGUAGE-MATRIX／引擎動詞對齊）。
- */
-
-/** Batch 10.9 v6：與 COMMAND-LANGUAGE-MATRIX 動詞對齊的極短籌碼（矩陣完整詞：救援、觀察、不碰、繼續收集證據 — 見 rules） */
 const DIGEST = [
   { key: "scale", label: "放大" },
   { key: "hold", label: "守住" },
@@ -17,7 +12,7 @@ export function HomepageCommandDigest() {
     <section data-testid="section-homepage-command-digest" aria-label="指揮語摘要">
       <div className="rounded-lg border border-dashed border-primary/35 bg-gradient-to-r from-primary/[0.06] to-transparent px-3 py-2.5 shadow-sm">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[10px] font-semibold text-muted-foreground shrink-0">指揮語</span>
+          <span className="text-xs font-semibold text-muted-foreground shrink-0">指揮語</span>
           <div className="flex flex-wrap gap-1.5" data-testid="block-homepage-command-digest-pills">
             {DIGEST.map((d) => (
               <span
@@ -29,10 +24,7 @@ export function HomepageCommandDigest() {
               </span>
             ))}
           </div>
-          <span className="text-[10px] text-muted-foreground hidden sm:inline">
-            口徑以「今日戰略指令」為準 ·{" "}
-            <span className="font-mono text-[9px]">docs/HOMEPAGE-COMMAND-DIGEST-RULES.md</span>
-          </span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">口徑以「今日戰略指令」為準。</span>
         </div>
       </div>
     </section>

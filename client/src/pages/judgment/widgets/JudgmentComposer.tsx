@@ -45,11 +45,11 @@ export function JudgmentComposer({
   const placeholder =
     selectedSubtype
       ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.placeholder ??
-        "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)")
-      : "輸入訊息或貼上網址、文案… (Enter 送出、Shift+Enter 換行)";
+        "輸入行銷問題、貼網址，或上傳素材（圖片/影片/PDF）… (Enter 送出、Shift+Enter 換行)")
+      : "輸入行銷問題、貼網址，或上傳素材（圖片/影片/PDF）… (Enter 送出、Shift+Enter 換行)";
 
   return (
-    <div className="sticky bottom-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 no-print">
+    <div className="sticky bottom-0 bg-background/95 backdrop-blur-md border-t border-border p-4 no-print">
       <div className="max-w-6xl mx-auto flex flex-col gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground shrink-0">工作流：</span>
@@ -66,7 +66,7 @@ export function JudgmentComposer({
               {workflowLabels[w]}
             </Button>
           ))}
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className="text-[11px] shrink-0 rounded-md">
             目前：{workflowLabels[workflow]}
           </Badge>
         </div>

@@ -31,7 +31,7 @@ type ScorecardItem = {
 
 function ScorecardTable({ items, nameToLabel, title }: { items: ScorecardItem[]; nameToLabel: (name: string) => string; title?: string }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {title && <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>}
       {items.map((item) => (
         <Card key={item.name}>

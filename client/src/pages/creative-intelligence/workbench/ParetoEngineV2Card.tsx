@@ -20,19 +20,17 @@ export function ParetoEngineV2Card(props: { engineV2: EngineV2 | undefined }) {
   return (
     <Card data-testid="ci-pareto-engine-v2">
       <CardHeader>
-        <CardTitle className="text-base">82／Pareto 主引擎 v2（跨層級）</CardTitle>
+        <CardTitle className="text-base">80／20 跨層級摘要</CardTitle>
       </CardHeader>
       <CardContent className="text-xs text-muted-foreground space-y-2">
-        <p>版本：{e.engineVersion ?? "—"}</p>
-        <p className="text-[11px] leading-relaxed">{e.legacyPrecedenceNote}</p>
         <p>
-          範圍層級：
-          {scopes.map((s) => `${s.level}(${s.items?.length ?? 0})`).join(" · ") || "—"}
+          分析範圍：
+          {scopes.map((s) => `${s.label || s.level}（${s.items?.length ?? 0}）`).join(" · ") || "—"}
         </p>
-        <p>主導贏家 hook：{(e.dominantWinningHooks ?? []).slice(0, 6).join("、") || "—"}</p>
+        <p>主導贏家方向：{(e.dominantWinningHooks ?? []).slice(0, 6).join("、") || "—"}</p>
         <p>主導落後型態：{(e.dominantFailurePatterns ?? []).slice(0, 6).join("、") || "—"}</p>
         <p className="text-foreground/80">
-          Canonical 貢獻前列：
+          貢獻前列：
           {(e.canonicalWorkbench?.topRevenueContributors ?? []).slice(0, 4).map((x) => x.label).join("、") || "—"}
         </p>
       </CardContent>

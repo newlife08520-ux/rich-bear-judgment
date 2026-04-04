@@ -6,16 +6,28 @@
 const DECREASE_PATTERNS = /降|減|停|止|止血|hold|stop|decrease|縮/i;
 const INCREASE_PATTERNS = /加碼|擴|增|提高|scale|increase|拉高/i;
 
+/** 移除否定語境後再做方向偵測 */
+function removeNegationContext(text: string): string {
+  return text
+    .replace(/不要\S{1,4}/g, "")
+    .replace(/不建議\S{1,6}/g, "")
+    .replace(/勿\S{1,3}/g, "")
+    .replace(/避免\S{1,4}/g, "")
+    .replace(/不必\S{1,3}/g, "")
+    .replace(/誤\S{1,2}/g, "")
+    .replace(/don'?t\s+\w+/gi, "");
+}
+
 function systemSuggestsDecrease(action: string, pct?: string | number): boolean {
-  const s = (action ?? "").trim();
+  const s = removeNegationContext((action ?? "").trim());
   if (DECREASE_PATTERNS.test(s)) return true;
-  if (typeof pct === "string" && /降|減|關閉/.test(pct)) return true;
+  if (typeof pct === "string" && /降|減|關閉/.test(removeNegationContext(pct))) return true;
   if (pct === "關閉") return true;
   return false;
 }
 
 function systemSuggestsIncrease(action: string): boolean {
-  const s = (action ?? "").trim();
+  const s = removeNegationContext((action ?? "").trim());
   return INCREASE_PATTERNS.test(s);
 }
 
@@ -26,12 +38,14 @@ function systemSuggestsHold(action: string): boolean {
 
 /** 檢測 AI 文案是否在建議加碼/擴量 */
 function aiSuggestsIncrease(aiText: string): boolean {
-  return INCREASE_PATTERNS.test(aiText ?? "");
+  const cleaned = removeNegationContext(aiText ?? "");
+  return INCREASE_PATTERNS.test(cleaned);
 }
 
 /** 檢測 AI 文案是否在建議降/停 */
 function aiSuggestsDecrease(aiText: string): boolean {
-  return DECREASE_PATTERNS.test(aiText ?? "");
+  const cleaned = removeNegationContext(aiText ?? "");
+  return DECREASE_PATTERNS.test(cleaned);
 }
 
 export interface AlignmentResult {

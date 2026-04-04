@@ -46,7 +46,7 @@ export function SettingsPromptStats({ text, label }: { text: string; label?: str
           </span>
         </span>
         {isOverThreshold && (
-          <Badge variant="secondary" className="text-[10px] text-amber-700 bg-amber-100 ml-1">
+          <Badge variant="secondary" className="text-xs text-amber-700 bg-amber-100 ml-1">
             <AlertTriangle className="w-3 h-3 mr-0.5" />
             偏長
           </Badge>

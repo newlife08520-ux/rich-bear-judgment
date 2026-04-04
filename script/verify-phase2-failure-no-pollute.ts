@@ -11,7 +11,7 @@ import { randomUUID } from "crypto";
 
 const TEST_USER = "phase2-failure-test-user";
 
-function main() {
+async function main() {
   const out: string[] = [];
   out.push("# 階段二：失敗不污染 latest 驗證");
   out.push("");
@@ -41,7 +41,7 @@ function main() {
     selectedAccountIds: [],
     selectedPropertyIds: [],
   };
-  storage.createRefreshJob(job);
+  await storage.createRefreshJob(job);
 
   process.env.FORCE_REFRESH_FAILURE_STAGE = "meta_fetch";
   runRefreshJob(jobId)
@@ -93,4 +93,4 @@ function main() {
     });
 }
 
-main();
+void main();

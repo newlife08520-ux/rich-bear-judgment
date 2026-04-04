@@ -18,7 +18,7 @@ export function BudgetRadarSection({ radar }: { radar: BudgetRadarDerived }) {
 
   return (
     <section data-testid="section-budget-radar">
-      <Card className="border-border/80">
+      <Card className="border-border/80 hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h2 className="text-base font-semibold text-foreground">預算雷達</h2>

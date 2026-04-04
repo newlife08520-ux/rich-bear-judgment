@@ -31,7 +31,7 @@ export function JudgmentHeader({
   const focusSlim = layoutMode === "focus";
 
   return (
-    <header className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-b border-gray-200 bg-white shrink-0 no-print">
+    <header className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-b border-border bg-background shrink-0 no-print">
       <SidebarTrigger data-testid="button-sidebar-toggle" />
       <Button
         variant="ghost"

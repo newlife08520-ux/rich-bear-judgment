@@ -2,6 +2,7 @@
  * Auth：bcrypt、rate limit、登入 session regenerate、logout clearCookie。
  */
 import type { Express, Request } from "express";
+import { z } from "zod";
 import { loginSchema } from "@shared/schema";
 import { storage } from "../storage";
 import { verifyPasswordAgainstUser, hashPassword } from "../auth/passwords";
@@ -68,6 +69,32 @@ export function registerAuthRoutes(
       return res.status(401).json({ message: "使用者不存在" });
     }
     const { password: _p, passwordHash: _h, ...safeUser } = user;
+    res.json(safeUser);
+  });
+
+  const patchMeSchema = z.object({
+    defaultProductScope: z.union([z.array(z.string().min(1)).max(200), z.null()]).optional(),
+  });
+
+  app.patch("/api/auth/me", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "未登入" });
+    }
+    const parsed = patchMeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "請求格式錯誤", errors: parsed.error.flatten() });
+    }
+    if (parsed.data.defaultProductScope === undefined) {
+      return res.status(400).json({ message: "無可更新欄位" });
+    }
+    const updated = await storage.updateUserDefaultProductScope(
+      req.session.userId,
+      parsed.data.defaultProductScope
+    );
+    if (!updated) {
+      return res.status(404).json({ message: "使用者不存在" });
+    }
+    const { password: _p, passwordHash: _h, ...safeUser } = updated;
     res.json(safeUser);
   });
 

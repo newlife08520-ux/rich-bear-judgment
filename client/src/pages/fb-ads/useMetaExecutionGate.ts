@@ -87,6 +87,30 @@ export function useMetaExecutionGate() {
     [toast]
   );
 
+  const requestDryRun = useCallback(
+    async (actionType: string, payload: Record<string, unknown>) => {
+      setExecBusy(true);
+      setExecConfirmError(null);
+      try {
+        const dr = await executionDryRun(actionType, payload);
+        setExecGate({
+          dryRunId: dr.dryRunId,
+          summary: dr.plan.summary,
+          steps: dr.plan.steps,
+        });
+        setExecGateOpen(true);
+      } catch (e) {
+        toast({
+          title: e instanceof Error ? e.message : "執行預覽失敗",
+          variant: "destructive",
+        });
+      } finally {
+        setExecBusy(false);
+      }
+    },
+    [toast]
+  );
+
   const requestBudgetUpdate = useCallback(
     async (payload: MetaBudgetPayload) => {
       const { campaignId, budgetDaily, budgetTotal } = payload;
@@ -154,6 +178,7 @@ export function useMetaExecutionGate() {
   return {
     requestPause,
     requestResume,
+    requestDryRun,
     requestBudgetUpdate,
     confirmMetaExecution,
     execGateOpen,

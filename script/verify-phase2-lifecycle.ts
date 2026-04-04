@@ -11,7 +11,7 @@ import { randomUUID } from "crypto";
 
 const TEST_USER = "phase2-lifecycle-test-user";
 
-function main() {
+async function main() {
   process.env.REFRESH_TEST_MODE = "fixture";
 
   const scopeKey = buildScopeKey(TEST_USER, [], [], "7");
@@ -36,7 +36,7 @@ function main() {
     selectedAccountIds: [],
     selectedPropertyIds: [],
   };
-  storage.createRefreshJob(job);
+  await storage.createRefreshJob(job);
 
   const before = storage.getRefreshJob(jobId);
   if (!before || before.status !== "pending") {
@@ -44,28 +44,27 @@ function main() {
     process.exit(1);
   }
 
-  runRefreshJob(jobId)
-    .then(() => {
-      const after = storage.getRefreshJob(jobId);
-      if (!after) {
-        console.error("未通過：執行後 job 遺失");
-        process.exit(1);
-      }
-      if (after.status !== "succeeded") {
-        console.error("未通過：fixture 模式應 succeeded，實際", after.status, after.errorStage, after.errorMessage);
-        process.exit(1);
-      }
-      if (!after.resultBatchKey) {
-        console.error("未通過：succeeded 時應有 resultBatchKey");
-        process.exit(1);
-      }
-      console.log("通過：lifecycle pending → running → succeeded，resultBatchKey=" + after.resultBatchKey);
-      process.exit(0);
-    })
-    .catch((e) => {
-      console.error("未通過：runRefreshJob 拋錯", e);
+  try {
+    await runRefreshJob(jobId);
+    const after = storage.getRefreshJob(jobId);
+    if (!after) {
+      console.error("未通過：執行後 job 遺失");
       process.exit(1);
-    });
+    }
+    if (after.status !== "succeeded") {
+      console.error("未通過：fixture 模式應 succeeded，實際", after.status, after.errorStage, after.errorMessage);
+      process.exit(1);
+    }
+    if (!after.resultBatchKey) {
+      console.error("未通過：succeeded 時應有 resultBatchKey");
+      process.exit(1);
+    }
+    console.log("通過：lifecycle pending → running → succeeded，resultBatchKey=" + after.resultBatchKey);
+    process.exit(0);
+  } catch (e) {
+    console.error("未通過：runRefreshJob 拋錯", e);
+    process.exit(1);
+  }
 }
 
-main();
+void main();

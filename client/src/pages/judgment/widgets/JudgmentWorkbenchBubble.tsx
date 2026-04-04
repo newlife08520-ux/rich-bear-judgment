@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { FileText, ListTodo, Loader2, ChevronDown, ChevronRight } from "lucide-react";
@@ -10,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { ChatMessage } from "@shared/schema";
 import type { JudgmentContext, ParsedJudgment, TaskCreateFromJudgmentPayload } from "../judgment-types";
+import { cn } from "@/lib/utils";
 import { DEFAULT_REVIEW_THRESHOLD, PROBLEM_TYPE_BADGES, CONFIDENCE_LABELS } from "../judgment-types";
 import { getParsedForMessage, buildTaskPayloadFromParsed } from "../judgment-formatters";
+import { ScoreBar } from "@/components/shared/ScoreBar";
 
 function SaveAsInitialVerdictBlock({
   parsed,
@@ -95,20 +98,40 @@ export function JudgmentWorkbenchBubble({
   onExportReport?: (msg: ChatMessage) => void;
   auditBlockId?: string;
 }) {
+  const [, setLocation] = useLocation();
   const ctx = judgmentContext ?? { sessionId: null, productName: null, creativeId: null, impactAmount: null };
   const parsed = getParsedForMessage(message);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const hasEvidence = parsed.evidence.trim().length > 0;
   const evidencePreview = parsed.evidence.trim().slice(0, 80) + (parsed.evidence.length > 80 ? "…" : "");
   const hasScore = typeof parsed.score === "number";
   const passed = hasScore && parsed.score! >= DEFAULT_REVIEW_THRESHOLD;
 
+  const detailMdParts: string[] = [];
+  if (parsed.reason?.trim()) detailMdParts.push(`### 詳細原因\n\n${parsed.reason.trim()}`);
+  if (parsed.suggestions?.trim()) detailMdParts.push(`### 具體建議\n\n${parsed.suggestions.trim()}`);
+  const fallbackBody =
+    !parsed.verdict?.trim() && !parsed.reason?.trim() && !parsed.suggestions?.trim() ? message.content.trim() : "";
+  const detailMarkdown = fallbackBody || detailMdParts.join("\n\n");
+  const hasDetailMarkdown = detailMarkdown.length > 0;
+
+  const structuredRec = (
+    message.structuredJudgment as { recommendation?: string } | undefined
+  )?.recommendation?.toLowerCase?.() ?? "";
+  const showPublishDraftCta =
+    structuredRec === "launch" ||
+    structuredRec === "scale" ||
+    /放量|擴量|加碼|上架投放|開啟投放|launch|scale/i.test(
+      `${parsed.verdict} ${parsed.actionFirst} ${parsed.suggestions ?? ""}`
+    );
+
   return (
     <div className="flex justify-start w-full max-w-4xl">
       <div className="w-full space-y-3">
-        <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
+        <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
           <CardContent className="p-4 space-y-3">
-            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 pb-3">
               {onExportReport && (
                 <Button
                   type="button"
@@ -136,6 +159,18 @@ export function JudgmentWorkbenchBubble({
                 </Button>
               )}
               <SaveAsInitialVerdictBlock parsed={parsed} hasScore={hasScore} passed={passed} />
+              {showPublishDraftCta && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setLocation("/publish")}
+                  data-testid="button-judgment-to-publish-draft"
+                >
+                  建立投放草稿 →
+                </Button>
+              )}
               {auditBlockId
                 ? hasScore
                   ? (
@@ -156,10 +191,18 @@ export function JudgmentWorkbenchBubble({
                   )
                 : null}
             </div>
+            {hasScore ? (
+              <div className="space-y-2">
+                <ScoreBar score={parsed.score!} />
+                <p className="text-xs text-muted-foreground">
+                  門檻 {DEFAULT_REVIEW_THRESHOLD} 分 · {passed ? "通過" : "未通過"}
+                </p>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">一句總判決</p>
-                <p className="text-base font-semibold text-gray-900 leading-snug">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">一句總判決</p>
+                <p className="text-sm font-semibold text-foreground leading-snug">
                   {parsed.verdict || "（無法自動擷取，請見下方詳細內容）"}
                 </p>
               </div>
@@ -180,31 +223,31 @@ export function JudgmentWorkbenchBubble({
               </div>
             </div>
             {parsed.actionFirst && (
-              <div className="border-t border-gray-100 pt-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">先做什麼</p>
-                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{parsed.actionFirst}</div>
+              <div className="border-t border-border/60 pt-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">先做什麼</p>
+                <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{parsed.actionFirst}</div>
               </div>
             )}
             {hasScore && (
               <div
                 id={auditBlockId}
-                className="border-t border-gray-200 pt-3 space-y-2 rounded-md bg-gray-50 p-3"
+                className="border-t border-border pt-3 space-y-2 rounded-md bg-muted/40 p-3"
               >
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">審核結果</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">審核結果</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                  <span className="text-gray-600">綜合分數</span>
+                  <span className="text-muted-foreground">綜合分數</span>
                   <span className="font-medium">{parsed.score}</span>
-                  <span className="text-gray-600">門檻分數</span>
+                  <span className="text-muted-foreground">門檻分數</span>
                   <span className="font-medium">{DEFAULT_REVIEW_THRESHOLD}</span>
-                  <span className="text-gray-600">結果</span>
+                  <span className="text-muted-foreground">結果</span>
                   <span className={passed ? "font-medium text-green-700" : "font-medium text-amber-700"}>
                     {passed ? "通過" : "未通過"}
                   </span>
                 </div>
                 {parsed.blockingReasons?.length ? (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-0.5">阻擋原因</p>
-                    <ul className="list-disc list-inside text-sm text-gray-800 space-y-0.5">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">阻擋原因</p>
+                    <ul className="list-disc list-inside text-sm text-foreground space-y-0.5">
                       {parsed.blockingReasons.map((r, i) => (
                         <li key={i}>{r}</li>
                       ))}
@@ -213,8 +256,8 @@ export function JudgmentWorkbenchBubble({
                 ) : null}
                 {parsed.pendingItems?.length ? (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-0.5">待辦／待補</p>
-                    <ul className="list-disc list-inside text-sm text-gray-800 space-y-0.5">
+                    <p className="text-xs font-medium text-muted-foreground mb-0.5">待辦／待補</p>
+                    <ul className="list-disc list-inside text-sm text-foreground space-y-0.5">
                       {parsed.pendingItems.map((p, i) => (
                         <li key={i}>{p}</li>
                       ))}
@@ -223,38 +266,31 @@ export function JudgmentWorkbenchBubble({
                 ) : null}
               </div>
             )}
-          </CardContent>
-        </Card>
-        {(parsed.reason || parsed.suggestions) && (
-          <Card className="bg-white border-gray-200 shadow-sm">
-            <CardContent className="p-4 space-y-3">
-              {parsed.reason && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">詳細原因</p>
+            {hasDetailMarkdown && (parsed.reason?.trim() || parsed.suggestions?.trim() || fallbackBody) ? (
+              <Collapsible open={detailOpen} onOpenChange={setDetailOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between px-0 text-muted-foreground">
+                    <span>查看完整分析</span>
+                    {detailOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
                   <div
-                    className="prose prose-gray max-w-none prose-sm text-gray-700 prose-p:my-1 prose-ul:my-1 prose-ol:my-1"
+                    className="prose prose-neutral dark:prose-invert max-w-none prose-sm text-foreground prose-p:my-1 prose-ul:my-1 prose-ol:my-1 pt-2 border-t border-border/60"
                     data-print-content={message.id}
                   >
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{parsed.reason}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailMarkdown}</ReactMarkdown>
                   </div>
-                </div>
-              )}
-              {parsed.suggestions && (
-                <div className={parsed.reason ? "border-t border-gray-100 pt-3" : ""}>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">具體建議</p>
-                  <div className="prose prose-gray max-w-none prose-sm text-gray-700 prose-p:my-1 prose-ul:my-1">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{parsed.suggestions}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                </CollapsibleContent>
+              </Collapsible>
+            ) : null}
+          </CardContent>
+        </Card>
         {!parsed.verdict && !parsed.reason && !parsed.suggestions && (
-          <Card className="bg-white border-gray-200 shadow-sm">
+          <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div
-                className="prose prose-gray max-w-none prose-sm text-gray-700 prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
+                className="prose prose-neutral dark:prose-invert max-w-none prose-sm text-foreground prose-p:my-2 prose-ul:my-2 prose-ol:my-2"
                 data-print-content={message.id}
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
@@ -264,23 +300,23 @@ export function JudgmentWorkbenchBubble({
         )}
         {hasEvidence && (
           <Collapsible open={evidenceOpen} onOpenChange={setEvidenceOpen}>
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow">
               <CollapsibleTrigger asChild>
-                <button className="w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-gray-50 transition-colors">
+                <button className="w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">證據與指標</span>
-                    <span className="text-xs text-gray-400">{evidencePreview}</span>
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">證據與指標</span>
+                    <span className="text-xs text-muted-foreground">{evidencePreview}</span>
                   </div>
                   {evidenceOpen ? (
-                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                   )}
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="pt-0 pb-4 border-t border-gray-100">
-                  <div className="prose prose-gray max-w-none prose-sm text-gray-600 prose-p:my-1 prose-table:my-2 mt-3">
+                <CardContent className="pt-0 pb-4 border-t border-border/60">
+                  <div className="prose prose-neutral dark:prose-invert max-w-none prose-sm text-muted-foreground prose-p:my-1 prose-table:my-2 mt-3">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{parsed.evidence}</ReactMarkdown>
                   </div>
                 </CardContent>

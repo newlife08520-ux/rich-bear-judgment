@@ -223,6 +223,17 @@ export function buildRealFbOverview(metrics: CampaignMetrics[]): FbAccountOvervi
   };
 }
 
+function inferProductFromCampaignName(campaignName: string): {
+  parsedProductName: string | null;
+  parseSource: "campaign_brackets" | "none";
+} {
+  const m = campaignName.match(/[【\[]([^】\]]{1,120})[】\]]/);
+  if (m?.[1]?.trim()) {
+    return { parsedProductName: m[1]!.trim(), parseSource: "campaign_brackets" };
+  }
+  return { parsedProductName: null, parseSource: "none" };
+}
+
 export function buildRealFbCreatives(metrics: CampaignMetrics[], search?: string): FbAdCreative[] {
   let filtered = metrics;
   if (search?.trim()) {
@@ -231,6 +242,7 @@ export function buildRealFbCreatives(metrics: CampaignMetrics[], search?: string
   }
 
   return filtered.map((m): FbAdCreative => {
+    const { parsedProductName, parseSource } = inferProductFromCampaignName(m.campaignName);
     const { aiLabel, aiComment, suggestedAction } = labelCampaign(m);
     const opportunityScore = m.scoring
       ? Math.round(m.scoring.scores.opportunity * 0.3)
@@ -278,6 +290,8 @@ export function buildRealFbCreatives(metrics: CampaignMetrics[], search?: string
       recommendationLevel: getRecommendationLevel(opportunityScore),
       suggestedAction,
       scoring: m.scoring,
+      parsedProductName,
+      parseSource,
     };
   }).sort((a, b) => b.spend - a.spend);
 }

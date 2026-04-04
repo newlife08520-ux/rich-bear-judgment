@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAppScope } from "@/hooks/use-app-scope";
 import { Link } from "wouter";
 
-/** 6.7-packaging：決策中心摘要帶入商品維度 Pareto（與 CI 同源 API） */
+/** 決策中心：商品維度 80／20 摘要 */
 export function ParetoSummaryCard() {
   const scope = useAppScope();
   const params = new URLSearchParams();
@@ -50,7 +50,7 @@ export function ParetoSummaryCard() {
   });
 
   return (
-    <Card data-testid="dashboard-pareto-summary">
+    <Card data-testid="dashboard-pareto-summary" className="hover:shadow-md transition-shadow">
       <CardHeader>
         <CardTitle className="text-base">80／20 摘要（商品）</CardTitle>
       </CardHeader>
@@ -63,11 +63,8 @@ export function ParetoSummaryCard() {
         {data && (
           <>
             <p>商品數：{data.productCount}</p>
-            {data.engineV2?.legacyPrecedenceNote ? (
-              <p className="text-[10px] leading-snug opacity-80">{data.engineV2.legacyPrecedenceNote}</p>
-            ) : null}
             <div className="text-xs space-y-1">
-              <p className="font-medium text-foreground">貢獻前段（摘 · v2 canonical）</p>
+              <p className="font-medium text-foreground">貢獻前段</p>
               {(
                 data.engineV2?.canonicalWorkbench?.topRevenueContributors ??
                 data.workbench?.topRevenueContributors ??
@@ -89,17 +86,14 @@ export function ParetoSummaryCard() {
               ))}
             </div>
             {cmd ? (
-              <div className="text-[10px] space-y-1 border-t pt-2 mt-2" data-testid="dashboard-pareto-command-layer">
-                <p className="font-medium text-foreground">指令層（少做／多做）</p>
+              <div className="text-xs space-y-1 border-t pt-2 mt-2" data-testid="dashboard-pareto-command-layer">
+                <p className="font-medium text-foreground">建議（少做／多做）</p>
                 <p>少做：{cmd.doLess?.expensiveMistakesToReduce?.[0] ?? "—"}</p>
                 <p>多做：{cmd.doMore?.expandCandidates?.[0] ?? "—"}</p>
-                {cmd.legacyVsEngine?.whenLegacyViewDiffers ? (
-                  <p className="opacity-80">{cmd.legacyVsEngine.whenLegacyViewDiffers}</p>
-                ) : null}
               </div>
             ) : null}
             <Link href="/creative-intelligence" className="text-xs text-primary underline">
-              至 Creative Intelligence 看完整模式與 Pareto
+              至創意智慧看完整分析
             </Link>
           </>
         )}

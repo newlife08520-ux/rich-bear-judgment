@@ -96,7 +96,7 @@ import {
 export function OperationalSummarySection({ data, isLoading }: { data?: FbAccountOverview; isLoading: boolean }) {
   if (isLoading) {
     return (
-      <Card data-testid="card-operational-summary">
+      <Card data-testid="card-operational-summary" className="hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <Skeleton className="w-32 h-5 mb-3" />
           <Skeleton className="w-full h-14 mb-5" />
@@ -153,7 +153,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
   ];
 
   return (
-    <Card data-testid="card-operational-summary">
+    <Card data-testid="card-operational-summary" className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
@@ -183,7 +183,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
               </p>
               <ChangeIndicator metricKey={m.key} change={m.kpi?.change ?? 0} />
               {m.kpi && (
-                <p className="text-[10px] text-muted-foreground mt-1 leading-snug line-clamp-2">{m.kpi.aiNote}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-snug line-clamp-2">{m.kpi.aiNote}</p>
               )}
             </div>
           ))}
@@ -212,7 +212,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
             <p className={`text-lg font-bold tracking-tight ${data.stopSuggestionCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`} data-testid="summary-value-dangerCount">
               {data.stopSuggestionCount}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
               {data.stopSuggestionCount > 0 ? `${data.stopSuggestionCount} 個活動需要立即關注` : "目前無高危活動"}
             </p>
           </div>
@@ -225,7 +225,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
             <p className={`text-lg font-bold tracking-tight ${data.highPotentialCount > 0 ? "text-blue-600 dark:text-blue-400" : "text-foreground"}`} data-testid="summary-value-scalableCount">
               {data.highPotentialCount}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
               {data.highPotentialCount > 0 ? `${data.highPotentialCount} 個活動有放大空間` : "目前無明顯擴量機會"}
             </p>
           </div>

@@ -84,7 +84,7 @@ export function AccountManagerAccountTable({
                 <TableCell className="px-2">
                   <Badge
                     variant="secondary"
-                    className={`text-[10px] px-1.5 py-0 ${metaAccountStatusColors[acct.accountStatus] || "bg-gray-100 text-gray-700"}`}
+                    className={`text-xs px-1.5 py-0 ${metaAccountStatusColors[acct.accountStatus] || "bg-gray-100 text-gray-700"}`}
                   >
                     {acct.accountStatusLabel}
                   </Badge>

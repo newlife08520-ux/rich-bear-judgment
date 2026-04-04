@@ -2,7 +2,9 @@ import type { Express, Request, Response, RequestHandler } from "express";
 import { storage } from "../storage";
 import { runCreativeReviewFromAssetVersion } from "../modules/creative-intelligence/creative-review-runner";
 import {
+  countCreativeReviewsForVersion,
   findLatestReviewForVersion,
+  listOlderReviewsForVersion,
   listTagsForReviewIds,
 } from "../modules/creative-intelligence/creative-review-prisma";
 import {
@@ -164,10 +166,19 @@ export function registerCreativeIntelligenceRoutes(app: Express, requireAuth: Re
     const userId = req.session.userId!;
     const assetVersionId = getParam(req, "assetVersionId");
     if (!assetVersionId) return res.status(400).json({ message: "缺少 assetVersionId" });
+    const totalReviewCount = await countCreativeReviewsForVersion(userId, assetVersionId);
     const review = await findLatestReviewForVersion(userId, assetVersionId);
-    if (!review) return res.json({ review: null, tags: [] });
+    if (!review) return res.json({ review: null, tags: [], totalReviewCount });
     const tags = await listTagsForReviewIds([review.id]);
-    res.json({ review, tags });
+    res.json({ review, tags, totalReviewCount });
+  });
+
+  app.get("/api/creative-reviews/by-version/:assetVersionId/history", requireAuth, async (req, res) => {
+    const userId = req.session.userId!;
+    const assetVersionId = getParam(req, "assetVersionId");
+    if (!assetVersionId) return res.status(400).json({ message: "缺少 assetVersionId" });
+    const items = await listOlderReviewsForVersion(userId, assetVersionId);
+    res.json({ items });
   });
 
   app.get("/api/creative-intelligence/patterns", requireAuth, async (req, res) => {

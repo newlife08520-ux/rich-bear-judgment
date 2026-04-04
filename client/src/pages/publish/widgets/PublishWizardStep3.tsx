@@ -25,6 +25,7 @@ import type { PublishWorkbench } from "../usePublishWorkbench";
 
 export function PublishWizardStep3({ wb }: { wb: PublishWorkbench }) {
   const {
+    guardCheck,
     form,
     setForm,
     metaPages,
@@ -45,6 +46,16 @@ export function PublishWizardStep3({ wb }: { wb: PublishWorkbench }) {
   } = wb;
   return (
 <>
+            {guardCheck?.metaWritesAllowed === false && (
+              <div
+                className="rounded-md border border-amber-500/60 bg-amber-50/90 dark:bg-amber-950/40 px-3 py-2 text-xs text-amber-950 dark:text-amber-50"
+                data-testid="publish-wizard-meta-guard-hint"
+              >
+                <span className="font-semibold">Meta 寫入未啟用</span>
+                <span className="text-muted-foreground dark:text-amber-100/80"> — 可先完成草稿並儲存；啟用後再由列表「確認送出至 Meta」。</span>
+                {guardCheck?.message ? <span className="block mt-1 text-amber-900/90 dark:text-amber-100/90">{guardCheck.message}</span> : null}
+              </div>
+            )}
             <Card>
               <CardContent className="pt-4">
                 <h3 className="font-medium mb-2">投放身分摘要（粉專／IG）</h3>

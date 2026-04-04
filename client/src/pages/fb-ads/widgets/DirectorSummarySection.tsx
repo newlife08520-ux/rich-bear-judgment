@@ -96,7 +96,7 @@ import {
 export function DirectorSummarySection({ data, isLoading }: { data?: FbAIDirectorSummary; isLoading: boolean }) {
   if (isLoading) {
     return (
-      <Card data-testid="card-director-summary">
+      <Card data-testid="card-director-summary" className="hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <Skeleton className="w-40 h-5 mb-4" />
           <Skeleton className="w-full h-16 mb-4" />
@@ -112,7 +112,7 @@ export function DirectorSummarySection({ data, isLoading }: { data?: FbAIDirecto
   if (!data) return null;
 
   return (
-    <Card data-testid="card-director-summary">
+    <Card data-testid="card-director-summary" className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-md bg-amber-50 dark:bg-amber-950 flex items-center justify-center shrink-0">

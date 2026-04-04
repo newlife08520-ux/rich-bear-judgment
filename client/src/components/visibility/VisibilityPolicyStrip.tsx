@@ -2,9 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import type { DormantGemCandidateItem } from "@/pages/dashboard/dashboard-types";
 
-/**
- * 0 spend／可見性政策：與 docs/DEFAULT-VISIBILITY-POLICY.md 一致，於 FB／CI／商品等面顯示。
- */
 export function VisibilityPolicyStrip({
   dormantGemCandidates = [],
   noDeliveryCount = 0,
@@ -28,14 +25,14 @@ export function VisibilityPolicyStrip({
     >
       <CardContent className="py-3 px-4 text-sm space-y-1">
         <p className="font-medium text-violet-900 dark:text-violet-100">
-          可見性政策（0 spend 分層）
+          可見性政策（零花費分層）
           {visibilityPolicyVersion ? (
-            <span className="ml-2 text-xs font-normal text-muted-foreground">v{visibilityPolicyVersion}</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground">版本 {visibilityPolicyVersion}</span>
           ) : null}
         </p>
         {dormantN > 0 && (
           <p className="text-muted-foreground">
-            沉睡贏家／休眠高潛 <strong className="text-foreground">{dormantN}</strong> 筆（主視窗 0 元、7／14 日視窗曾有花費＋品質訊號）— 不與「尚未投遞」混列。
+            沉睡贏家／休眠高潛 <strong className="text-foreground">{dormantN}</strong> 筆（主視窗零花費、近期曾有花費＋品質訊號）— 不與「尚未投遞」混列。
           </p>
         )}
         {(noDeliveryCount > 0 || underSampleCount > 0) && (
@@ -44,16 +41,15 @@ export function VisibilityPolicyStrip({
           </p>
         )}
         <p className="text-xs text-muted-foreground pt-1">
-          詳見 <span className="font-mono">docs/DEFAULT-VISIBILITY-POLICY.md</span>
           {surface === "dashboard" ? (
-            "；與本頁五區、資料健康區同源 GET /api/dashboard/action-center。"
+            "與本頁五大決策區、資料健康區使用同一資料來源。"
           ) : (
             <>
-              ；首頁「資料健康」與{" "}
+              首頁「資料健康」與{" "}
               <Link href="/" className="text-primary hover:underline">
                 今日決策中心
               </Link>{" "}
-              同源 action-center。
+              使用相同彙總邏輯。
             </>
           )}
         </p>

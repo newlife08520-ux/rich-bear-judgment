@@ -110,6 +110,13 @@ function computeHealthScore(c: CampaignMetrics, avg: AccountAvg): number {
   const sampleBonus = c.impressions >= 10000 ? 10 : c.impressions >= 5000 ? 7 : c.impressions >= 1000 ? 4 : 1;
   score += sampleBonus;
 
+  if (c.roas < 0.5) score = Math.min(score, 25);
+  else if (c.roas < 1.0) score = Math.min(score, 45);
+
+  if (avg.roas > 0 && avg.roas < 1.0) {
+    score = Math.round(score * 0.85);
+  }
+
   return clamp(Math.round(score));
 }
 
@@ -119,6 +126,7 @@ function computeUrgencyScore(c: CampaignMetrics, avg: AccountAvg): number {
   if (c.multiWindow) {
     const mw = c.multiWindow;
     let trendDown = 0;
+    let windowsWithData = 0;
     const windows: [WindowSnapshot, WindowSnapshot][] = [
       [mw.window1d, mw.prev1d],
       [mw.window3d, mw.prev3d],
@@ -126,10 +134,13 @@ function computeUrgencyScore(c: CampaignMetrics, avg: AccountAvg): number {
       [mw.window14d, mw.prev14d],
     ];
     for (const [curr, prev] of windows) {
+      if (curr.spend <= 0) continue;
+      windowsWithData++;
       if (prev.roas > 0 && curr.roas < prev.roas) trendDown++;
       if (prev.ctr > 0 && curr.ctr < prev.ctr) trendDown++;
     }
-    score += clamp((trendDown / 8) * 100 * 0.6, 0, 30);
+    const totalSignals = windowsWithData * 2;
+    score += totalSignals > 0 ? clamp((trendDown / totalSignals) * 100 * 0.6, 0, 30) : 0;
   } else {
     const roasChange = pctChange(c.roas, c.roasPrev);
     const ctrChange = pctChange(c.ctr, c.ctrPrev);

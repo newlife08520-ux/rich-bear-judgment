@@ -87,31 +87,30 @@ export default function CreativeIntelligencePage() {
       <header className="border-b p-4 flex items-center gap-3">
         <SidebarTrigger />
         <h1 className="page-title" data-testid="creative-intelligence-title">
-          Creative Intelligence
+          創意智慧
         </h1>
       </header>
-      <div className="p-4 md:p-6 space-y-4 page-container-fluid">
+      <div className="p-4 md:p-6 space-y-6 page-container-fluid">
         <Alert
           variant="default"
           className="border-muted bg-muted/30"
           data-testid="ci-statistical-disclosure"
         >
-          <AlertTitle className="text-sm">統計與歸因限制（常駐揭露）</AlertTitle>
+          <AlertTitle className="text-sm">歸因與資料說明</AlertTitle>
           <AlertDescription className="text-xs text-muted-foreground space-y-1">
             <p>
-              Creative Intelligence 之標籤／Pareto／實驗連結受 <strong>歸因延遲</strong>、
-              <strong>樣本量</strong> 與 <strong>跨平台 ID 對齊</strong> 影響；樣本稀疏時建議視為低信心，不宜當唯一真理。
+              注意：素材表現數據受歸因延遲影響，建議以 7 天以上數據為主要參考。
             </p>
             <p data-testid="ci-low-confidence-demotion-hint">
-              當模式 API 降級或後端回傳 degraded 時，下方高分卡與建議應降權解讀，並以實際投放批次與 execution 稽核交叉驗證。
+              若系統顯示分析降級，請將高分建議視為參考，並與實際投放結果交叉確認。
             </p>
             <p data-testid="ci-learning-phase-protected-hint" className="text-xs text-muted-foreground">
-              Meta 學習期／投放狀態異常時，系統會以 <code className="text-[10px]">learningPhaseProtected</code> 降權節奏敘事；請勿將 CI 高分解讀為可立即 pause／縮減預算的唯一依據。
+              Meta 學習期或投放狀態異常時，請勿僅憑單一指標立即大幅縮減預算。
             </p>
           </AlertDescription>
         </Alert>
-        <div data-testid="ci-command-surface-v6" className="space-y-3">
-          <div data-testid="ci-dormant-primary-workflow-v3" className="space-y-3">
+        <div data-testid="ci-command-surface-v6" className="space-y-6">
+          <div data-testid="ci-dormant-primary-workflow-v3" className="space-y-6">
             <DormantActionStrip data-testid="ci-dormant-primary-strip-v6">
               <DormantGemsWorkflowRibbon
                 surface="creative-intelligence"
@@ -142,7 +141,7 @@ export default function CreativeIntelligencePage() {
                 <div>
                   <p className="font-medium text-amber-900 dark:text-amber-100">模式 API 已降級（仍回 200）</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {String(data.degradedReason ?? "未知原因")} — 請確認資料庫 migration 與 Prisma schema 一致；下方為空架構以利繼續操作。
+                    {String(data.degradedReason ?? "未知原因")} — 請稍後重試或聯繫管理員；下方介面仍可瀏覽。
                   </p>
                 </div>
               </CardContent>
@@ -153,7 +152,7 @@ export default function CreativeIntelligencePage() {
               <CreativeIntelligenceStrategicCallout patterns={data} />
               <Card data-testid="ci-queue">
                 <CardHeader>
-                  <CardTitle className="text-base">審判佇列（背景工作）</CardTitle>
+                  <CardTitle className="text-base">審判進度</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-1">
                   {(() => {
@@ -169,18 +168,8 @@ export default function CreativeIntelligencePage() {
                       </p>
                     );
                   })()}
-                  <p className="text-xs">
-                    {(data as { attributionNote?: string }).attributionNote ??
-                      "Experiment link：僅 primary 且 active 承載主要 Meta 歸因。"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    商品 drilldown（JSON）：GET /api/creative-intelligence/product/{"{productName}"}
-                  </p>
                 </CardContent>
               </Card>
-              <p className="text-sm text-muted-foreground">
-                可加 <code className="text-xs bg-muted px-1 rounded">?syncSnapshots=1</code> 以目前 batch 同步 outcome 快照（需先有 experiment link）。
-              </p>
               <CreativeIntelligenceWorkbench
                 patterns={data}
                 paretoData={paretoData}
@@ -232,7 +221,7 @@ export default function CreativeIntelligencePage() {
         )}
         <Card data-testid="ci-card-pareto">
           <CardHeader>
-            <CardTitle className="text-base">80／20（商品維度 · 含 v2 主引擎）</CardTitle>
+            <CardTitle className="text-base">80／20（商品維度）</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             {paretoLoading && (
@@ -250,12 +239,9 @@ export default function CreativeIntelligencePage() {
                   尾段壓力（約 bottom 20%）：{paretoData.pareto.bottom20PctIds.slice(0, 8).join("、") || "—"}
                 </p>
                 <p className="text-xs">
-                  候選：hidden diamond {paretoData.pareto.hiddenDiamondCandidates.length} 個 · drag{" "}
+                  候選：隱鑽 {paretoData.pareto.hiddenDiamondCandidates.length} 個 · 待觀察{" "}
                   {paretoData.pareto.dragCandidates.length} 個
                 </p>
-                {paretoData.engineV2?.legacyPrecedenceNote ? (
-                  <p className="text-[11px] border-t pt-2 mt-2">{paretoData.engineV2.legacyPrecedenceNote}</p>
-                ) : null}
               </>
             )}
           </CardContent>

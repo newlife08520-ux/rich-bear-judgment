@@ -25,6 +25,8 @@ export interface FbProductRow {
   conversions: number;
 }
 
+export type StitchConfidence = "full" | "fb_only" | "ga4_only" | "no_match";
+
 /** 縫合後單一產品漏斗一列 */
 export interface ProductFunnelRow {
   productName: string;
@@ -37,6 +39,18 @@ export interface ProductFunnelRow {
   purchases: number;
   addToCartRate: number;
   purchaseRate: number;
+  stitchConfidence: StitchConfidence;
+  stitchNote?: string;
+}
+
+function ga4HasSignal(ga4: GA4Metrics | undefined): boolean {
+  if (!ga4) return false;
+  return (
+    ga4.sessions > 0 ||
+    ga4.addToCart > 0 ||
+    ga4.purchases > 0 ||
+    ga4.bounceRate > 0
+  );
 }
 
 /** 漏斗診斷警告 */
@@ -91,14 +105,31 @@ export function stitchFunnelData(
   ga4Rows: GA4Metrics[]
 ): ProductFunnelRow[] {
   const ga4ByProduct = new Map(ga4Rows.map((r) => [r.productName, r]));
-  return fbRows.map((fb) => {
+  const fbNames = new Set(fbRows.map((r) => r.productName));
+  const out: ProductFunnelRow[] = [];
+
+  for (const fb of fbRows) {
     const ga4 = ga4ByProduct.get(fb.productName);
+    const hasGa4 = ga4HasSignal(ga4);
     const sessions = ga4?.sessions ?? 0;
     const bounceRate = ga4?.bounceRate ?? 0;
     const addToCart = ga4?.addToCart ?? 0;
     const purchases = ga4?.purchases ?? 0;
     const ctr = fb.impressions > 0 ? (fb.clicks / fb.impressions) * 100 : 0;
-    return {
+
+    let stitchConfidence: StitchConfidence;
+    let stitchNote: string | undefined;
+    if (hasGa4) {
+      stitchConfidence = "full";
+    } else if (ga4) {
+      stitchConfidence = "fb_only";
+      stitchNote = "GA4 有列名但無有效工作階段／事件（請確認 UTM／命名）";
+    } else {
+      stitchConfidence = "fb_only";
+      stitchNote = "GA4 未匹配此商品（請確認 utm_campaign 與商品名一致）";
+    }
+
+    out.push({
       productName: fb.productName,
       spend: fb.spend,
       clicks: fb.clicks,
@@ -109,8 +140,31 @@ export function stitchFunnelData(
       purchases,
       addToCartRate: sessions > 0 ? addToCart / sessions : 0,
       purchaseRate: sessions > 0 ? purchases / sessions : 0,
-    };
-  });
+      stitchConfidence,
+      stitchNote,
+    });
+  }
+
+  for (const ga4 of ga4Rows) {
+    if (fbNames.has(ga4.productName)) continue;
+    if (!ga4HasSignal(ga4)) continue;
+    out.push({
+      productName: ga4.productName,
+      spend: 0,
+      clicks: 0,
+      ctr: 0,
+      sessions: ga4.sessions,
+      bounceRate: ga4.bounceRate,
+      addToCart: ga4.addToCart,
+      purchases: ga4.purchases,
+      addToCartRate: ga4.sessions > 0 ? ga4.addToCart / ga4.sessions : 0,
+      purchaseRate: ga4.sessions > 0 ? ga4.purchases / ga4.sessions : 0,
+      stitchConfidence: "ga4_only",
+      stitchNote: "FB 商品聚合無此名稱（請確認廣告命名／商品解析）",
+    });
+  }
+
+  return out;
 }
 
 /**

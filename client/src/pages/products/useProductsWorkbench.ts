@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ParetoResult } from "@shared/pareto-engine";
 import { useLocation } from "wouter";
 import { deriveProductRow, applySavedViewToProducts, type SavedViewId } from "@/lib/decision-workbench";
 import { useWorkbenchFilter, type SortKey } from "@/lib/workbench-filter-context";
 import { useEmployee } from "@/lib/employee-context";
 import { useAppScope } from "@/hooks/use-app-scope";
+import { useProductViewScope } from "@/hooks/use-product-view-scope";
 import { useToast } from "@/hooks/use-toast";
 import { getProductNameFromUrl } from "./products-formatters";
 import type { ProductBattleRow } from "./products-types";
@@ -24,13 +26,18 @@ export function useProductsWorkbench() {
   const [taskAction, setTaskAction] = useState("");
   const [taskReason, setTaskReason] = useState("");
 
+  const { mode: productViewMode, setMode: setProductViewMode, scopeProductsForApi } = useProductViewScope();
+  const effectiveScopeProducts =
+    scopeProductsForApi ??
+    (employee.assignedProducts?.length ? employee.assignedProducts : undefined);
+
   const params = useMemo(() => {
     const p = new URLSearchParams();
     if (scope.scopeKey) p.set("scope", scope.scopeKey);
-    if (employee.assignedProducts?.length) p.set("scopeProducts", employee.assignedProducts.join(","));
+    if (effectiveScopeProducts?.length) p.set("scopeProducts", effectiveScopeProducts.join(","));
     if (employee.assignedAccounts?.length) p.set("scopeAccountIds", employee.assignedAccounts.join(","));
     return p;
-  }, [scope.scopeKey, employee.assignedProducts, employee.assignedAccounts]);
+  }, [scope.scopeKey, effectiveScopeProducts, employee.assignedAccounts]);
 
   const { data: ownerMap = {} } = useQuery({
     queryKey: ["/api/workbench/owners"],
@@ -89,17 +96,94 @@ export function useProductsWorkbench() {
   });
   const goalPacingByProduct = goalPacingResp?.goalPacingByProduct ?? {};
 
-  const { data: actionData } = useQuery<ActionCenterData>({
+  const {
+    data: actionData,
+    isLoading: actionCenterLoading,
+    isError: actionCenterIsError,
+    error: actionCenterError,
+    refetch: refetchActionCenter,
+  } = useQuery<ActionCenterData>({
     queryKey: ["/api/dashboard/action-center", scope.scopeKey ?? "", confidenceParamsStr],
     queryFn: async () => {
       const q = confidenceParamsStr;
       const res = await fetch(q ? `/api/dashboard/action-center?${q}` : "/api/dashboard/action-center", {
         credentials: "include",
       });
-      if (!res.ok) return { productLevel: [], creativeLeaderboard: [], failureRatesByTag: {} };
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入決策資料（${res.status}）`);
+      }
       return res.json();
     },
   });
+
+  const { data: paretoPayload } = useQuery<{ pareto?: ParetoResult } | null>({
+    queryKey: ["/api/pareto/by-product", scope.scopeKey ?? "", confidenceParamsStr],
+    queryFn: async () => {
+      const q = confidenceParamsStr;
+      const url = q ? `/api/pareto/by-product?${q}` : "/api/pareto/by-product";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  const paretoMarkedIdSet = useMemo(() => {
+    const p = paretoPayload?.pareto;
+    if (!p) return null;
+    return new Set([
+      ...p.top20PctIds,
+      ...p.bottom20PctIds,
+      ...p.hiddenDiamondCandidates,
+      ...p.dragCandidates,
+    ]);
+  }, [paretoPayload]);
+
+  const paretoFlagsByProduct = useMemo(() => {
+    const p = paretoPayload?.pareto;
+    const m = new Map<string, { top20: boolean; hiddenDiamond: boolean; moneyPit: boolean }>();
+    if (!p) return m;
+    const top = new Set(p.top20PctIds);
+    const hd = new Set(p.hiddenDiamondCandidates);
+    const mp = new Set([...p.bottom20PctIds, ...p.dragCandidates]);
+    for (const id of new Set([...top, ...hd, ...mp])) {
+      m.set(id, { top20: top.has(id), hiddenDiamond: hd.has(id), moneyPit: mp.has(id) });
+    }
+    return m;
+  }, [paretoPayload]);
+
+  const getParetoFlagsForProduct = useCallback(
+    (productName: string) => paretoFlagsByProduct.get(productName),
+    [paretoFlagsByProduct]
+  );
+
+  const {
+    data: crossAccountPayload,
+    isLoading: crossAccountLoading,
+    isError: crossAccountIsError,
+    error: crossAccountError,
+    refetch: refetchCrossAccount,
+  } = useQuery<{
+    dataStatus?: string;
+  }>({
+    queryKey: ["/api/dashboard/cross-account-summary", scope.scopeKey ?? ""],
+    queryFn: async () => {
+      const url = scope.scopeKey
+        ? `/api/dashboard/cross-account-summary?scope=${encodeURIComponent(scope.scopeKey)}`
+        : "/api/dashboard/cross-account-summary";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入摘要（${res.status}）`);
+      }
+      return res.json();
+    },
+  });
+
+  const productsMainLoading = crossAccountLoading || actionCenterLoading;
+  const productsMainError = crossAccountIsError ? crossAccountError : actionCenterIsError ? actionCenterError : null;
+  const refetchProductsMain = () => {
+    void refetchCrossAccount();
+    void refetchActionCenter();
+  };
 
   const { data: confidenceData } = useQuery<{
     products: Array<{
@@ -229,6 +313,12 @@ export function useProductsWorkbench() {
 
   const filtered = useMemo(() => {
     let f = rows.filter((r) => r.spend >= (filter.minSpend || 0));
+    if (filter.paretoListMode === "needs_attention") {
+      f = f.filter((r) => r.productStatus !== "watch");
+    }
+    if (filter.paretoListMode === "pareto_marked" && paretoMarkedIdSet && paretoMarkedIdSet.size > 0) {
+      f = f.filter((r) => paretoMarkedIdSet.has(r.productName));
+    }
     if (filter.statusFilter.length > 0) {
       f = f.filter((r) => filter.statusFilter.includes(r.productStatus));
     }
@@ -320,6 +410,9 @@ export function useProductsWorkbench() {
 
   return {
     actionData,
+    productViewMode,
+    setProductViewMode,
+    dashboardDataStatus: crossAccountPayload?.dataStatus,
     goalPacingByProduct,
     scopeAccountIds,
     scopeProducts,
@@ -351,6 +444,10 @@ export function useProductsWorkbench() {
     updateOwner: (productName: string, field: "productOwnerId" | "mediaOwnerId" | "creativeOwnerId" | "taskStatus", value: string) => {
       patchOwner.mutate({ productName, patch: { [field]: value } });
     },
+    getParetoFlagsForProduct,
+    productsMainLoading,
+    productsMainError,
+    refetchProductsMain,
   };
 }
 

@@ -82,12 +82,12 @@ export function HistoryReportsTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <Badge variant="outline" className={`text-[10px] ${historyTypeColors[record.type]}`}>
+                      <Badge variant="outline" className={`text-xs ${historyTypeColors[record.type]}`}>
                         {judgmentTypeLabels[record.type]}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] ${recommendationColors[record.recommendation]}`}
+                        className={`text-xs ${recommendationColors[record.recommendation]}`}
                       >
                         {recommendationLabels[record.recommendation]}
                       </Badge>
@@ -106,7 +106,7 @@ export function HistoryReportsTab({
                         {formatHistoryDate(record.createdAt)}
                       </span>
                       {record.version > 1 && (
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className="text-xs">
                           v{record.version}
                         </Badge>
                       )}

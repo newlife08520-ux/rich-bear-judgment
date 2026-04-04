@@ -27,6 +27,7 @@ import {
   Target,
   StopCircle,
   Rocket,
+  ImageOff,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -94,6 +95,10 @@ import {
   type SortDir,
   type AccountFilter,
 } from "./shared";
+import type { ParetoResult } from "@shared/pareto-engine";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { StatusDot } from "@/components/shared/StatusDot";
+import { getActionStatus } from "@/components/shared/status-colors";
 
 function dormantRevivalScore(c: FbAdCreative, candidates: DormantGemCandidateItem[] | undefined): number {
   if (!candidates?.length) return 0;
@@ -109,17 +114,52 @@ function dormantRevivalScore(c: FbAdCreative, candidates: DormantGemCandidateIte
   return best;
 }
 
+function guessProductForPareto(c: FbAdCreative, productLevelNames: string[]): string | null {
+  const parsed = c.parsedProductName?.trim();
+  if (parsed) return parsed;
+  const blob = `${c.name} ${c.adName} ${c.campaign}`.toLowerCase();
+  let best: string | null = null;
+  let bestLen = 0;
+  for (const n of productLevelNames) {
+    const ln = n.toLowerCase();
+    if (ln && blob.includes(ln) && n.length > bestLen) {
+      best = n;
+      bestLen = n.length;
+    }
+  }
+  return best;
+}
+
+function paretoBadgesForCreative(
+  c: FbAdCreative,
+  pareto: ParetoResult | undefined | null,
+  productLevelNames: string[]
+): { top20: boolean; hiddenDiamond: boolean; moneyPit: boolean } {
+  if (!pareto) return { top20: false, hiddenDiamond: false, moneyPit: false };
+  const id = guessProductForPareto(c, productLevelNames);
+  if (!id) return { top20: false, hiddenDiamond: false, moneyPit: false };
+  return {
+    top20: pareto.top20PctIds.includes(id),
+    hiddenDiamond: pareto.hiddenDiamondCandidates.includes(id),
+    moneyPit: pareto.bottom20PctIds.includes(id) || pareto.dragCandidates.includes(id),
+  };
+}
+
 export function CreativeTable({
   creatives,
   isLoading,
   onViewDetail,
   dormantGemCandidates,
+  pareto,
+  productLevelNames = [],
 }: {
   creatives?: FbAdCreative[];
   isLoading: boolean;
   onViewDetail: (c: FbAdCreative) => void;
   /** Batch 12.4：與 action-center 同批沉睡候選，供主表排序／標記 */
   dormantGemCandidates?: DormantGemCandidateItem[];
+  pareto?: ParetoResult | null;
+  productLevelNames?: string[];
 }) {
   const dormant = dormantGemCandidates ?? [];
   const [sortField, setSortField] = useState<SortField>("dormant_revival");
@@ -187,55 +227,108 @@ export function CreativeTable({
   return (
     <div data-testid="fbads-creative-table-dormant-v6">
     <div className="table-scroll-container" data-testid="fbads-creative-table-dormant-v4">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pb-2 text-xs text-muted-foreground" data-testid="creative-table-sort-toolbar">
+      <span className="font-medium text-foreground">排序：</span>
+      <SortButton field="dormant_revival" label="沉睡" />
+      <SortButton field="roas" label="ROAS" />
+      <SortButton field="spend" label="花費" />
+      <SortButton field="ctr" label="CTR" />
+      <SortButton field="frequency" label="頻率" />
+      <SortButton field="judgmentScore" label="判決" />
+      <SortButton field="opportunityScore" label="機會" />
+    </div>
     <Table data-testid="table-creatives">
       <TableHeader>
         <TableRow>
           <TableHead className="w-8"></TableHead>
-          <TableHead className="min-w-[180px]">素材名稱</TableHead>
+          <TableHead className="min-w-[200px]">素材／指標</TableHead>
           <TableHead>
             <SortButton field="dormant_revival" label="沉睡" />
           </TableHead>
-          <TableHead><SortButton field="roas" label="ROAS" /></TableHead>
-          <TableHead><SortButton field="spend" label="花費" /></TableHead>
-          <TableHead><SortButton field="ctr" label="CTR" /></TableHead>
           <TableHead><SortButton field="judgmentScore" label="判決" /></TableHead>
           <TableHead>建議等級</TableHead>
           <TableHead>AI 標籤</TableHead>
-          <TableHead><SortButton field="frequency" label="頻率" /></TableHead>
           <TableHead><SortButton field="opportunityScore" label="機會" /></TableHead>
           <TableHead>活動 / 廣告組</TableHead>
           <TableHead>狀態</TableHead>
+          <TableHead className="w-[140px]">操作</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sorted.map((c) => {
           const isExpanded = expandedRows.has(c.id);
           const dScore = dormantRevivalScore(c, dormant);
+          const pb = paretoBadgesForCreative(c, pareto ?? null, productLevelNames);
           return (
             <Fragment key={c.id}>
               <TableRow
-                className="cursor-pointer"
+                className="cursor-pointer border-b border-border/50 hover:bg-muted/30 transition-colors"
                 onClick={() => toggleRow(c.id)}
                 data-testid={`row-creative-${c.id}`}
               >
-                <TableCell className="w-8">
+                <TableCell className="w-8 align-top">
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   )}
                 </TableCell>
-                <TableCell className="font-medium min-w-[180px]" data-testid={`text-creative-name-${c.id}`}>
-                  <span className="line-clamp-2 text-sm leading-snug">{c.name}</span>
+                <TableCell className="font-medium min-w-[200px] align-top" data-testid={`text-creative-name-${c.id}`}>
+                  <div className="flex items-start gap-3 min-w-0 px-1 py-0.5">
+                    {!c.thumbnail?.trim() ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="shrink-0 pt-1 text-muted-foreground cursor-help" tabIndex={0}>
+                            <ImageOff className="w-4 h-4" aria-hidden />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs text-xs">
+                          無縮圖
+                          {c.parsedProductName ? ` · 名稱解析：${c.parsedProductName}` : ""}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : null}
+                    <StatusDot semantic={getActionStatus(c.suggestedAction || c.aiLabel || "")} size="md" className="mt-1.5" />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <span className="line-clamp-2 text-sm font-medium leading-snug block">{c.name}</span>
+                      <p
+                        className="text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis"
+                        title={`花費 ${formatCurrency(c.spend)} · ROAS ${c.roas.toFixed(2)} · CTR ${Number(c.ctr).toFixed(2)}% · Freq ${c.frequency.toFixed(1)}`}
+                        data-testid={`text-creative-metrics-${c.id}`}
+                      >
+                        花費 {formatCurrency(c.spend)} · ROAS {c.roas.toFixed(2)} · CTR {Number(c.ctr).toFixed(2)}% · Freq{" "}
+                        {c.frequency.toFixed(1)}
+                      </p>
+                      {pb.top20 || pb.hiddenDiamond || pb.moneyPit ? (
+                        <div className="flex flex-wrap gap-1" data-testid={`pareto-badges-${c.id}`}>
+                          {pb.top20 ? (
+                            <Badge variant="outline" className="text-[11px] h-5 border-emerald-500/50 text-emerald-800">
+                              Top20
+                            </Badge>
+                          ) : null}
+                          {pb.hiddenDiamond ? (
+                            <Badge variant="outline" className="text-[11px] h-5 border-violet-500/50 text-violet-800">
+                              Hidden
+                            </Badge>
+                          ) : null}
+                          {pb.moneyPit ? (
+                            <Badge variant="outline" className="text-[11px] h-5 border-rose-500/50 text-rose-800">
+                              Pit
+                            </Badge>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="text-xs align-top">
                   {dScore > 0 ? (
                     <div className="space-y-1" data-testid={`dormant-revival-cell-${c.id}`}>
-                      <Badge variant="outline" className="text-[10px] border-violet-400 text-violet-800 dark:text-violet-200">
+                      <Badge variant="outline" className="text-xs border-violet-400 text-violet-800 dark:text-violet-200">
                         沉睡 {dScore}
                       </Badge>
                       <div>
-                        <Button variant="ghost" className="h-auto p-0 text-[10px] text-primary underline-offset-2 hover:underline" asChild data-testid={`dormant-revival-action-${c.id}`}>
+                        <Button variant="ghost" className="h-auto p-0 text-xs text-primary underline-offset-2 hover:underline" asChild data-testid={`dormant-revival-action-${c.id}`}>
                           <Link href="/tasks">復活任務</Link>
                         </Button>
                       </div>
@@ -244,36 +337,59 @@ export function CreativeTable({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="font-semibold" data-testid={`text-roas-${c.id}`}>{c.roas.toFixed(2)}</TableCell>
-                <TableCell data-testid={`text-spend-${c.id}`}>{formatCurrency(c.spend)}</TableCell>
-                <TableCell>{Number(c.ctr).toFixed(2)}%</TableCell>
-                <TableCell data-testid={`text-judgment-score-${c.id}`}>
+                <TableCell className="align-top" data-testid={`text-judgment-score-${c.id}`}>
                   <ScoreBadge score={c.judgmentScore} label="" />
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <RecommendationLevelBadge level={c.recommendationLevel} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <Badge variant="secondary" className={`${getAiLabelClass(c.aiLabel)} border-transparent`} data-testid={`badge-label-${c.id}`}>
                     {c.aiLabel}
                   </Badge>
                 </TableCell>
-                <TableCell>{c.frequency.toFixed(1)}</TableCell>
-                <TableCell data-testid={`text-opportunity-score-${c.id}`}>
+                <TableCell className="align-top" data-testid={`text-opportunity-score-${c.id}`}>
                   <OpportunityScoreBadge score={c.opportunityScore} />
                 </TableCell>
-                <TableCell className="text-muted-foreground text-xs max-w-[160px]">
+                <TableCell className="text-muted-foreground text-xs max-w-[160px] align-top">
                   <span className="line-clamp-2">{c.campaign} / {c.adSet}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <Badge variant="secondary" className={`${statusColors[c.status] || ""} border-transparent`} data-testid={`badge-status-${c.id}`}>
                     {statusLabels[c.status] || c.status}
                   </Badge>
                 </TableCell>
+                <TableCell className="align-top" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    {c.suggestedAction?.trim() ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-7 text-xs rounded-lg w-full truncate"
+                        title={c.suggestedAction}
+                        onClick={() => onViewDetail(c)}
+                        data-testid={`button-suggested-action-${c.id}`}
+                      >
+                        {c.suggestedAction}
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs rounded-lg w-full"
+                      onClick={() => onViewDetail(c)}
+                      data-testid={`button-row-detail-${c.id}`}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      詳情
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
               {isExpanded && (
                 <TableRow key={`${c.id}-expanded`}>
-                  <TableCell colSpan={13} className="bg-muted/30">
+                  <TableCell colSpan={10} className="bg-muted/30">
                     <div className="p-3 space-y-2" data-testid={`expanded-creative-${c.id}`}>
                       <p className="text-sm leading-relaxed">{c.aiComment}</p>
                       <div className="flex items-center gap-3 flex-wrap">
@@ -302,7 +418,7 @@ export function CreativeTable({
         })}
         {sorted.length === 0 && (
           <TableRow>
-            <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
+            <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
               沒有符合條件的素材
             </TableCell>
           </TableRow>

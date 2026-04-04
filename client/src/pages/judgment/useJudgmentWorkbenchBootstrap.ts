@@ -28,7 +28,13 @@ export function useJudgmentWorkbenchBootstrap(
     (decisionCardsData as { goalPacingByProduct?: Record<string, import("@shared/goal-pacing-engine").GoalPacingEvaluation> })
       ?.goalPacingByProduct ?? {};
 
-  const { data: sessionsList = [], isLoading: loadingSessions } = useQuery({
+  const {
+    data: sessionsList = [],
+    isLoading: loadingSessions,
+    isError: sessionsLoadError,
+    error: sessionsLoadErr,
+    refetch: refetchSessions,
+  } = useQuery({
     queryKey: ["/api/review-sessions"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/review-sessions");
@@ -51,6 +57,9 @@ export function useJudgmentWorkbenchBootstrap(
     goalPacingByProduct,
     sessionsList,
     loadingSessions,
+    sessionsLoadError,
+    sessionsLoadErr,
+    refetchSessions,
     fetchedSession,
     loadingSession,
   };

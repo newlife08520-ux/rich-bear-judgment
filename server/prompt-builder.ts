@@ -138,6 +138,30 @@ export function buildContentJudgmentUserPrompt(
   if (input.text) lines.push(`\n## 待審判內容\n${input.text}`);
   if (input.notes) lines.push(`\n## 補充說明\n${input.notes}`);
 
+  if (contentType === "video") {
+    lines.push(`\n## 行銷影片審查重點`);
+    lines.push(`你正在審查一支行銷影片，系統已自動擷取關鍵幀。`);
+    lines.push(`請特別注意：`);
+    lines.push(`1. 前 3 秒鉤子（第一張幀）是否能抓住注意力`);
+    lines.push(`2. 畫面上的文字疊加（字卡、標語、價格）— 請讀出來並評估效果`);
+    lines.push(`3. 中段是否有產品展示或使用情境`);
+    lines.push(`4. 結尾是否有明確 CTA`);
+    lines.push(`5. 整體節奏：畫面切換頻率是否適合短影音`);
+    lines.push(`如果某幀看不清楚，請如實說明，不要猜測。`);
+  }
+
+  if (contentType === "pdf") {
+    lines.push(`\n## PDF 審查重點`);
+    lines.push(`你正在審查一份行銷提案或企劃書（PDF）。`);
+    lines.push(`請特別注意：`);
+    lines.push(`1. 整體結構：痛點 → 解方 → 證據 → 行動 是否清晰`);
+    lines.push(`2. 文案品質：是否有說服力、語言精準度`);
+    lines.push(`3. 視覺設計：排版專業度、圖文比例`);
+    lines.push(`4. 數據使用：引用的數據是否支持論點`);
+    lines.push(`5. CTA 或下一步行動是否明確`);
+    lines.push(`如果 PDF 模糊或看不清楚，請如實說明。`);
+  }
+
   lines.push(`\n## 輸出要求`);
   lines.push(`請以 JSON 格式回傳，結構如下：`);
   lines.push(`\`\`\`json

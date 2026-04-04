@@ -10,11 +10,13 @@ import { formatPercent } from "../ga4-formatters";
 import type { Ga4Workbench } from "../useGa4Workbench";
 import { Ga4RankingTabContent } from "./Ga4RankingTabContent";
 import { Ga4CompareTabContent } from "./Ga4CompareTabContent";
+import { ProductFunnelStitchSection } from "./ProductFunnelStitchSection";
 
 export function Ga4MainTabs(w: Ga4Workbench) {
   const {
     activeTab, setActiveTab, segmentsLoading, funnelSegments, funnelDrillDown,
     expandedSegments, toggleSegment,
+    productFunnelStitch, productFunnelStitchLoading,
   } = w;
 
   return (
@@ -26,6 +28,10 @@ export function Ga4MainTabs(w: Ga4Workbench) {
       </TabsList>
 
       <TabsContent value="funnel">
+        <ProductFunnelStitchSection
+          rows={productFunnelStitch}
+          loading={!!productFunnelStitchLoading}
+        />
         {segmentsLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (

@@ -99,7 +99,7 @@ export function SettingsPreferencesCard({
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Sliders className="w-3.5 h-3.5" />
               進階調校
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-xs">
                 選填
               </Badge>
             </div>

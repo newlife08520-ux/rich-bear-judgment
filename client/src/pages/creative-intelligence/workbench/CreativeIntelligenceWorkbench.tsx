@@ -70,9 +70,9 @@ export function CreativeIntelligenceWorkbench(props: {
   });
 
   return (
-    <div className="space-y-4" data-testid="ci-workbench">
+    <div className="space-y-6" data-testid="ci-workbench">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-muted-foreground">商品篩選（標籤上下文）</span>
+        <span className="text-muted-foreground">商品篩選</span>
         <Select value={productFilter} onValueChange={setProductFilter}>
           <SelectTrigger className="w-[220px]" data-testid="ci-workbench-product-filter">
             <SelectValue placeholder="全部" />
@@ -97,10 +97,10 @@ export function CreativeIntelligenceWorkbench(props: {
           <TabsTrigger value="timeline">版本時間線</TabsTrigger>
           <TabsTrigger value="pareto">Pareto v2</TabsTrigger>
         </TabsList>
-        <TabsContent value="dormant" data-testid="ci-dormant-operational-v7" className="space-y-3">
+        <TabsContent value="dormant" data-testid="ci-dormant-operational-v7" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Dormant／復活（與首頁／商品／FB 同批 action-center）</CardTitle>
+              <CardTitle className="text-base">沉睡復活候選</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               {dormantSorted.length === 0 ? (
@@ -133,7 +133,7 @@ export function CreativeIntelligenceWorkbench(props: {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="tags" className="space-y-4">
+        <TabsContent value="tags" className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-2">
             <TagFamilyWorkbenchPanel
               tagFamilies={props.patterns?.tagFamilies}
@@ -187,7 +187,7 @@ export function CreativeIntelligenceWorkbench(props: {
                   ))}
                 </div>
                 <div>
-                  <p className="font-medium mb-1">hidden-diamond motifs</p>
+                  <p className="font-medium mb-1">隱鑽主題</p>
                   {(perf.hiddenDiamondMotifs ?? []).slice(0, 6).map((x) => (
                     <div key={x.tag}>
                       {x.tag}：{x.count}
@@ -201,25 +201,18 @@ export function CreativeIntelligenceWorkbench(props: {
         <TabsContent value="timeline">
           <Card data-testid="ci-version-timeline">
             <CardHeader>
-              <CardTitle className="text-base">版本時間線（API）</CardTitle>
+              <CardTitle className="text-base">版本時間線</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground space-y-2">
-              <p>
-                請以 <code className="text-xs bg-muted px-1 rounded">GET /api/creative-intelligence/version/{"{assetVersionId}"}</code>{" "}
-                取得 review／snapshot／link 合併之 <code>versionTimeline</code> 與{" "}
-                <code>attribution</code>（why winning／losing、信心、歧義說明）。
-              </p>
-              <p className="text-xs">
-                頁面層級時間線將以多版本輪詢為重載；營運單版本 drilldown 建議自素材頁或後續深連結開啟。
-              </p>
+              <p>單一素材版本可從「素材中心」開啟，檢視審判紀錄、成效快照與歸因說明。</p>
+              <p className="text-xs">此處為總覽；若需細節請至對應素材頁查看。</p>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="pareto">
           <ParetoEngineV2Card engineV2={props.paretoData?.engineV2} />
           <p className="text-xs text-muted-foreground mt-2" data-testid="ci-pareto-command-layer-hint">
-            商品數（batch）：{props.paretoData?.productCount ?? "—"} · 共用營運層：{" "}
-            <code className="bg-muted px-1 rounded">GET /api/pareto/command-layer</code>（7.6）
+            納入分析之商品數：{props.paretoData?.productCount ?? "—"}
           </p>
         </TabsContent>
       </Tabs>

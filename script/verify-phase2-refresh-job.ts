@@ -17,7 +17,7 @@ function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function main() {
+async function main() {
   const out: string[] = [];
   out.push("# 階段二 Refresh Job 驗證結果");
   out.push("");
@@ -51,7 +51,7 @@ function main() {
 
   // (1) 建立 job、可查詢、持久化到檔案
   try {
-    storage.createRefreshJob(job);
+    await storage.createRefreshJob(job);
     const got = storage.getRefreshJob(jobId);
     if (!got) {
       out.push("- **未通過**：createRefreshJob 後 getRefreshJob 取得 null。");
@@ -80,7 +80,7 @@ function main() {
     } else {
       out.push("- **通過**：同 scope 去重鎖有效，getRunningJobByScopeKey(scopeKey) 回傳該 job。");
     }
-    storage.updateRefreshJob(jobId, { status: "running", startedAt: new Date().toISOString() });
+    await storage.updateRefreshJob(jobId, { status: "running", startedAt: new Date().toISOString() });
     const stillRunning = storage.getRunningJobByScopeKey(scopeKey);
     if (!stillRunning || stillRunning.status !== "running") {
       out.push("- **未通過**：job 設為 running 後 getRunningJobByScopeKey 應仍回傳該 job。");
@@ -138,4 +138,4 @@ function main() {
   console.log(out.join("\n"));
 }
 
-main();
+void main();

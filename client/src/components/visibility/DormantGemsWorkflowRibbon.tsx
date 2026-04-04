@@ -28,16 +28,16 @@ export function DormantGemsWorkflowRibbon({
       </span>
       {top.map((c) => (
         <div key={c.campaignId} className="flex items-center gap-1.5 min-w-0 max-w-full">
-          <Badge variant="outline" className="text-[10px] font-mono shrink-0 tabular-nums">
+          <Badge variant="outline" className="text-xs font-mono shrink-0 tabular-nums">
             P{c.revivalPriorityScore ?? "—"}
           </Badge>
           <span className="text-xs font-medium truncate max-w-[220px]">{c.campaignName}</span>
-          <span className="text-[10px] text-muted-foreground truncate hidden sm:inline max-w-[120px]">{c.productName}</span>
+          <span className="text-xs text-muted-foreground truncate hidden sm:inline max-w-[120px]">{c.productName}</span>
         </div>
       ))}
       <Link
         href="/fb-ads"
-        className="text-[10px] text-primary ml-auto underline-offset-2 hover:underline shrink-0"
+        className="text-xs text-primary ml-auto underline-offset-2 hover:underline shrink-0"
         data-testid={`dormant-gems-workflow-ribbon-link-${surface}`}
       >
         至預算控制操作

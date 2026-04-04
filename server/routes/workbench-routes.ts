@@ -177,6 +177,7 @@ export function registerWorkbenchRoutes(app: Express, requireAuth: RequestHandle
         funnelWarnings: funnelWarnings || [],
         urgentStop,
         failureRatesByTag,
+        analysisWindowLabel: batch.dateRange?.label,
       },
       thresholdConfig as import("@shared/decision-cards-engine").ThresholdConfig | null
     );

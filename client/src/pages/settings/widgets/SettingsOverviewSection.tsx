@@ -2,8 +2,12 @@ import { Link } from "wouter";
 import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuth, canAccess } from "@/lib/auth";
 
 export function SettingsOverviewSection() {
+  const { user } = useAuth();
+  const r = user?.role;
+
   return (
     <>
       <Card className="mb-6">
@@ -12,48 +16,83 @@ export function SettingsOverviewSection() {
           <p className="text-xs text-muted-foreground mt-1">低頻設定與資料修正，非日常主流程</p>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/mapping">資料歸因修正</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/thresholds">門檻設定</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/profit-rules">獲利規則中心</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/prompts">角色視角 Overlay</Link>
-          </Button>
+          {canAccess(r, "/mapping") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/mapping">資料歸因修正</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/settings/thresholds") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/thresholds">門檻設定</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/settings/profit-rules") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/profit-rules">獲利規則中心</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/settings/prompts") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/prompts">角色視角 Overlay</Link>
+            </Button>
+          ) : null}
           <Button variant="outline" size="sm" asChild>
             <Link href="/settings/team">團隊權限</Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/history">判讀紀錄</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/fb-ads">預算控制</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/ga4">漏斗 / 站內證據</Link>
-          </Button>
+          {canAccess(r, "/history") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/history">判讀紀錄</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/fb-ads") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/fb-ads">預算控制</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/ga4") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/ga4">漏斗 / 站內證據</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/execution-history") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/execution-history">全域執行稽核</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/scorecard") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/scorecard">成功率成績單</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/creative-lifecycle") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/creative-lifecycle">素材生命週期</Link>
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base">AI 作戰設定</CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">門檻與 Prompt 版本化、發布與回滾</p>
+          <p className="text-xs text-muted-foreground mt-1">門檻與提示詞版本化、發布與回滾</p>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/thresholds">門檻設定</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/profit-rules">獲利規則中心</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/prompts">角色視角 Overlay</Link>
-          </Button>
+          {canAccess(r, "/settings/thresholds") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/thresholds">門檻設定</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/settings/profit-rules") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/profit-rules">獲利規則中心</Link>
+            </Button>
+          ) : null}
+          {canAccess(r, "/settings/prompts") ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/prompts">角色視角 Overlay</Link>
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 

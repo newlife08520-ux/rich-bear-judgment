@@ -5,10 +5,12 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
+    "seed": "tsx script/seed-default-users.ts",
     "build": "prisma generate && tsx script/build.ts",
     "start": "node script/start-production.mjs",
     "check": "tsc",
-    "db:push": "drizzle-kit push",
+    "test": "vitest run",
+    "test:engines": "vitest run tests/engines",
     "migrate:asset": "tsx script/migrate-asset-to-package-version.ts",
     "migrate:asset:dry": "tsx script/migrate-asset-to-package-version.ts --dry-run",
     "test:roi-funnel": "tsx script/roi-funnel-acceptance.ts",
@@ -140,7 +142,7 @@
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
-    "@prisma/adapter-better-sqlite3": "^7.4.2",
+    "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.4.2",
     "@radix-ui/react-accordion": "^1.2.4",
     "@radix-ui/react-alert-dialog": "^1.1.7",
@@ -179,8 +181,6 @@
     "cmdk": "^1.1.1",
     "connect-pg-simple": "^10.0.0",
     "date-fns": "^3.6.0",
-    "drizzle-orm": "^0.39.3",
-    "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.0.1",
     "express-session": "^1.18.1",
@@ -236,7 +236,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.1.0",
-    "drizzle-kit": "^0.31.8",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "prisma": "^7.4.2",
@@ -245,12 +244,8 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
-    "vite": "^7.3.0"
-  },
-  "overrides": {
-    "drizzle-kit": {
-      "@esbuild-kit/esm-loader": "npm:tsx@^4.20.4"
-    }
+    "vite": "^7.3.0",
+    "vitest": "^4.1.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

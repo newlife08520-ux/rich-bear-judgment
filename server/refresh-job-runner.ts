@@ -26,16 +26,16 @@ export async function runRefreshJob(jobId: string): Promise<void> {
   }
 
   const now = new Date().toISOString();
-  storage.updateRefreshJob(jobId, { status: "running", startedAt: now });
+  await storage.updateRefreshJob(jobId, { status: "running", startedAt: now });
   console.log(`[RefreshJob] started jobId=${jobId} scopeKey=${job.scopeKey}`);
 
   try {
-    const batch = await buildRefreshCandidateBatch(job, (step, message) => {
-      storage.updateRefreshJob(jobId, { progressStep: step, progressMessage: message });
+    const batch = await buildRefreshCandidateBatch(job, async (step, message) => {
+      await storage.updateRefreshJob(jobId, { progressStep: step, progressMessage: message });
     });
 
     try {
-      storage.saveBatch(job.userId, batch);
+      await storage.saveBatch(job.userId, batch);
       void persistMetaCampaignSnapshotsFromBatch(job.userId, batch).catch((e) =>
         console.warn("[RefreshJob] persistMetaCampaignSnapshotsFromBatch:", e)
       );
@@ -45,7 +45,7 @@ export async function runRefreshJob(jobId: string): Promise<void> {
       throw e;
     }
     const finishedAt = new Date().toISOString();
-    storage.updateRefreshJob(jobId, {
+    await storage.updateRefreshJob(jobId, {
       status: "succeeded",
       finishedAt,
       resultBatchKey: job.scopeKey,
@@ -66,7 +66,7 @@ export async function runRefreshJob(jobId: string): Promise<void> {
     const stage: RefreshJobErrorStage = err?.stage ?? "unknown";
     const message = err?.message ?? String(err);
     const finishedAt = new Date().toISOString();
-    storage.updateRefreshJob(jobId, {
+    await storage.updateRefreshJob(jobId, {
       status: "failed",
       finishedAt,
       errorStage: stage,

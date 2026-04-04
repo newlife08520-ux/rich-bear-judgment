@@ -31,7 +31,7 @@ export function StrategicDiagnosticsCollapsible({
         >
           <span className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            資料信任、範圍與政策（次層）
+            資料狀態
             {triggerHint ? (
               <span className="text-xs font-normal text-amber-700 dark:text-amber-300">· {triggerHint}</span>
             ) : null}

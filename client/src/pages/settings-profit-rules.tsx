@@ -87,7 +87,7 @@ export default function SettingsProfitRulesPage() {
           獲利規則中心
         </h1>
       </header>
-      <div className="flex-1 p-4 md:p-6 space-y-4">
+      <div className="flex-1 p-4 md:p-6 space-y-6">
         <Card className="bg-muted/30">
           <CardContent className="py-3 px-4 text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">公式</p>
@@ -110,7 +110,7 @@ export default function SettingsProfitRulesPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {products.map((productName) => {
             const r = rules[productName] ?? DEFAULT_RULE;
             const be = breakEvenRoas(r.costRatio);

@@ -363,3 +363,38 @@ export async function callGeminiCreativeAssetReview(
     return null;
   }
 }
+
+/** 多幀影片截圖審查：與單圖相同 JSON 結構 */
+export async function callGeminiVideoFrameReview(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  frames: Array<{ base64: string; timestampSec: number }>
+): Promise<CreativeAssetJudgmentPayload | null> {
+  if (frames.length === 0) return null;
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_MODEL || "gemini-3.1-pro-preview",
+      systemInstruction: systemPrompt,
+    });
+    const parts: GeminiPart[] = [
+      {
+        text:
+          userPrompt +
+          `\n\n以下是此影片的 ${frames.length} 張關鍵幀截圖（按時間順序）：`,
+      },
+    ];
+    for (const f of frames) {
+      parts.push({ text: `── ${f.timestampSec.toFixed(1)} 秒 ──` });
+      parts.push({ inlineData: { mimeType: "image/jpeg", data: f.base64 } });
+    }
+    const result = await model.generateContent({ contents: [{ role: "user", parts }] } as any);
+    const responseText = result.response.text();
+    console.log(`[Gemini] Video frame review (${responseText.length} chars)`);
+    return parseCreativeAssetJudgmentResponse(responseText);
+  } catch (e: any) {
+    console.error("[Gemini] Video frame review failed:", e?.message || e);
+    return null;
+  }
+}

@@ -37,7 +37,7 @@ function fail(stage: RefreshJobErrorStage, message: string): never {
   throw e;
 }
 
-export type PipelineProgress = (step: number, message: string) => void;
+export type PipelineProgress = (step: number, message: string) => void | Promise<void>;
 
 /**
  * 建置 refresh 候選 batch，不寫入 storage。失敗時拋出 { stage, message }。
@@ -56,9 +56,9 @@ export async function buildRefreshCandidateBatch(
   const settings = storage.getSettings(userId);
   const dateRange = resolveDateRange(datePreset, customStart, customEnd);
 
-  const progress = (step: number, msg: string) => {
+  const progress = async (step: number, msg: string) => {
     storage.setRefreshStatus(userId, { currentStep: msg, progress: step });
-    onProgress?.(step, msg);
+    await onProgress?.(step, msg);
   };
 
   const isFixtureMode = process.env.REFRESH_TEST_MODE === "fixture" || process.env.REFRESH_TEST_MODE === "mock";
@@ -70,7 +70,7 @@ export async function buildRefreshCandidateBatch(
 
   try {
     clearCampaignParseCache();
-    progress(10, "同步帳號...");
+    await progress(10, "同步帳號...");
     let syncedAccounts = storage.getSyncedAccounts(userId);
 
     if (!isFixtureMode && selectedAccountIds.length > 0) {
@@ -106,7 +106,7 @@ export async function buildRefreshCandidateBatch(
               }));
             if (newAccounts.length > 0) {
               syncedAccounts = [...syncedAccounts, ...newAccounts];
-              storage.saveSyncedAccounts(userId, syncedAccounts);
+              await storage.saveSyncedAccounts(userId, syncedAccounts);
             }
           }
         } catch (e) {
@@ -120,7 +120,7 @@ export async function buildRefreshCandidateBatch(
     if (selectedAccountIds.length > 0) metaAccounts = metaAccounts.filter((a: SyncedAccount) => selectedAccountIds.includes(a.accountId));
     if (selectedPropertyIds.length > 0) ga4Accounts = ga4Accounts.filter((a: SyncedAccount) => selectedPropertyIds.includes(a.accountId));
 
-    progress(20, "擷取 Meta 與 GA4 數據...");
+    await progress(20, "擷取 Meta 與 GA4 數據...");
     let metaResults: CampaignMetrics[];
     let ga4Results: GA4FunnelMetrics[];
     if (isFixtureMode) {
@@ -158,7 +158,7 @@ export async function buildRefreshCandidateBatch(
     let allCampaignMetrics = metaResults;
     const allGA4Metrics = ga4Results;
 
-    progress(40, "擷取多時間窗口數據...");
+    await progress(40, "擷取多時間窗口數據...");
     const accountGroupsForMW = new Map<string, CampaignMetrics[]>();
     for (const c of allCampaignMetrics) {
       if (!accountGroupsForMW.has(c.accountId)) accountGroupsForMW.set(c.accountId, []);
@@ -177,7 +177,7 @@ export async function buildRefreshCandidateBatch(
       }
     }
 
-    progress(50, "擷取 GA4 頁面數據...");
+    await progress(50, "擷取 GA4 頁面數據...");
     let allGA4PageMetrics: any[] = [];
     if (!isFixtureMode && process.env.GOOGLE_SERVICE_ACCOUNT_KEY && ga4Accounts.length > 0) {
       const pageResults = await mapWithConcurrency(ga4Accounts, REFRESH_FETCH_CONCURRENCY, (account: SyncedAccount) =>
@@ -189,7 +189,7 @@ export async function buildRefreshCandidateBatch(
       allGA4PageMetrics = pageResults.flat();
     }
 
-    progress(60, "計算三維評分與風險分析...");
+    await progress(60, "計算三維評分與風險分析...");
     try {
       const globalAvg = computeAccountAvg(allCampaignMetrics);
       let loopIdx = 0;
@@ -206,7 +206,7 @@ export async function buildRefreshCandidateBatch(
       fail("aggregation", (e as Error)?.message ?? String(e));
     }
 
-    progress(65, "執行異常檢測與分析...");
+    await progress(65, "執行異常檢測與分析...");
     const allAnomalies: any[] = [];
     const accountHealthScores: any[] = [];
     const accountGroups = new Map<string, CampaignMetrics[]>();
@@ -239,7 +239,7 @@ export async function buildRefreshCandidateBatch(
       }
     }
 
-    progress(70, "識別機會與風險...");
+    await progress(70, "識別機會與風險...");
     const globalAvg = computeAccountAvg(allCampaignMetrics);
     const riskyCampaigns = identifyRiskyCampaigns(allCampaignMetrics);
     const scaleOpportunities = riskyCampaigns.filter((r: any) => r.riskType === "low_spend_high_potential");
@@ -247,7 +247,7 @@ export async function buildRefreshCandidateBatch(
     const riskyCampaignIds = new Set(realRisks.map((r: any) => r.campaignId));
     const opportunities = classifyOpportunities(allCampaignMetrics, globalAvg, riskyCampaignIds);
 
-    progress(72, "計算 V2 評分與戰情板...");
+    await progress(72, "計算 V2 評分與戰情板...");
     if (allGA4PageMetrics.length > 0) {
       const siteAvg = {
         conversionRate: allGA4PageMetrics.reduce((s: number, p: any) => s + p.conversionRate, 0) / allGA4PageMetrics.length,
@@ -270,7 +270,7 @@ export async function buildRefreshCandidateBatch(
     }
     const boards = buildBoardSet(allCampaignMetrics, allGA4PageMetrics, accountHealthScores);
 
-    progress(80, "產生 AI 策略摘要...");
+    await progress(80, "產生 AI 策略摘要...");
     let summary: any;
     try {
       summary = await generateCrossAccountSummary(settings.aiApiKey || "", {
@@ -307,7 +307,7 @@ export async function buildRefreshCandidateBatch(
       generatedAt: new Date().toISOString(),
     };
 
-    progress(90, "預計算 action-center 與 scorecard...");
+    await progress(90, "預計算 action-center 與 scorecard...");
     try {
       const { buildActionCenterPayload } = await import("./build-action-center-payload");
       const { buildScorecardPayload } = await import("./build-scorecard-payload");

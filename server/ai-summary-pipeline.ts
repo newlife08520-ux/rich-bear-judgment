@@ -521,7 +521,7 @@ export async function generateCrossAccountSummary(
     }
 
     console.log(`[AISummary] Summary generated successfully by ${model}, batch=${batchId}`);
-    return baseSummary;
+    return { ...baseSummary, summarySource: "ai" as const };
   } catch (err: any) {
     console.error(`[AISummary] Gemini call failed:`, err.message);
     return buildDeterministicSummary(baseSummary, input);
@@ -676,5 +676,5 @@ function buildDeterministicSummary(
       .map(o => `[${o.typeLabel}] ${o.accountName} ${o.campaignName} — ROAS ${o.roas.toFixed(1)}，擴量潛力 ${o.estimatedScalePotential}/100`);
   }
 
-  return base;
+  return { ...base, summarySource: "deterministic" as const };
 }

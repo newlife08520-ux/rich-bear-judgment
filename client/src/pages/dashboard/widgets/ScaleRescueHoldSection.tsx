@@ -23,7 +23,7 @@ export function ScaleRescueHoldSection({
 
   return (
     <section data-testid="section-scale-rescue-hold" aria-label="戰略三桶">
-      <Card className="border-emerald-200/40 dark:border-emerald-900/40 bg-gradient-to-b from-emerald-50/30 to-transparent dark:from-emerald-950/10">
+      <Card className="border-emerald-200/40 dark:border-emerald-900/40 bg-gradient-to-b from-emerald-50/30 to-transparent dark:from-emerald-950/10 hover:shadow-md transition-shadow">
         <CardContent className="p-5 space-y-3">
           <div>
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">

@@ -74,7 +74,7 @@ export function TeamSettingsPageView({ wb }: { wb: TeamSettingsWorkbench }) {
             </Button>
           ))}
         </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {selected ? (
             <>
               <TeamCoverageCards coverageData={coverageData} employees={employees} />

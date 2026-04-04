@@ -1,7 +1,4 @@
-/**
- * 今日決策中心（首頁）。Batch2：僅保留 5 區主體，邏輯與 UI 已拆至 dashboard/*。
- * Scope 與範圍鍵：useAppScope（見 useDashboardDecisionCenter）；主資料來源：/api/dashboard/action-center。
- */
+/** 今日決策中心（首頁）；資料與邏輯見 dashboard/*。 */
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -27,6 +24,7 @@ import { formatTimestamp } from "./dashboard/dashboard-formatters";
 import {
   HomepageDataTruthSection,
   HomepageCommandPanelV12Chrome,
+  HomepageCommandMetrics,
   HomepageCommandDigest,
   TodayActionsSection,
   ProductProfitOverviewSection,
@@ -42,6 +40,18 @@ import { VisibilityPolicyStrip } from "@/components/visibility/VisibilityPolicyS
 import { DormantGemsSurfaceSection } from "@/components/visibility/DormantGemsSurfaceSection";
 import { CommandBand, TrustBand, SpotlightRail, DormantActionStrip } from "@/components/strategic-panel";
 import { ExternalMetaDriftBanner } from "@/components/sync/ExternalMetaDriftBanner";
+import { ProductScopeToggle } from "@/components/shared/ProductScopeToggle";
+import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { UserSettings } from "@shared/schema";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { PageQueryError } from "@/components/shared/PageQueryError";
+import { DashboardWelcomeEmpty } from "./dashboard/widgets/DashboardWelcomeEmpty";
+import { useMetaExecutionGate } from "@/pages/fb-ads/useMetaExecutionGate";
+import { useMetaPublishGuard } from "@/hooks/use-meta-publish-guard";
+import { createTodayActionExecutor } from "@/lib/run-today-action-execution";
+import { ExecutionGateDialog } from "@/components/ExecutionGateDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const { employee, employees, setEmployeeById } = useEmployee();
@@ -59,7 +69,21 @@ export default function DashboardPage() {
     summaryMessage,
     coverageNote,
     dataStatus,
+    productViewMode,
+    setProductViewMode,
+    dashboardLoading,
+    dashboardError,
+    refetchDashboard,
   } = useDashboardDecisionCenter();
+
+  const { data: settingsData, isLoading: settingsLoading } = useQuery<UserSettings | null>({
+    queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings", { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
 
   const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV === true;
   const scopeMismatch = actionData?.sourceMeta?.scopeKey != null && scope.scopeKey !== actionData.sourceMeta.scopeKey;
@@ -81,6 +105,40 @@ export default function DashboardPage() {
   const diagnosticsDefaultOpen = partialHomepage || scopeMismatch || batchWeak;
 
   const strategicTodayActions = derived.todayActions.filter((a) => a.type !== "規則缺失待補");
+
+  const { toast } = useToast();
+  const { data: guardData } = useMetaPublishGuard();
+  const metaGate = useMetaExecutionGate();
+  const runTodayExecution = useMemo(
+    () => createTodayActionExecutor(metaGate, toast),
+    [metaGate, toast]
+  );
+  const handleExecuteTodayRow = useCallback(
+    (row: (typeof strategicTodayActions)[number]) => {
+      void runTodayExecution(row);
+    },
+    [runTodayExecution]
+  );
+  const todayExecution = {
+    metaWritesAllowed: guardData?.metaWritesAllowed === true,
+    guardMessage: guardData?.metaWritesAllowed ? null : (guardData?.message ?? "Meta 寫入未啟用"),
+    busy: metaGate.execBusy,
+    onExecuteRow: handleExecuteTodayRow,
+  };
+
+  const showWelcomeEmpty =
+    dataStatus === "no_sync" ||
+    dataStatus === "synced_no_data" ||
+    (!actionData?.sourceMeta?.batchId &&
+      (actionData?.productLevel?.length ?? 0) === 0 &&
+      (actionData?.creativeLeaderboard?.length ?? 0) === 0);
+
+  const hasGeminiKey = Boolean(settingsData?.aiApiKey?.trim());
+  const hasMetaToken = Boolean(settingsData?.fbAccessToken?.trim());
+  const hasBatchData = Boolean(
+    actionData?.sourceMeta?.batchId &&
+      ((actionData?.productLevel?.length ?? 0) > 0 || (actionData?.creativeLeaderboard?.length ?? 0) > 0)
+  );
 
   return (
     <div className="flex flex-col min-h-full">
@@ -129,17 +187,44 @@ export default function DashboardPage() {
             <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             {isRefreshing ? (refreshStatusData?.currentStep || "更新中...") : "更新資料"}
           </Button>
+          <ProductScopeToggle mode={productViewMode} onModeChange={setProductViewMode} />
           <DateRangeSelector value={scope.dateDisplayValue} onChange={scope.handleDateChange} />
         </div>
       </header>
 
       <ExternalMetaDriftBanner surface="dashboard" />
 
+      {dashboardLoading ? (
+        <PageLoading />
+      ) : dashboardError ? (
+        <div className="p-4 md:p-6 page-container-fluid">
+          <PageQueryError
+            message={dashboardError instanceof Error ? dashboardError.message : "載入失敗"}
+            onRetry={refetchDashboard}
+          />
+        </div>
+      ) : showWelcomeEmpty ? (
+        settingsLoading ? (
+          <PageLoading />
+        ) : (
+          <DashboardWelcomeEmpty
+            hasGeminiKey={hasGeminiKey}
+            hasMetaToken={hasMetaToken}
+            hasBatchData={hasBatchData}
+          />
+        )
+      ) : (
       <div className="min-h-full p-4 md:p-6 space-y-6 page-container-fluid">
         <section className="space-y-6" aria-label="戰略指揮面板">
           <HomepageCommandPanelV12Chrome partialHomepage={partialHomepage}>
+            <HomepageCommandMetrics
+              totalSpend={derived.productOverview.totalSpend}
+              totalRevenue={derived.productOverview.totalRevenue}
+              weightedRoas={derived.productOverview.weightedRoas}
+              pendingCount={strategicTodayActions.length}
+            />
             <CommandBand data-testid="rail-homepage-top3-command-v12">
-              <TodayActionsSection todayActions={strategicTodayActions.slice(0, 3)} />
+              <TodayActionsSection todayActions={strategicTodayActions.slice(0, 3)} execution={todayExecution} />
             </CommandBand>
             {partialHomepage ? (
               <div
@@ -148,8 +233,7 @@ export default function DashboardPage() {
                 data-testid="banner-partial-first-screen-actionability-v12"
               >
                 <p>
-                  <strong>partial_data：</strong>
-                  仍可依「今日戰略指令」與下方「資料真相」行動；摘要層若晚到不阻擋數值決策。
+                  目前為<strong>部分資料</strong>：仍可依「今日戰略指令」與下方「資料狀態」行動；摘要若較晚出現，不阻擋數值決策。
                 </p>
                 <div
                   className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]"
@@ -158,24 +242,15 @@ export default function DashboardPage() {
                   <div className="rounded-md border border-emerald-400/50 bg-emerald-50/80 dark:bg-emerald-950/30 px-2.5 py-2">
                     <p className="font-semibold text-emerald-900 dark:text-emerald-100">此刻可用（主決策）</p>
                     <p className="text-muted-foreground mt-1">
-                      今日戰略指令、action-center 五區數值、加碼／救援焦點、沉睡復活名單（同批次／範圍鍵）。
+                      今日戰略指令、五大決策區數值、加碼／救援焦點、沉睡復活名單（同一資料範圍）。
                     </p>
                   </div>
                   <div className="rounded-md border border-amber-400/50 bg-amber-50/70 dark:bg-amber-950/25 px-2.5 py-2">
                     <p className="font-semibold text-amber-900 dark:text-amber-100">僅供參考／易變</p>
                     <p className="text-muted-foreground mt-1">
-                      跨帳摘要文案、Pareto／目標節奏敘事—晚到或弱化時以左欄數值為準。
+                      跨帳摘要與營運敘事—若與數字牴觸，以左欄數值為準。
                     </p>
                   </div>
-                </div>
-                <div
-                  className="rounded-md border border-sky-600/40 bg-white/80 dark:bg-sky-950/30 px-2.5 py-2 text-[11px]"
-                  data-testid="grid-partial-operational-implication-v12"
-                >
-                  <p className="font-semibold text-sky-950 dark:text-sky-100">partial 營運語意（必讀）</p>
-                  <p className="text-muted-foreground mt-1 leading-snug">
-                    摘要空窗不代表五區不可用：仍以 action-center 與沉睡桶下指令；跨帳敘事僅作 Reference，不阻塞放資／救援／復活排序。
-                  </p>
                 </div>
               </div>
             ) : null}
@@ -185,6 +260,7 @@ export default function DashboardPage() {
                 homepageDataTruth={homepageDataTruth}
                 hasDecisionSignals={hasDecisionSignals}
                 summaryMessage={summaryMessage}
+                summarySource={summaryData?.summary?.summarySource}
                 coverageNote={coverageNote}
                 partialHomepage={partialHomepage}
                 scopeMismatch={scopeMismatch}
@@ -249,7 +325,7 @@ export default function DashboardPage() {
           )}
           {dataStatus === "partial_data" && summaryMessage ? (
             <p className="text-xs text-muted-foreground px-1" data-testid="banner-homepage-partial-data">
-              partial_data 詳見上方「資料真相與覆蓋度」；此處為政策與範圍細節。
+              部分資料說明請見上方「資料狀態」；此處為政策與範圍細節。
             </p>
           ) : null}
           {batchWeak && (
@@ -285,15 +361,30 @@ export default function DashboardPage() {
             <p className="text-sm text-muted-foreground">
               完整報表請至「商品中心」「預算控制」「素材審判」查看。
             </p>
-            {actionData?.sourceMeta && (
-              <div className="text-[11px] text-muted-foreground border border-border/60 rounded-md px-3 py-2 bg-muted/20 font-mono">
-                batchId={actionData.sourceMeta.batchId ?? "—"} · scopeKey={actionData.sourceMeta.scopeKey ?? "—"} ·
-                campaignCountUsed={actionData.sourceMeta.campaignCountUsed}
-              </div>
-            )}
+            {actionData?.sourceMeta?.generatedAt ? (
+              <p className="text-xs text-muted-foreground">
+                資料彙整時間：{actionData.sourceMeta.generatedAt}
+                {actionData.sourceMeta.campaignCountUsed != null
+                  ? ` · 納入廣告組合數：${actionData.sourceMeta.campaignCountUsed}`
+                  : ""}
+              </p>
+            ) : null}
           </CollapsibleContent>
         </Collapsible>
       </div>
+      )}
+
+      <ExecutionGateDialog
+        open={metaGate.execGateOpen}
+        onOpenChange={metaGate.onExecGateOpenChange}
+        gate={metaGate.execGate}
+        onConfirm={metaGate.confirmMetaExecution}
+        confirming={metaGate.execGateConfirming}
+        error={metaGate.execConfirmError}
+        title="Meta 操作確認"
+        intro="請確認以下預覽步驟無誤後勾選並核准，系統將寫入 Meta。"
+        checkboxLabel="我已知悉並同意執行上述 Meta 操作"
+      />
     </div>
   );
 }

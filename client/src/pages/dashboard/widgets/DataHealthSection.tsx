@@ -38,7 +38,7 @@ export function DataHealthSection({ health }: { health: DataHealthDerived }) {
 
   return (
     <section data-testid="section-data-health">
-      <Card className="border-border/80 bg-muted/10">
+      <Card className="border-border/80 bg-muted/10 hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
             <Shield className="w-4 h-4 shrink-0" />

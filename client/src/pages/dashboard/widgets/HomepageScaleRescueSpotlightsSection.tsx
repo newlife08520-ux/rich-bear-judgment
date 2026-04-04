@@ -22,7 +22,7 @@ export function HomepageScaleRescueSpotlightsSection({
 
   return (
     <section data-testid="section-homepage-scale-rescue-spotlights" aria-label="今日放大與止血焦點">
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/[0.06] to-transparent shadow-sm">
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/[0.06] to-transparent shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-4 sm:p-5">
           <p className="text-xs font-semibold text-foreground mb-3">指揮焦點 · 放大與止血（精簡列；完整三桶見下方「營運細節」）</p>
           <div className="grid gap-4 md:grid-cols-2">
@@ -89,7 +89,7 @@ export function HomepageScaleRescueSpotlightsSection({
               )}
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             零花費診斷與「沉睡／暫停高潛」分桶—見{" "}
             <Link href="/fb-ads" className="text-primary underline-offset-2 hover:underline">
               預算控制

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { Label } from "@/components/ui/label";
+import { useWorkbenchFilter } from "@/lib/workbench-filter-context";
 import { Loader2, RefreshCw, Search, ListChecks, ClipboardList } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,18 +30,22 @@ import {
 } from "./widgets";
 import type { useFbAdsWorkbench } from "./useFbAdsWorkbench";
 import { useMetaExecutionGate } from "./useMetaExecutionGate";
-import { ParetoCommandLayerStrip } from "@/components/pareto/ParetoCommandLayerStrip";
 import { VisibilityPolicyStrip } from "@/components/visibility/VisibilityPolicyStrip";
 import { DormantGemsSurfaceSection } from "@/components/visibility/DormantGemsSurfaceSection";
 import { DormantGemsWorkflowRibbon } from "@/components/visibility/DormantGemsWorkflowRibbon";
 import { DormantActionStrip } from "@/components/strategic-panel";
 import { ExternalMetaDriftBanner } from "@/components/sync/ExternalMetaDriftBanner";
+import { DataTruthScopeBanner } from "@/components/data-truth/DataTruthScopeBanner";
+import { ProductScopeToggle } from "@/components/shared/ProductScopeToggle";
 import type { DormantGemCandidateItem } from "@/pages/dashboard/dashboard-types";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { PageQueryError } from "@/components/shared/PageQueryError";
 
 type Workbench = ReturnType<typeof useFbAdsWorkbench>;
 
 export function FbAdsPageView(w: Workbench) {
   const [execLogOpen, setExecLogOpen] = useState(false);
+  const { filter, setParetoListMode } = useWorkbenchFilter();
   const metaGate = useMetaExecutionGate();
   const {
     scope,
@@ -60,12 +66,26 @@ export function FbAdsPageView(w: Workbench) {
     creativesLoading,
     goalPacingByProduct,
     actionCenterData,
+    dashboardDataStatus,
+    productViewMode,
+    setProductViewMode,
+    paretoPayload,
+    fbMainLoading,
+    fbMainError,
+    refetchFbMain,
   } = w;
+
+  const noBatchData =
+    dashboardDataStatus === "no_sync" ||
+    dashboardDataStatus === "synced_no_data" ||
+    (!actionCenterData?.sourceMeta?.batchId &&
+      (actionCenterData?.productLevel?.length ?? 0) === 0 &&
+      (actionCenterData?.creativeLeaderboard?.length ?? 0) === 0);
 
   return (
     <div className="flex flex-col min-h-full">
       <header className="border-b shrink-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-5 md:p-8">
           <div className="flex items-center gap-3">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <h1 className="page-title" data-testid="text-page-title">
@@ -74,6 +94,7 @@ export function FbAdsPageView(w: Workbench) {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
+            <ProductScopeToggle mode={productViewMode} onModeChange={setProductViewMode} />
             <DateRangeSelector value={scope.dateDisplayValue} onChange={scope.handleDateChange} />
 
             <Button
@@ -119,20 +140,84 @@ export function FbAdsPageView(w: Workbench) {
           </div>
         </div>
 
-        <div className="px-4 pb-3 space-y-2">
+        <div className="px-5 md:px-8 pb-4 space-y-2">
           <AccountManagerPanel
             selectedAccountIds={scope.selectedAccountIds}
             onSelectionChange={scope.setSelectedAccounts}
           />
-          <ParetoCommandLayerStrip />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">清單視角</Label>
+              <div
+                className="inline-flex rounded-lg bg-muted/50 p-1 gap-1"
+                data-testid="select-fbads-pareto-list-mode"
+              >
+                <Button
+                  type="button"
+                  variant={filter.paretoListMode === "needs_attention" ? "default" : "ghost"}
+                  size="sm"
+                  className="rounded-md text-xs h-8 px-3"
+                  onClick={() => setParetoListMode("needs_attention")}
+                >
+                  需處理
+                </Button>
+                <Button
+                  type="button"
+                  variant={filter.paretoListMode === "pareto_marked" ? "default" : "ghost"}
+                  size="sm"
+                  className="rounded-md text-xs h-8 px-3"
+                  onClick={() => setParetoListMode("pareto_marked")}
+                >
+                  重點 Top 20%
+                </Button>
+                <Button
+                  type="button"
+                  variant={filter.paretoListMode === "all" ? "default" : "ghost"}
+                  size="sm"
+                  className="rounded-md text-xs h-8 px-3"
+                  onClick={() => setParetoListMode("all")}
+                >
+                  全部
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       <ExternalMetaDriftBanner surface="fb-ads" />
 
+      {fbMainLoading ? (
+        <PageLoading />
+      ) : fbMainError ? (
+        <div className="px-4 md:px-6 py-4 page-container-fluid">
+          <PageQueryError
+            message={fbMainError instanceof Error ? fbMainError.message : "載入失敗"}
+            onRetry={refetchFbMain}
+          />
+        </div>
+      ) : noBatchData ? (
+        <div className="px-4 md:px-6 py-8 page-container-fluid">
+          <Card>
+            <CardContent className="p-8 text-center space-y-4">
+              <p className="text-muted-foreground text-sm">
+                尚無廣告／商品資料。請先到設定頁連結 Meta 帳戶並同步資料。
+              </p>
+              <Button variant="default" size="sm" asChild>
+                <Link href="/settings">前往設定</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <>
+      <div className="px-4 pt-2">
+        <DataTruthScopeBanner dataStatus={dashboardDataStatus} />
+      </div>
+
       <FbAdsGoalPacingBanner goalPacingByProduct={goalPacingByProduct} />
 
-      <div className="px-4 md:px-6 pt-2 space-y-3" data-testid="fb-dormant-operational-v7">
+      <div className="px-4 md:px-6 pt-2 space-y-6" data-testid="fb-dormant-operational-v7">
         <div data-testid="fbads-dormant-primary-workflow-v3" className="space-y-2">
           <DormantActionStrip data-testid="fbads-dormant-primary-strip-v6">
             <DormantGemsWorkflowRibbon
@@ -158,7 +243,7 @@ export function FbAdsPageView(w: Workbench) {
         <OperationalSummarySection data={overview} isLoading={overviewLoading} />
 
         {!directorLoading && !directorSummary && (
-          <Card className="border-dashed border-primary/30 bg-primary/5">
+          <Card className="border-dashed border-primary/30 bg-primary/5 hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">預算控制 — 使用步驟</h3>
               <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
@@ -202,10 +287,10 @@ export function FbAdsPageView(w: Workbench) {
             </TabsTrigger>
           </TabsList>
           <div
-            className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground py-1"
+            className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground py-1"
             data-testid="fbads-dormant-tab-hints-v3"
           >
-            <span data-testid="fbads-dormant-hint-creatives">素材排行：沉睡復活價值與今日 action-center 同批排序。</span>
+            <span data-testid="fbads-dormant-hint-creatives">素材排行：沉睡復活價值與今日決策中心採相同排序邏輯。</span>
             <span data-testid="fbads-dormant-hint-structure">結構分析：先對齊 ribbon Top3，再下鑽帳戶結構。</span>
             <span data-testid="fbads-dormant-hint-budget">預算建議：高潛 dormant 與 budget 風險分開判讀。</span>
             <span data-testid="fbads-dormant-hint-alerts">警示：與沉睡捷徑並讀，不停留在單一 tab。</span>
@@ -218,6 +303,10 @@ export function FbAdsPageView(w: Workbench) {
                 isLoading={creativesLoading}
                 onViewDetail={(c) => setDetailCreative(c)}
                 dormantGemCandidates={(actionCenterData?.dormantGemCandidates ?? []) as DormantGemCandidateItem[]}
+                pareto={paretoPayload?.pareto}
+                productLevelNames={(actionCenterData?.productLevel ?? [])
+                  .map((p) => p.productName)
+                  .filter(Boolean) as string[]}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,6 +336,8 @@ export function FbAdsPageView(w: Workbench) {
           </TabsContent>
         </Tabs>
       </main>
+        </>
+      )}
 
       <CreativeDetailDialog
         creative={detailCreative}

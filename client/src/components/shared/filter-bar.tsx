@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SAVED_VIEW_LABELS, SAVED_VIEW_IDS, PRODUCT_STATUS, type SavedViewId } from "@/lib/decision-workbench";
-import { useWorkbenchFilter, type SortKey } from "@/lib/workbench-filter-context";
+import { useWorkbenchFilter, type SortKey, type ParetoListMode } from "@/lib/workbench-filter-context";
 import { useAppScope } from "@/hooks/use-app-scope";
 import { Filter, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -54,7 +54,17 @@ export function FilterBar({
   className = "",
 }: FilterBarProps) {
   const scope = useAppScope();
-  const { filter, setSavedView, setProductFilter, setOwnerFilter, setStatusFilter, setMinSpend, setSort, resetFilter } = useWorkbenchFilter();
+  const {
+    filter,
+    setSavedView,
+    setProductFilter,
+    setOwnerFilter,
+    setStatusFilter,
+    setMinSpend,
+    setSort,
+    setParetoListMode,
+    resetFilter,
+  } = useWorkbenchFilter();
 
   const toggleProduct = (id: string) => {
     const next = filter.productIds.includes(id)
@@ -79,6 +89,23 @@ export function FilterBar({
       <div className="flex items-center gap-2">
         <Label className="text-xs text-muted-foreground whitespace-nowrap">日期</Label>
         <DateRangeSelector value={scope.dateDisplayValue} onChange={scope.handleDateChange} />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Label className="text-xs text-muted-foreground whitespace-nowrap">清單視角</Label>
+        <Select
+          value={filter.paretoListMode ?? "needs_attention"}
+          onValueChange={(v) => setParetoListMode(v as ParetoListMode)}
+        >
+          <SelectTrigger className="w-[148px]" data-testid="select-pareto-list-mode">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="needs_attention">需處理（預設）</SelectItem>
+            <SelectItem value="pareto_marked">Pareto 標記</SelectItem>
+            <SelectItem value="all">全部商品</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {showProductFilter && productOptions.length > 0 && (

@@ -10,6 +10,7 @@ export function normalizeDashboardDataStatus(
   if (raw === "has_data" || raw === "partial_data" || raw === "no_data" || raw === "no_sync") {
     return raw;
   }
+  if (raw === "synced_no_data") return "no_data";
   if (raw === "partial_decision") return "partial_data";
   return null;
 }

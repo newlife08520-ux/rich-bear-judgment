@@ -3,7 +3,65 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+}
+
+enum LinkLifecycleState {
+  active
+  soft_inactive
+  superseded
+}
+
+model User {
+  id                  String   @id
+  username            String   @unique
+  passwordHash        String
+  role                String   @default("user")
+  displayName         String   @default("")
+  /** JSON array of product names; null = no restriction from user profile */
+  defaultProductScope String?
+  createdAt           DateTime @default(now())
+}
+
+model UserSettingsRecord {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  settingsJson String   @default("{}")
+  updatedAt    DateTime @updatedAt
+}
+
+model ReviewSessionRecord {
+  id          String   @id
+  userId      String
+  sessionJson String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model MemAnalysisBatch {
+  storageKey String   @id
+  userId     String
+  batchJson  String
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MemRefreshJob {
+  jobId     String   @id
+  userId    String
+  jobJson   String
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MemSyncedAccounts {
+  userId       String   @id
+  accountsJson String   @default("[]")
+  updatedAt    DateTime @updatedAt
 }
 
 model WorkbenchOwner {
@@ -217,7 +275,7 @@ model CreativeExperimentLink {
   /** 例如 primary_only | shared | historical */
   attributionMode String?
   /** 7.3：active | soft_inactive | superseded */
-  linkLifecycleState String @default("active")
+  linkLifecycleState LinkLifecycleState @default(active)
 
   @@unique([userId, publishDraftId, assetVersionId])
   @@index([assetVersionId])

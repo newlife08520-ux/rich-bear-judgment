@@ -68,6 +68,33 @@ export async function findLatestReviewForVersion(userId: string, assetVersionId:
   });
 }
 
+export async function countCreativeReviewsForVersion(userId: string, assetVersionId: string) {
+  return prisma.creativeReviewRecord.count({ where: { userId, assetVersionId } });
+}
+
+/** 比最新一筆更舊的審查紀錄（供「歷史審查」展開） */
+export async function listOlderReviewsForVersion(
+  userId: string,
+  assetVersionId: string,
+  take = 50
+) {
+  return prisma.creativeReviewRecord.findMany({
+    where: { userId, assetVersionId },
+    orderBy: { createdAt: "desc" },
+    skip: 1,
+    take,
+    select: {
+      id: true,
+      createdAt: true,
+      reviewStatus: true,
+      summary: true,
+      nextAction: true,
+      score: true,
+      problemType: true,
+    },
+  });
+}
+
 export async function listTagsForReviewIds(ids: string[]) {
   if (ids.length === 0) return [];
   return prisma.creativePatternTag.findMany({

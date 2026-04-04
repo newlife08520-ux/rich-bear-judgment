@@ -13,6 +13,9 @@ export type SortKey =
   /** 與 dormant_priority 同權重（revivalPriorityScore）；別名供文件／verify 對齊 */
   | "revival_priority";
 
+/** 清單 Pareto／優先級視角：與 CI /api/pareto/by-product 的 product id（商品名）對齊 */
+export type ParetoListMode = "all" | "needs_attention" | "pareto_marked";
+
 export interface WorkbenchFilterState {
   savedViewId: SavedViewId | "";
   productIds: string[];
@@ -22,6 +25,8 @@ export interface WorkbenchFilterState {
   minSpend: number;
   sortBy: SortKey;
   sortDesc: boolean;
+  /** 預設「需處理」：排除純觀察桶；pareto_marked 僅顯示落在 Pareto 標記集合的商品／對應素材列 */
+  paretoListMode: ParetoListMode;
 }
 
 const STORAGE_KEY = "workbench-filter";
@@ -35,6 +40,7 @@ const defaultState: WorkbenchFilterState = {
   minSpend: 0,
   sortBy: "dormant_priority",
   sortDesc: true,
+  paretoListMode: "needs_attention",
 };
 
 function load(): WorkbenchFilterState {
@@ -63,6 +69,7 @@ const WorkbenchFilterContext = createContext<{
   setPriorityFilter: (priorities: string[]) => void;
   setMinSpend: (v: number) => void;
   setSort: (by: SortKey, desc?: boolean) => void;
+  setParetoListMode: (mode: ParetoListMode) => void;
   resetFilter: () => void;
 } | null>(null);
 
@@ -123,6 +130,13 @@ export function WorkbenchFilterProvider({ children }: { children: React.ReactNod
     [filter, persist]
   );
 
+  const setParetoListMode = useCallback(
+    (paretoListMode: ParetoListMode) => {
+      persist({ ...filter, paretoListMode });
+    },
+    [filter, persist]
+  );
+
   const resetFilter = useCallback(() => {
     persist(defaultState);
   }, [persist]);
@@ -138,6 +152,7 @@ export function WorkbenchFilterProvider({ children }: { children: React.ReactNod
         setPriorityFilter,
         setMinSpend,
         setSort,
+        setParetoListMode,
         resetFilter,
       }}
     >

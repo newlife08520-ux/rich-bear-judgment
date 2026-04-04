@@ -38,12 +38,12 @@ export function JudgmentEmptyState({
 
   return (
     <div className="py-8">
-      <p className="text-lg font-semibold text-center text-gray-900 mb-1">
+      <p className="text-lg font-semibold text-center text-foreground mb-1">
         {selectedSubtype
           ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.emptyTitle ?? "裁決入口")
           : "裁決入口 — 拿判決，不是純聊天"}
       </p>
-      <p className="text-sm text-center text-gray-600 mb-4">
+      <p className="text-sm text-center text-muted-foreground mb-4">
         {selectedSubtype
           ? (EMPTY_ENTRIES.find((e) => e.id === selectedSubtype)?.emptySubtitle ?? "選擇類型或輸入問題")
           : "選擇「我要做什麼」與類型，總監會給出可執行的裁決與建議"}

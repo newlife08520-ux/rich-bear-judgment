@@ -68,7 +68,7 @@ export default function CreativesPage() {
         </h1>
       </header>
 
-      <div className="flex-1 p-4 md:p-6 space-y-4">
+      <div className="flex-1 p-4 md:p-6 space-y-6">
         <p className="text-sm text-muted-foreground">每張卡回答：屬於哪個商品、幫還是拖、是否黑馬、是否疲乏、值不值得延伸、給投手一句話、給設計一句話。</p>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -93,7 +93,7 @@ export default function CreativesPage() {
                     <span className="font-medium text-foreground truncate">{c.materialStrategy}</span>
                     <span className="text-xs text-muted-foreground truncate max-w-[140px]" title={c.headlineSnippet}>{c.headlineSnippet}</span>
                     {c.evidenceLevel && EVIDENCE_LABELS[c.evidenceLevel] && (
-                      <Badge variant="outline" className="text-[10px] font-normal">{EVIDENCE_LABELS[c.evidenceLevel]}</Badge>
+                      <Badge variant="outline" className="text-xs font-normal">{EVIDENCE_LABELS[c.evidenceLevel]}</Badge>
                     )}
                   </div>
                   <div className="grid gap-1.5 text-sm">

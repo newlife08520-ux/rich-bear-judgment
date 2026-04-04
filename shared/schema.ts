@@ -692,6 +692,9 @@ export interface FbAdCreative {
   opportunityBreakdown?: OpportunityBreakdown;
   estimatedImpact?: string;
   scoring?: ScoringResult;
+  /** 由活動／廣告名稱括號等規則擷取，供 UI 與 Pareto 對齊；非權威歸因 */
+  parsedProductName?: string | null;
+  parseSource?: "campaign_brackets" | "none";
 }
 
 export interface FbKPICard {
@@ -1392,6 +1395,8 @@ export interface ProblemDiagnosis {
 }
 
 export interface CrossAccountSummary {
+  /** 跨帳摘要來源：AI 生成或規則式填字（無 API key / 失敗時為 deterministic） */
+  summarySource?: "ai" | "deterministic";
   executiveSummary: string;
   topPriorityAccounts: AccountHealthScore[];
   urgentActions: { order: number; action: string; reason: string; impact: string; accountName: string }[];

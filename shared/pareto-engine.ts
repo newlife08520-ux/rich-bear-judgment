@@ -20,6 +20,12 @@ export interface ParetoResult {
   dragCandidates: string[];
 }
 
+export interface ParetoOptions {
+  hiddenDiamondMaxSpend?: number;
+  hiddenDiamondMinRoas?: number;
+  dragMaxRoas?: number;
+}
+
 function profitLike(it: ParetoItem): number {
   if (it.profit != null && Number.isFinite(it.profit)) return it.profit;
   if (it.score != null && Number.isFinite(it.score)) return it.score;
@@ -36,7 +42,10 @@ function slicePct<T>(arr: T[], pct: number): T[] {
   return arr.slice(0, n);
 }
 
-export function computePareto(items: ParetoItem[]): ParetoResult {
+export function computePareto(items: ParetoItem[], options?: ParetoOptions): ParetoResult {
+  const hdMaxSpend = options?.hiddenDiamondMaxSpend ?? 200;
+  const hdMinRoas = options?.hiddenDiamondMinRoas ?? 2.2;
+  const dragMaxRoas = options?.dragMaxRoas ?? 0.9;
   if (items.length === 0) {
     return {
       top20PctIds: [],
@@ -63,12 +72,17 @@ export function computePareto(items: ParetoItem[]): ParetoResult {
   const bottom20 = slicePct(bottomSrc, 0.2);
 
   const hiddenDiamondCandidates = sorted
-    .filter((it) => it.spend < 200 && profitLike(it) > 0 && it.revenue / Math.max(it.spend, 1) >= 2.2)
+    .filter(
+      (it) =>
+        it.spend < hdMaxSpend &&
+        profitLike(it) > 0 &&
+        it.revenue / Math.max(it.spend, 1) >= hdMinRoas
+    )
     .map((it) => it.id)
     .slice(0, 20);
 
   const dragCandidates = bottom20
-    .filter((it) => profitLike(it) < 0 || roasLike(it) < 0.9)
+    .filter((it) => profitLike(it) < 0 || roasLike(it) < dragMaxRoas)
     .map((it) => it.id);
 
   return {

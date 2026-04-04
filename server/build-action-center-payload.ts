@@ -83,11 +83,6 @@ export async function buildActionCenterPayload(
   const productLevel: ProductLevelMetrics[] = aggregateByProductWithResolver(rows, resolveProduct, scopeProducts);
   const creativeRaw: CreativeTagLevelMetrics[] = aggregateByCreativeTagsWithResolver(rows, resolveProduct, scopeProducts);
   const totalRevenue = productLevel.reduce((s, p) => s + p.revenue, 0);
-  const seedHash = (s: string) => {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-    return Math.abs(h);
-  };
   const totalAccountSpend = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.spend, 0);
   const totalAccountRevenue = (batch.campaignMetrics as CampaignMetrics[]).reduce((s, c) => s + c.revenue, 0);
   const campaignList =
@@ -183,8 +178,7 @@ export async function buildActionCenterPayload(
   }
   const creativeRawDecisionReady = creativeRaw.filter((c) => c.spend > 0);
   const creativeLeaderboardRaw = creativeRawDecisionReady.map((c) => {
-    const seed = seedHash(`${c.productName}-${c.materialStrategy}-${c.headlineSnippet}`);
-    const thumbnailUrl = `https://picsum.photos/seed/${seed}/120/90`;
+    const thumbnailUrl = null as string | null;
     const budgetSuggestion = getBudgetRecommendation(c.spend, c.roas) ?? undefined;
     const materialTier = classifyMaterialTier(
       c.spend,

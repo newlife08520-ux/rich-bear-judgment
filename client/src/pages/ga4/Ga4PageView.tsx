@@ -67,7 +67,7 @@ export function Ga4PageView(w: Ga4Workbench) {
         </div>
       </header>
 
-      <div className="min-h-full p-4 md:p-6 space-y-4 page-container-fluid">
+      <div className="min-h-full p-4 md:p-6 space-y-6 page-container-fluid">
         <Ga4UpperSections
           directorLoading={w.directorLoading}
           directorSummary={w.directorSummary}

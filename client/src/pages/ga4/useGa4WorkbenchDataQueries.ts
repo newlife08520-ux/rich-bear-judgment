@@ -12,11 +12,13 @@ import type {
   HighRiskItem,
   PageRecommendation,
 } from "@shared/schema";
+import type { ProductFunnelRow } from "@shared/funnel-stitching";
 
 export function useGa4WorkbenchDataQueries(
   scopeKey: string | undefined,
   scopeQ: string,
-  search: string
+  search: string,
+  selectedAccountIds: string[] = []
 ) {
   const { data: directorSummary, isLoading: directorLoading } = useQuery<GA4AIDirectorSummary>({
     queryKey: ["/api/ga4/director-summary", scopeKey ?? ""],
@@ -131,6 +133,25 @@ export function useGa4WorkbenchDataQueries(
     },
   });
 
+  const accountIdsKey = selectedAccountIds.length ? selectedAccountIds.slice().sort().join(",") : "";
+  const { data: productFunnelStitchRes, isLoading: productFunnelStitchLoading } = useQuery<{
+    rows: ProductFunnelRow[];
+  }>({
+    queryKey: ["/api/ga4/product-funnel-stitch", scopeKey ?? "", accountIdsKey],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (scopeKey) params.set("scope", scopeKey);
+      if (selectedAccountIds.length > 0) {
+        params.set("scopeAccountIds", selectedAccountIds.join(","));
+      }
+      const qs = params.toString();
+      const url = qs ? `/api/ga4/product-funnel-stitch?${qs}` : "/api/ga4/product-funnel-stitch";
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
   return {
     directorSummary,
     directorLoading,
@@ -150,5 +171,7 @@ export function useGa4WorkbenchDataQueries(
     highRiskLoading,
     pagesDetailedData,
     pagesDetailedLoading,
+    productFunnelStitch: productFunnelStitchRes?.rows,
+    productFunnelStitchLoading,
   };
 }

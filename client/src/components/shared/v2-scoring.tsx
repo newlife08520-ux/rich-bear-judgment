@@ -42,7 +42,7 @@ export function DiagnosisBadge({ diagnosis, className }: { diagnosis: DiagnosisT
   return (
     <Badge
       variant="secondary"
-      className={cn("text-[10px] px-1.5 py-0 border-transparent", colors.bg, colors.text, className)}
+      className={cn("text-xs px-1.5 py-0 border-transparent", colors.bg, colors.text, className)}
       data-testid={`badge-diagnosis-${diagnosis}`}
     >
       {DIAGNOSIS_LABELS[diagnosis]}
@@ -55,7 +55,7 @@ export function ActionBadge({ action, className }: { action: RecommendedAction; 
   return (
     <Badge
       variant="outline"
-      className={cn("text-[10px] px-1.5 py-0", colors.bg, colors.text, className)}
+      className={cn("text-xs px-1.5 py-0", colors.bg, colors.text, className)}
       data-testid={`badge-action-${action}`}
     >
       {ACTION_LABELS[action]}
@@ -75,8 +75,8 @@ export function V2ScoreMini({ scoring }: { scoring?: ScoringResult }) {
     <div className="flex items-center gap-2" data-testid="v2-score-mini">
       {items.map((item, idx) => (
         <div key={item.label} className="flex items-center gap-0.5">
-          {idx > 0 && <span className="text-[10px] text-muted-foreground/40 mr-0.5">/</span>}
-          <span className="text-[10px] text-muted-foreground">{item.label}</span>
+          {idx > 0 && <span className="text-xs text-muted-foreground/40 mr-0.5">/</span>}
+          <span className="text-xs text-muted-foreground">{item.label}</span>
           <span className={cn("text-[11px] font-semibold", item.textColor)}>{item.value}</span>
           <div className="w-6 h-1.5 rounded-full bg-muted overflow-hidden">
             <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.value}%` }} />
@@ -100,7 +100,7 @@ export function V2ScoreBar({ scoring }: { scoring?: ScoringResult }) {
       {items.map((item) => (
         <div key={item.label} className="flex-1">
           <div className="flex items-center justify-between gap-1 mb-0.5">
-            <span className="text-[10px] text-muted-foreground">{item.label}</span>
+            <span className="text-xs text-muted-foreground">{item.label}</span>
             <span className={cn("text-xs font-semibold tabular-nums", item.textColor)}>{item.value}</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -152,7 +152,7 @@ export function ScoringInline({ scoring }: { scoring?: ScoringResult }) {
 export function BenchmarkInfo({ scoring }: { scoring?: ScoringResult }) {
   if (!scoring?.benchmarkBasis && !scoring?.timeWindowBasis) return null;
   return (
-    <span className="text-[10px] text-muted-foreground" data-testid="benchmark-info">
+    <span className="text-xs text-muted-foreground" data-testid="benchmark-info">
       {scoring.benchmarkBasis && scoring.benchmarkBasis}
       {scoring.benchmarkBasis && scoring.timeWindowBasis && " / "}
       {scoring.timeWindowBasis && scoring.timeWindowBasis}

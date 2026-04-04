@@ -63,9 +63,9 @@ export function TriScoreDisplay({ triScore }: { triScore: TriScore }) {
                 stroke="currentColor"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{item.value}</span>
+            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{item.value}</span>
           </div>
-          <span className="text-[10px] text-muted-foreground">{item.label}</span>
+          <span className="text-xs text-muted-foreground">{item.label}</span>
         </div>
       ))}
     </div>

@@ -177,7 +177,7 @@ export function HistoryReportDialog({
                               className="flex items-start gap-2 p-2 rounded-md bg-emerald-500/[0.04] border border-emerald-500/10"
                               data-testid={`card-priority-action-${i}`}
                             >
-                              <span className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                              <span className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                                 {action.order}
                               </span>
                               <div className="flex-1 min-w-0">
@@ -192,7 +192,7 @@ export function HistoryReportDialog({
                                 )}
                                 <Badge
                                   variant="secondary"
-                                  className={`text-[10px] ${impactColors[action.impact] || ""}`}
+                                  className={`text-xs ${impactColors[action.impact] || ""}`}
                                 >
                                   {impactLabels[action.impact] || action.impact}
                                 </Badge>

@@ -1,6 +1,4 @@
-/**
- * 全域 Meta／外部 API 錯誤條（v2）：與 drift banner 分離；由各 surface 呼叫 reportMetaApiError 餵入。
- */
+/** 全域 Meta／外部 API 錯誤提示；與資料漂移提示分離。 */
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -26,7 +24,7 @@ export function MetaGlobalErrorBanner() {
     <Alert
       variant="destructive"
       className="rounded-none border-x-0 border-t-0 shrink-0"
-      data-testid="meta-global-error-banner-v2"
+      data-testid="meta-global-error-banner"
     >
       <AlertTitle className="text-sm flex items-center justify-between gap-2 pr-8">
         <span>{lastError.title}</span>

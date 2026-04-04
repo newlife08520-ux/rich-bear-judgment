@@ -49,6 +49,12 @@ export function useAssetsWorkbench() {
   const [versionSortBy, setVersionSortBy] = useState<"newest" | "name">("newest");
   const [selectedVersionIdsForBatch, setSelectedVersionIdsForBatch] = useState<Set<string>>(new Set());
   const [batchDeleting, setBatchDeleting] = useState(false);
+  const [creativeBatchReviewing, setCreativeBatchReviewing] = useState(false);
+  const [creativeBatchSummary, setCreativeBatchSummary] = useState<{
+    total: number;
+    completed: number;
+    failed: number;
+  } | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [groupCreating, setGroupCreating] = useState(false);
   const [versionGroupFilter, setVersionGroupFilter] = useState<string>("");
@@ -493,6 +499,76 @@ export function useAssetsWorkbench() {
     }
   };
 
+  const dismissCreativeBatchSummary = () => setCreativeBatchSummary(null);
+
+  const batchQueueCreativeReviews = async () => {
+    const ids = Array.from(selectedVersionIdsForBatch);
+    if (ids.length === 0 || !selectedPackageId) return;
+    setCreativeBatchReviewing(true);
+    setCreativeBatchSummary(null);
+    try {
+      const res = await fetch("/api/creative-reviews/queue-batch", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: ids.map((assetVersionId) => ({ assetVersionId, reviewSource: "batch_queue" })),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { jobs?: { jobId: string }[]; message?: string };
+      if (!res.ok) {
+        toast({
+          title: "批次送審失敗",
+          description: data.message ?? "請稍後再試",
+          variant: "destructive",
+        });
+        return;
+      }
+      const jobIds = (data.jobs ?? []).map((j) => j.jobId).filter(Boolean);
+      if (jobIds.length === 0) {
+        toast({ title: "批次送審", description: "未取得工作 ID", variant: "destructive" });
+        return;
+      }
+      const terminal = new Set(["completed", "failed"]);
+      const statuses: Record<string, string> = {};
+      const pollOnce = async () => {
+        for (const jid of jobIds) {
+          const st = statuses[jid];
+          if (terminal.has(st)) continue;
+          const jr = await fetch(`/api/creative-reviews/jobs/${encodeURIComponent(jid)}`, { credentials: "include" });
+          if (!jr.ok) continue;
+          const j = (await jr.json()) as { job?: { status?: string } };
+          statuses[jid] = j.job?.status ?? "pending";
+        }
+      };
+      const maxPolls = 150;
+      for (let round = 0; round < maxPolls; round++) {
+        await pollOnce();
+        const allDone = jobIds.every((jid) => terminal.has(statuses[jid] ?? ""));
+        if (allDone) break;
+        await new Promise((r) => setTimeout(r, 2200));
+      }
+      let completed = 0;
+      let failed = 0;
+      for (const jid of jobIds) {
+        const st = statuses[jid];
+        if (st === "completed") completed++;
+        else failed++;
+      }
+      const total = jobIds.length;
+      setCreativeBatchSummary({ total, completed, failed });
+      toast({
+        title: "批次審判結果",
+        description: `${total} 個素材已送審，${completed} 個完成，${failed} 個失敗（可重試）`,
+      });
+      for (const id of ids) {
+        void queryClient.invalidateQueries({ queryKey: ["/api/creative-reviews/by-version", id] });
+      }
+    } finally {
+      setCreativeBatchReviewing(false);
+    }
+  };
+
   const batchDeleteVersions = async () => {
     const ids = Array.from(selectedVersionIdsForBatch);
     if (ids.length === 0 || !selectedPackageId) return;
@@ -632,6 +708,10 @@ export function useAssetsWorkbench() {
     selectedVersionIdsForBatch,
     setSelectedVersionIdsForBatch,
     batchDeleting,
+    creativeBatchReviewing,
+    creativeBatchSummary,
+    dismissCreativeBatchSummary,
+    batchQueueCreativeReviews,
     newGroupName,
     setNewGroupName,
     groupCreating,

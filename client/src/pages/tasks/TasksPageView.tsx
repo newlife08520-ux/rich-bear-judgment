@@ -66,7 +66,7 @@ export function TasksPageView({ wb }: { wb: TasksWorkbench }) {
         </div>
       </header>
 
-      <div className="flex-1 p-4 md:p-6 space-y-4">
+      <div className="flex-1 p-4 md:p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-l-4 border-l-red-500/80 bg-card">
             <CardContent className="py-4 px-4">

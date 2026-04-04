@@ -26,6 +26,7 @@ import { SettingsApiConnectionSection } from "./widgets/SettingsApiConnectionSec
 import { SettingsSyncStatusBlock } from "./widgets/SettingsSyncStatusBlock";
 import { SettingsPromptStats } from "./widgets/SettingsPromptStats";
 import { SettingsPipelineDebugPanel } from "./widgets/SettingsPipelineDebugPanel";
+import { SettingsMyProductScopeCard } from "./widgets/SettingsMyProductScopeCard";
 
 export function SettingsPageView({ wb }: { wb: SettingsWorkbench }) {
   const {
@@ -68,6 +69,8 @@ export function SettingsPageView({ wb }: { wb: SettingsWorkbench }) {
       <div className="min-h-full p-4">
         <div className="page-container-reading">
           <SettingsOverviewSection />
+
+          <SettingsMyProductScopeCard />
 
           <form onSubmit={form.handleSubmit(onSave)}>
             <SettingsPreferencesCard

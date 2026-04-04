@@ -48,8 +48,8 @@ export function OpportunityScoreBadge({ score, size = "sm" }: { score: number; s
       ? "text-amber-700 bg-amber-50 border-amber-200"
       : score >= 8
       ? "text-blue-700 bg-blue-50 border-blue-200"
-      : "text-gray-600 bg-gray-50 border-gray-200";
-  const sizeClass = size === "md" ? "text-xs px-2 py-0.5" : "text-[10px] px-1.5 py-0";
+      : "text-muted-foreground bg-muted/50 border-border";
+  const sizeClass = size === "md" ? "text-xs px-2 py-0.5" : "text-xs px-1.5 py-0";
   return (
     <Badge variant="outline" className={`${color} ${sizeClass} font-bold tabular-nums`} data-testid="badge-opportunity-score">
       <Sparkles className={size === "md" ? "w-3 h-3 mr-1" : "w-2.5 h-2.5 mr-0.5"} />
@@ -66,7 +66,7 @@ export function OpportunityIndexDisplay({ index, compact = false }: { index: num
       ? "text-amber-700"
       : index >= 21
       ? "text-blue-700"
-      : "text-gray-600";
+      : "text-muted-foreground";
   const bgColor =
     index >= 61
       ? "bg-red-50 border-red-200"
@@ -74,14 +74,14 @@ export function OpportunityIndexDisplay({ index, compact = false }: { index: num
       ? "bg-amber-50 border-amber-200"
       : index >= 21
       ? "bg-blue-50 border-blue-200"
-      : "bg-gray-50 border-gray-200";
+      : "bg-muted/50 border-border";
 
   if (compact) {
     return (
       <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${bgColor}`} data-testid="display-opportunity-index">
         <TrendingUp className={`w-3 h-3 ${color}`} />
         <span className={`text-xs font-bold ${color}`}>{index}</span>
-        <span className="text-[10px] text-muted-foreground">/100</span>
+        <span className="text-xs text-muted-foreground">/100</span>
       </div>
     );
   }

@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useReportMetaApiError } from "@/context/meta-api-error-context";
 import { mapMetaOrNetworkErrorToActionability } from "@/lib/meta-error-actionability";
 import { useAppScope } from "@/hooks/use-app-scope";
+import { useProductViewScope } from "@/hooks/use-product-view-scope";
 import { useEmployee } from "@/lib/employee-context";
 import type { ActionCenterData, ProductLevelItem, BudgetActionRow, CreativeLeaderboardItem } from "./dashboard-types";
 import type { CrossAccountSummary, AccountHealthScore, Anomaly, RefreshStatus } from "@shared/schema";
@@ -166,25 +167,44 @@ export function useDashboardDecisionCenter() {
   const { toast } = useToast();
   const reportMetaApiError = useReportMetaApiError();
   const { employee } = useEmployee();
+  const { mode: productViewMode, setMode: setProductViewMode, scopeProductsForApi } = useProductViewScope();
   const autoRefreshed = useRef(false);
+
+  const effectiveScopeProducts =
+    scopeProductsForApi ??
+    (employee.assignedProducts?.length ? employee.assignedProducts : undefined);
 
   const actionCenterParams = new URLSearchParams();
   if (scope.scopeKey) actionCenterParams.set("scope", scope.scopeKey);
-  if (employee.assignedProducts?.length) actionCenterParams.set("scopeProducts", employee.assignedProducts.join(","));
+  if (effectiveScopeProducts?.length) actionCenterParams.set("scopeProducts", effectiveScopeProducts.join(","));
   if (employee.assignedAccounts?.length) actionCenterParams.set("scopeAccountIds", employee.assignedAccounts.join(","));
   const actionCenterQueryKey = ["/api/dashboard/action-center", scope.scopeKey ?? "", actionCenterParams.toString()];
 
-  const { data: actionData = emptyActionData } = useQuery<ActionCenterData>({
+  const {
+    data: actionData = emptyActionData,
+    isLoading: actionCenterLoading,
+    isError: actionCenterIsError,
+    error: actionCenterError,
+    refetch: refetchActionCenter,
+  } = useQuery<ActionCenterData>({
     queryKey: actionCenterQueryKey,
     queryFn: async () => {
       const res = await fetch(`/api/dashboard/action-center?${actionCenterParams.toString()}`, { credentials: "include" });
-      if (!res.ok) return emptyActionData;
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入決策資料（${res.status}）`);
+      }
       return res.json();
     },
   });
 
   const scopeQuerySuffix = scope.scopeKey ?? "";
-  const { data: summaryData, isLoading: summaryLoading } = useQuery<{
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    isError: summaryIsError,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useQuery<{
     hasSummary: boolean;
     summary?: CrossAccountSummary;
     dataStatus?: "no_sync" | "synced_no_data" | "has_data" | "partial_data";
@@ -199,7 +219,9 @@ export function useDashboardDecisionCenter() {
     queryFn: async () => {
       const url = scope.scopeKey ? `/api/dashboard/cross-account-summary?scope=${encodeURIComponent(scope.scopeKey)}` : "/api/dashboard/cross-account-summary";
       const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) return { hasSummary: false };
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "請重新登入" : `無法載入摘要（${res.status}）`);
+      }
       return res.json();
     },
   });
@@ -306,6 +328,13 @@ export function useDashboardDecisionCenter() {
     },
   };
 
+  const dashboardLoading = actionCenterLoading || summaryLoading;
+  const dashboardError = actionCenterIsError || summaryIsError ? (actionCenterError ?? summaryError) : null;
+  const refetchDashboard = () => {
+    void refetchActionCenter();
+    void refetchSummary();
+  };
+
   return {
     scope,
     isRefreshing,
@@ -313,6 +342,7 @@ export function useDashboardDecisionCenter() {
     summary,
     summaryData,
     summaryLoading,
+    actionCenterLoading,
     actionData,
     accounts,
     rankingLoading,
@@ -327,5 +357,10 @@ export function useDashboardDecisionCenter() {
     summaryMessage: summaryData?.message,
     coverageNote: summaryData?.coverageNote ?? null,
     dataStatus: summaryData?.dataStatus,
+    productViewMode,
+    setProductViewMode,
+    dashboardLoading,
+    dashboardError,
+    refetchDashboard,
   };
 }

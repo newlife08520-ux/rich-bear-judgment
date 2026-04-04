@@ -154,7 +154,7 @@ export function OpportunityBoardSection() {
               <div className="flex items-center gap-2 mb-3">
                 <Icon className="w-4 h-4 text-muted-foreground" />
                 <h4 className="text-xs font-semibold text-muted-foreground">{group.typeLabel}</h4>
-                <Badge variant="secondary" className="text-[10px]">{group.items.length}</Badge>
+                <Badge variant="secondary" className="text-xs">{group.items.length}</Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {group.items.map((opp) => (

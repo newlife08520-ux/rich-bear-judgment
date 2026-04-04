@@ -70,7 +70,7 @@ export function DiagnosticsFold({ className, children, ...rest }: BandProps) {
   return (
     <div
       className={cn(
-        "rounded-md border border-dashed border-muted-foreground/40 bg-muted/[0.08] px-2 py-1.5 text-[10px] text-muted-foreground",
+        "rounded-md border border-dashed border-muted-foreground/40 bg-muted/[0.08] px-2 py-1.5 text-xs text-muted-foreground",
         className
       )}
       {...rest}

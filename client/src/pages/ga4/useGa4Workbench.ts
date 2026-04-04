@@ -70,6 +70,7 @@ export function useGa4Workbench() {
         ["/api/ga4/page-ranking"],
         ["/api/ga4/priority-fixes"],
         ["/api/ga4/pages-detailed"],
+        ["/api/ga4/product-funnel-stitch"],
         ["/api/dashboard/high-risk"],
       ] as const;
       for (const key of keys) {
@@ -101,7 +102,9 @@ export function useGa4Workbench() {
     highRiskLoading,
     pagesDetailedData,
     pagesDetailedLoading,
-  } = useGa4WorkbenchDataQueries(scope.scopeKey, scopeQ, search);
+    productFunnelStitch,
+    productFunnelStitchLoading,
+  } = useGa4WorkbenchDataQueries(scope.scopeKey, scopeQ, search, scope.selectedAccountIds ?? []);
 
   const [expandedSegments, setExpandedSegments] = useState<Set<number>>(new Set());
   const toggleSegment = (idx: number) => {
@@ -325,6 +328,8 @@ export function useGa4Workbench() {
     highRiskLoading,
     pagesDetailedData,
     pagesDetailedLoading,
+    productFunnelStitch,
+    productFunnelStitchLoading,
     sortedPages,
     pageRecommendationMap,
     expandedDetailedRows,

@@ -94,7 +94,7 @@ export function registerMetaConnectRoutes(app: Express, requireAuth: RequestHand
     }
 
     if (allSyncedAccounts.length > 0) {
-      storage.saveSyncedAccounts(userId, allSyncedAccounts);
+      await storage.saveSyncedAccounts(userId, allSyncedAccounts);
     }
 
     if (results.length === 0) {
@@ -238,7 +238,7 @@ export function registerMetaConnectRoutes(app: Express, requireAuth: RequestHand
 
         const nonMeta = existing.filter(a => a.platform !== "meta");
         const merged = [...nonMeta, ...newMeta];
-        storage.saveSyncedAccounts(userId, merged);
+        await storage.saveSyncedAccounts(userId, merged);
         console.log(`[SyncSelected] Synced ${newMeta.length} Meta accounts for user=${userId}`);
         return res.json({ success: true, syncedCount: newMeta.length, accounts: merged });
       } catch (err: any) {
@@ -260,7 +260,7 @@ export function registerMetaConnectRoutes(app: Express, requireAuth: RequestHand
         isDefault: idx === 0,
       }));
       const merged = [...nonGA4, ...newGA4];
-      storage.saveSyncedAccounts(userId, merged);
+      await storage.saveSyncedAccounts(userId, merged);
       console.log(`[SyncSelected] Synced ${newGA4.length} GA4 properties for user=${userId}`);
       return res.json({ success: true, syncedCount: newGA4.length, accounts: merged });
     }

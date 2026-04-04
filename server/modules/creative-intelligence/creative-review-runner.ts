@@ -10,7 +10,8 @@ import {
   suggestUIModeFromJudgmentType,
   type JudgmentType as RBJudgmentType,
 } from "../../rich-bear-prompt-assembly";
-import { callGeminiCreativeAssetReview } from "../../gemini";
+import { callGeminiCreativeAssetReview, callGeminiVideoFrameReview } from "../../gemini";
+import { extractVideoKeyframes } from "../asset/video-keyframes";
 import { getPublishedPrompt } from "../../workbench-db";
 import { storage } from "../../storage";
 import * as assetVersionRepo from "../asset/asset-version-repository";
@@ -48,9 +49,71 @@ export async function runCreativeReviewFromAssetVersion(params: {
   const pkg = assetPackageRepo.getById(params.userId, v.packageId);
   const productName = pkg?.brandProductName ?? pkg?.name ?? null;
 
-  /** 7.4：影片 — 不送 multimodal，寫入明確占位審判（已儲存、待人工／未來幀抽取） */
   if (mime.startsWith("video/")) {
-    const uiMode = suggestUIModeFromJudgmentType("creative" as RBJudgmentType);
+    let frames: { base64: string; timestampSec: number }[];
+    try {
+      frames = extractVideoKeyframes(buf, mime);
+    } catch {
+      frames = [];
+    }
+    if (frames.length === 0) {
+      const uiMode = suggestUIModeFromJudgmentType("creative" as RBJudgmentType);
+      const rec = await createCreativeReviewWithTags({
+        userId: params.userId,
+        assetVersionId: v.id,
+        assetPackageId: v.packageId,
+        productName,
+        reviewSource: params.reviewSource,
+        workflow: "audit",
+        uiMode,
+        reviewStatus: "completed",
+        summary:
+          "無法從影片擷取關鍵畫面（ffmpeg 不可用或影片格式不支援）。請改上傳首幀或關鍵畫面為圖片版本再審。",
+        nextAction: "匯出首幀為 JPG/PNG 後上傳圖片版本。",
+        problemType: "流程",
+        confidence: "low",
+        score: null,
+        reasonsJson: JSON.stringify({ text: "video_keyframe_extract_failed" }),
+        evidenceJson: JSON.stringify({ mime, note: "no_frames" }),
+        tags: [
+          { tagType: "format", tagValue: "video_keyframe_failed", weight: 1 },
+          { tagType: "visual_motif", tagValue: "video_needs_image_fallback", weight: 0.2 },
+        ],
+      });
+      return { ok: true, reviewId: rec.id };
+    }
+
+    const contentType: ContentType = "video";
+    const judgmentType = contentTypeToJudgmentType(contentType) as JudgmentType;
+    const uiMode = suggestUIModeFromJudgmentType(judgmentType as RBJudgmentType);
+    const publishedMain = await getPublishedPrompt(uiMode);
+    const systemPrompt = getAssembledSystemPrompt({
+      uiMode,
+      customMainPrompt: publishedMain,
+      judgmentType: judgmentType as RBJudgmentType,
+      workflow: "audit",
+    });
+    const input: ContentJudgmentInput = {
+      purpose: "selling",
+      depth: "full",
+      notes: `素材包：${pkg?.name ?? ""}；檔名：${v.fileName ?? ""}；商品：${productName ?? ""}`,
+      url: "",
+      text: `請審判此影片素材版本（ID ${v.id}）。請只輸出單一 JSON 物件（勿 markdown），鍵需包含：oneLineVerdict, keyPoints, fullAnalysis, nextActions, followUpSuggestions；並額外附上 summary, nextAction, problemType, confidence, score(0-100), reasons, suggestions, evidence, blockingReasons, pendingItems（可省略空值）。`,
+      detectedType: contentType,
+    };
+    const settings = storage.getSettings(params.userId);
+    const baseUser = buildContentJudgmentUserPrompt(settings, input, contentType, judgmentType);
+    const userPrompt = `${baseUser}\n\n【重要】回覆必須為單一 JSON，結構須符合 CreativeAssetJudgmentPayload（含陳列欄位）。`;
+
+    const payload = await callGeminiVideoFrameReview(params.apiKey, systemPrompt, userPrompt, frames);
+    if (!payload) {
+      return { ok: false, message: "AI 呼叫失敗", code: "AI_CALL_FAILED" };
+    }
+
+    const tags = extractPatternTagsFromPayload(payload);
+    const reviewStatus =
+      payload.oneLineVerdict.includes("解析失敗") && payload.keyPoints.length === 0 ? "failed" : "completed";
+
     const rec = await createCreativeReviewWithTags({
       userId: params.userId,
       assetVersionId: v.id,
@@ -59,18 +122,21 @@ export async function runCreativeReviewFromAssetVersion(params: {
       reviewSource: params.reviewSource,
       workflow: "audit",
       uiMode,
-      reviewStatus: "completed",
-      summary: "影片素材：系統已佇列但未自動送審（7.4 顯式不支援自動影格審判）。",
-      nextAction: "請改以圖像匯出首幀或使用外部剪輯預覽後再上傳圖像版本。",
-      problemType: "流程",
-      confidence: "low",
-      score: null,
-      reasonsJson: JSON.stringify({ text: "video_autopilot_disabled" }),
-      evidenceJson: JSON.stringify({ mime, note: "stored_only" }),
-      tags: [
-        { tagType: "format", tagValue: "video_stored_no_auto_review", weight: 1 },
-        { tagType: "visual_motif", tagValue: "video_pending", weight: 0.2 },
-      ],
+      reviewStatus,
+      summary: payload.summary ?? payload.oneLineVerdict,
+      nextAction: payload.nextAction ?? payload.nextActions?.[0]?.label,
+      problemType: payload.problemType ?? null,
+      confidence: payload.confidence ?? null,
+      score: payload.score ?? null,
+      reasonsJson: payload.reasons ? JSON.stringify({ text: payload.reasons }) : null,
+      suggestionsJson: payload.suggestions ? JSON.stringify({ text: payload.suggestions }) : null,
+      evidenceJson: payload.evidence
+        ? JSON.stringify({ text: payload.evidence, frameCount: frames.length })
+        : JSON.stringify({ frameCount: frames.length }),
+      blockingJson: payload.blockingReasons?.length ? JSON.stringify(payload.blockingReasons) : null,
+      pendingJson: payload.pendingItems?.length ? JSON.stringify(payload.pendingItems) : null,
+      rawResultJson: JSON.stringify(payload),
+      tags,
     });
     return { ok: true, reviewId: rec.id };
   }

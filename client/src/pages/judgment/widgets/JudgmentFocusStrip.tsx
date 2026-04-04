@@ -50,25 +50,25 @@ export function JudgmentFocusStrip({
         data-testid="judgment-focus-strip-v12"
       >
         <p className="text-sm font-semibold text-foreground leading-snug tracking-tight">{conclusion}</p>
-        <p className="text-[11px] text-emerald-800 dark:text-emerald-200 leading-snug">
+        <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-snug">
           <span className="font-semibold">下一步 · </span>
           {nextAction}
         </p>
         {confidenceShort ? (
-          <p className="text-[10px] text-muted-foreground leading-snug" data-testid="judgment-focus-trust-line-v12">
+          <p className="text-xs text-muted-foreground leading-snug" data-testid="judgment-focus-trust-line-v12">
             信任／風險 · {confidenceShort}
           </p>
         ) : null}
         {evidenceOneLine ? (
           <p
-            className="text-[10px] text-muted-foreground leading-snug line-clamp-2"
+            className="text-xs text-muted-foreground leading-snug line-clamp-2"
             data-testid="judgment-focus-evidence-single-v12"
           >
             證據：<span data-testid="judgment-focus-evidence-hint-v12">{evidenceOneLine}</span>
           </p>
         ) : null}
       </div>
-      <p className="text-[9px] text-muted-foreground px-0.5" data-testid="judgment-focus-operator-path-v12">
+      <p className="text-xs text-muted-foreground px-0.5" data-testid="judgment-focus-operator-path-v12">
         決策卡全文／節奏／執行閘門 → 頂欄「營運工作台」。
       </p>
     </div>

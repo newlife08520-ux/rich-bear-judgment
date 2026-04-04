@@ -2,13 +2,37 @@
  * 區塊 1：War room — 今日最優先（首頁僅傳入 Top N，通常 3 筆）。資料來源：actionData.todayActions
  */
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ListChecks, Calculator } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ListChecks, Calculator, Loader2 } from "lucide-react";
 import { formatCurrency, getEvidenceLabel } from "../dashboard-formatters";
 import type { TodayActionRow } from "../dashboard-types";
+import { mapTodayActionToExecution } from "@/lib/map-suggested-action-to-execution";
+import { ActionCard } from "@/components/shared/ActionCard";
+import type { StatusSemantic } from "@/components/shared/status-colors";
 
-export function TodayActionsSection({ todayActions }: { todayActions: TodayActionRow[] }) {
+function todayTypeToSemantic(t: string): StatusSemantic {
+  if (t === "止血") return "loss";
+  if (t === "放大") return "profit";
+  if (t === "不要誤殺") return "watch";
+  if (t === "值得延伸") return "info";
+  return "neutral";
+}
+
+export type TodayActionsExecutionProps = {
+  metaWritesAllowed: boolean;
+  guardMessage: string | null;
+  busy: boolean;
+  onExecuteRow: (row: TodayActionRow) => void | Promise<void>;
+};
+
+export function TodayActionsSection({
+  todayActions,
+  execution,
+}: {
+  todayActions: TodayActionRow[];
+  execution?: TodayActionsExecutionProps | null;
+}) {
   return (
     <section data-testid="section-today-actions">
       <Card className="border-primary/30 bg-gradient-to-b from-primary/8 to-transparent shadow-md ring-1 ring-primary/10">
@@ -18,63 +42,63 @@ export function TodayActionsSection({ todayActions }: { todayActions: TodayActio
               <ListChecks className="w-5 h-5 text-primary shrink-0" />
               今日先打這三件（War room）
             </h2>
-            <p className="text-xs text-muted-foreground mt-2 max-w-3xl leading-relaxed">
-              第一屏只留最高優先；其餘動作與「指揮語 digest」在真相列之後。政策／partial／批次細節收合於下方「資料信任與政策」。
+            <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-snug">
+              先看結論與建議動作；細節在下方「資料真相」與各主戰場。
             </p>
           </div>
           {todayActions.length > 0 ? (
             <ul className="space-y-4">
-              {todayActions.map((a, i) => (
-                <li
-                  key={`${a.type}-${a.productName}-${a.campaignId ?? a.campaignName ?? i}`}
-                  className="rounded-xl border border-border/80 bg-background p-4 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium",
-                        a.type === "止血" && "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
-                        a.type === "放大" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-                        a.type === "不要誤殺" && "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-                        a.type === "值得延伸" && "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
-                        a.type === "規則缺失待補" && "bg-muted text-muted-foreground"
-                      )}
+              {todayActions.map((a, i) => {
+                const plan = execution ? mapTodayActionToExecution(a) : null;
+                const showExec = !!plan && execution;
+                const title = `${a.type} · ${a.productName}${a.campaignName ? ` · ${a.campaignName}` : ""}`;
+                const subtitle = `影響面：${a.objectType}`;
+                return (
+                  <li key={`${a.type}-${a.productName}-${a.campaignId ?? a.campaignName ?? i}`}>
+                    <ActionCard
+                      semantic={todayTypeToSemantic(a.type)}
+                      title={title}
+                      subtitle={subtitle}
+                      metrics={
+                        <>
+                          <span>花費 {formatCurrency(a.spend)}</span>
+                          <span>ROAS {a.roas.toFixed(2)}</span>
+                          <span>
+                            建議：{a.suggestedAction}{" "}
+                            {a.suggestedPct === "關閉" ? "關閉" : `${a.suggestedPct}%`}
+                          </span>
+                        </>
+                      }
                     >
-                      {a.type}
-                    </span>
-                    <span className="inline-flex items-center rounded border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-                      影響面：{a.objectType}
-                    </span>
-                    <span className="font-medium text-sm text-foreground">
-                      {a.productName}
-                      {a.campaignName ? ` · ${a.campaignName}` : ""}
-                    </span>
-                    {a.evidenceLevel && getEvidenceLabel(a.evidenceLevel) && (
-                      <span className="text-[11px] text-muted-foreground border border-border/60 rounded px-1.5 py-0.5">
-                        {getEvidenceLabel(a.evidenceLevel)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[15px] sm:text-base leading-relaxed text-foreground mt-1 font-medium" data-testid="director-verdict">
-                    {a.directorVerdict}
-                  </p>
-                  {a.reason ? (
-                    <p className="text-xs text-muted-foreground mt-2 border-l-2 border-primary/30 pl-2" data-testid="today-action-why">
-                      <span className="font-medium text-foreground/80">為何現在：</span>
-                      {a.reason}
-                    </p>
-                  ) : null}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
-                    <span>花費 {formatCurrency(a.spend)}</span>
-                    <span>ROAS {a.roas.toFixed(2)}</span>
-                    {a.breakEvenRoas != null && <span>保本 {a.breakEvenRoas.toFixed(2)}</span>}
-                    {a.targetRoas != null && <span>目標 {a.targetRoas.toFixed(2)}</span>}
-                    <span>
-                      {a.suggestedAction} {a.suggestedPct === "關閉" ? "關閉" : `${a.suggestedPct}%`}
-                    </span>
-                  </div>
-                </li>
-              ))}
+                      <p className="text-base font-semibold text-foreground w-full" data-testid="director-verdict">
+                        {a.directorVerdict}
+                      </p>
+                      {showExec ? (
+                        <div className="flex flex-col gap-1 w-full sm:flex-row sm:items-center sm:flex-wrap">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            className="rounded-lg w-full sm:w-auto"
+                            disabled={!execution!.metaWritesAllowed || execution!.busy}
+                            onClick={() => void execution!.onExecuteRow(a)}
+                            data-testid="button-today-action-execute"
+                          >
+                            {execution!.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                            執行建議
+                          </Button>
+                          {!execution!.metaWritesAllowed && execution!.guardMessage ? (
+                            <p className="text-xs text-amber-700 dark:text-amber-300 max-w-xs">{execution!.guardMessage}</p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {a.evidenceLevel && getEvidenceLabel(a.evidenceLevel) ? (
+                        <p className="text-xs text-muted-foreground w-full">信號：{getEvidenceLabel(a.evidenceLevel)}</p>
+                      ) : null}
+                    </ActionCard>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">

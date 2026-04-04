@@ -147,6 +147,17 @@ export function AssetsRightPanel({ wb }: { wb: AssetsWorkbench }) {
       </Card>
 
       <div ref={wb.versionSectionRef}>
+        {wb.creativeBatchSummary && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-sm flex flex-wrap items-center justify-between gap-2 mb-3">
+            <p className="text-foreground">
+              {wb.creativeBatchSummary.total} 個素材已送審，{wb.creativeBatchSummary.completed} 個完成，
+              {wb.creativeBatchSummary.failed} 個失敗（可於各版本卡重試）
+            </p>
+            <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={wb.dismissCreativeBatchSummary}>
+              關閉
+            </Button>
+          </div>
+        )}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
@@ -277,6 +288,15 @@ export function AssetsRightPanel({ wb }: { wb: AssetsWorkbench }) {
                       批次刪除 ({wb.selectedVersionIdsForBatch.size})
                     </Button>
                     <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => void wb.batchQueueCreativeReviews()}
+                      disabled={wb.creativeBatchReviewing}
+                    >
+                      {wb.creativeBatchReviewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      批次送審 ({wb.selectedVersionIdsForBatch.size})
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => wb.toast({ title: "即將推出", description: "批次移動到另一素材包" })}
@@ -341,7 +361,7 @@ export function AssetsRightPanel({ wb }: { wb: AssetsWorkbench }) {
                                   ) : (
                                     <div className="flex flex-col items-center justify-center gap-0.5 text-muted-foreground">
                                       <Film className="w-8 h-8" />
-                                      <span className="text-[10px]">影片</span>
+                                      <span className="text-xs">影片</span>
                                     </div>
                                   )
                                 ) : (

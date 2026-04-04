@@ -190,6 +190,16 @@ export function buildDormantGemCandidates(
   const out: DormantGemCandidate[] = [];
   for (const c of campaigns) {
     if (c.spend > 0) continue;
+    const statusUpper = (c.status ?? "").toUpperCase();
+    if (
+      statusUpper.includes("DISAPPROVED") ||
+      statusUpper.includes("WITH_ISSUES") ||
+      statusUpper.includes("DELETED") ||
+      statusUpper.includes("IN_PROCESS") ||
+      statusUpper.includes("PENDING_REVIEW")
+    ) {
+      continue;
+    }
     const mw = c.multiWindow;
     const t7 = mw?.window7d?.spend ?? 0;
     const t14 = mw?.window14d?.spend ?? 0;

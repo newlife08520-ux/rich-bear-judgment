@@ -1,6 +1,4 @@
-/**
- * 全域 execution 稽核：dry-run / apply / 結果與錯誤（企業可追蹤）。
- */
+/** 全域執行稽核：預覽、正式套用、結果與錯誤（可追蹤）。 */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -37,6 +35,12 @@ function statusLabel(status: string): string {
 function shortUserId(userId: string): string {
   if (userId.length <= 14) return userId;
   return `${userId.slice(0, 6)}…${userId.slice(-4)}`;
+}
+
+function kindLabel(kind: string): string {
+  if (kind === "dry_run") return "預覽";
+  if (kind === "apply") return "套用";
+  return kind;
 }
 
 export default function ExecutionHistoryPage() {
@@ -83,7 +87,7 @@ export default function ExecutionHistoryPage() {
           <CardHeader>
             <CardTitle className="text-base">全域紀錄（最近 200 筆事件）</CardTitle>
             <p className="text-sm text-muted-foreground">
-              含 dry-run 預覽與 apply 結果；實際寫入 Meta 與否依 actionType 與環境旗標而定。詳見 docs/active/EXECUTION-AUDIT-SURFACE.md。
+              含預覽與正式套用紀錄；是否實際寫入廣告帳戶依當次操作類型與確認結果而定。
             </p>
             <div
               className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-end"
@@ -97,8 +101,8 @@ export default function ExecutionHistoryPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="dry_run">dry_run（預覽）</SelectItem>
-                    <SelectItem value="apply">apply（套用／結果）</SelectItem>
+                    <SelectItem value="dry_run">預覽</SelectItem>
+                    <SelectItem value="apply">套用／結果</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -152,7 +156,7 @@ export default function ExecutionHistoryPage() {
                       <TableHead>時間</TableHead>
                       <TableHead className="whitespace-nowrap">操作者</TableHead>
                       <TableHead>類型</TableHead>
-                      <TableHead>action</TableHead>
+                      <TableHead>動作</TableHead>
                       <TableHead>狀態</TableHead>
                       <TableHead>目標／受影響</TableHead>
                       <TableHead className="min-w-[140px]">變更快照</TableHead>
@@ -171,13 +175,13 @@ export default function ExecutionHistoryPage() {
                             {new Date(row.timestamp).toLocaleString("zh-TW")}
                           </TableCell>
                           <TableCell
-                            className="font-mono text-[10px] max-w-[100px] truncate align-top"
+                            className="font-mono text-xs max-w-[100px] truncate align-top"
                             title={row.userId}
                           >
                             {shortUserId(row.userId)}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{row.kind}</Badge>
+                            <Badge variant="outline">{kindLabel(row.kind)}</Badge>
                           </TableCell>
                           <TableCell className="text-sm">{row.actionType}</TableCell>
                           <TableCell>
@@ -206,7 +210,7 @@ export default function ExecutionHistoryPage() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="font-mono text-[10px] max-w-[120px] truncate align-top">
+                          <TableCell className="font-mono text-xs max-w-[120px] truncate align-top">
                             {row.dryRunId}
                           </TableCell>
                         </TableRow>

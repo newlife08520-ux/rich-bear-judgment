@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import type { PublishTemplate } from "@shared/schema";
 import * as publishService from "./publish-service";
 import * as templateRepo from "./publish-template-repository";
+import { allowMetaPublishStage1Writes } from "../meta-publish/meta-publish-guard";
 
 /**
  * Publish 模組 API 回傳格式（與 asset 模組一致）：
@@ -10,6 +11,14 @@ import * as templateRepo from "./publish-template-repository";
  * - 失敗：{ message: string, errors?: unknown }，errors 僅在驗證失敗時存在。
  */
 export const publishRouter = Router();
+
+publishRouter.get("/guard-check", (_req: Request, res: Response) => {
+  const allowed = allowMetaPublishStage1Writes();
+  res.json({
+    metaWritesAllowed: allowed,
+    message: allowed ? null : "Meta 投放功能目前未啟用。草稿可建立，但無法送出至 Meta。",
+  });
+});
 
 function getUserId(req: Request): string {
   const id = (req as Request & { session: { userId?: string } }).session?.userId;

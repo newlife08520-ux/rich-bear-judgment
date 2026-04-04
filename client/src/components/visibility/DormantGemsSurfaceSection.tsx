@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { ActionCard } from "@/components/shared/ActionCard";
 import {
   Select,
   SelectContent,
@@ -100,37 +102,36 @@ export function DormantGemsSurfaceSection({
         >
           <CardHeader className="py-3 pb-2">
             <CardTitle className="text-base font-semibold text-violet-950 dark:text-violet-100">
-              主工作物件：沉睡／暫停高潛（復活候選）
+              沉睡復活候選
             </CardTitle>
             <p className="text-xs text-muted-foreground font-normal leading-snug">
-              目前無符合政策的候選。零花費但<strong>非</strong>本列者，請看「可見性政策」與 no_delivery／樣本不足診斷—與本桶<strong>分開</strong>。
+              目前無符合條件的候選。其他零花費列（尚未投遞、樣本不足等）請見可見性政策與預算頁診斷，與本區分開檢視。
             </p>
             <div
               className="rounded-md border border-violet-200/60 dark:border-violet-800/40 bg-background/60 px-2.5 py-2 text-[11px] text-muted-foreground leading-snug"
               data-testid="dormant-zero-spend-classification-legend"
             >
-              <p className="font-medium text-violet-950 dark:text-violet-100 mb-1">零花費分類（主清單不混無行動價值列）</p>
+              <p className="font-medium text-violet-950 dark:text-violet-100 mb-1">零花費怎麼看</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>
-                  <strong>沉睡高潛／暫停贏家</strong>：尾隨花費 + 正向訊號達門檻—本區操作物件。
+                  <strong>沉睡高潛／暫停贏家</strong>：本區主要操作對象。
                 </li>
                 <li>
-                  <strong>no_delivery／樣本不足</strong>：診斷列，排序在後、不當復活主線。
+                  <strong>尚未投遞／樣本不足</strong>：診斷用，不當復活主線。
                 </li>
                 <li>
-                  <strong>Stale／無法行動</strong>：缺批次或範圍不一致—先同步再判斷。
+                  <strong>資料未齊</strong>：請先同步再判斷。
                 </li>
               </ul>
             </div>
           </CardHeader>
           <CardContent className="pt-0 pb-4" data-testid="dormant-gems-empty-state">
             <p className="text-xs text-muted-foreground">
-              操作：同步資料後於{" "}
+              請同步資料後到{" "}
               <Link href="/fb-ads" className="text-primary underline-offset-2 hover:underline">
                 預算控制
               </Link>{" "}
-              檢視活動狀態；政策說明見{" "}
-              <span className="font-mono text-[10px]">docs/DORMANT-GEM-OPERATIONAL-POLICY.md</span>。
+              檢視活動狀態。
             </p>
           </CardContent>
         </Card>
@@ -171,7 +172,7 @@ export function DormantGemsSurfaceSection({
             </Select>
           </div>
           <div
-            className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-primary"
+            className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-primary"
             data-testid="dormant-gem-action-shortcuts-v4"
           >
             <Link href="/judgment" className="underline-offset-2 hover:underline font-medium">
@@ -192,57 +193,65 @@ export function DormantGemsSurfaceSection({
             ) : null}
           </div>
           <div
-            className="rounded-md border border-violet-200/50 dark:border-violet-800/40 bg-background/50 px-2.5 py-1.5 text-[10px] text-muted-foreground"
+            className="rounded-md border border-violet-200/50 dark:border-violet-800/40 bg-background/50 px-2.5 py-1.5 text-xs text-muted-foreground"
             data-testid="dormant-zero-spend-classification-legend"
           >
-            零花費：本列 = 高潛復活主物件；診斷與 stale 見政策與預算頁—主清單不混入無行動價值項。
+            零花費時：本列為高潛復活主對象；其餘診斷列請見政策與預算頁。
           </div>
         </CardHeader>
-        <CardContent className="pt-0 space-y-3 text-sm">
+        <CardContent className="pt-0 space-y-4 text-sm">
           {sortedFiltered.slice(0, 40).map((c) => (
-            <div
-              key={`${c.campaignId}-${surface}`}
-              className="flex flex-col gap-1.5 border-b border-border/50 pb-3 last:border-0 last:pb-0"
-              data-testid="dormant-gem-operational-row"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{c.campaignName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {c.productName} · 7d {Number(c.trailingSpend7d ?? 0).toFixed(0)} · 14d{" "}
-                    {Number(c.trailingSpend14d ?? 0).toFixed(0)}
-                    {c.roas7d != null ? ` · 7d ROAS ${Number(c.roas7d).toFixed(2)}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-1 shrink-0">
+            <div key={`${c.campaignId}-${surface}`} data-testid="dormant-gem-operational-row">
+            <ActionCard
+              semantic="dormant"
+              title={`${c.campaignName} — 值得復活`}
+              subtitle={`${c.productName ?? "—"} · 7d ${Number(c.trailingSpend7d ?? 0).toFixed(0)} · 14d ${Number(c.trailingSpend14d ?? 0).toFixed(0)}`}
+              metrics={
+                <>
+                  <span>7d ROAS {c.roas7d != null ? Number(c.roas7d).toFixed(1) : "—"}</span>
+                  <span>機會分 {c.opportunityScore ?? "—"}</span>
                   {c.revivalPriorityScore != null ? (
-                    <Badge variant="secondary" className="text-[10px] font-mono tabular-nums">
+                    <Badge variant="secondary" className="text-xs font-mono tabular-nums">
                       P{c.revivalPriorityScore}
                     </Badge>
                   ) : null}
-                  <Badge variant="outline" className="text-[10px] uppercase tracking-tight">
+                  <Badge variant="outline" className="text-xs uppercase tracking-tight">
                     {c.visibilityTier === "paused_winner_bucket" ? "暫停贏家" : "沉睡高潛"}
                   </Badge>
-                </div>
+                </>
+              }
+              confidenceLabel={
+                c.revivalPriorityScore != null && c.revivalPriorityScore > 70 ? "高信心" : "中信心"
+              }
+              className="border-violet-300/50 dark:border-violet-800/40 bg-violet-50/10 dark:bg-violet-950/15"
+            >
+              <Button type="button" size="sm" className="h-8 text-xs rounded-lg" asChild>
+                <Link href="/judgment">審判下指令</Link>
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="h-8 text-xs rounded-lg" asChild>
+                <Link href="/fb-ads">查看預算</Link>
+              </Button>
+              <div className="w-full basis-full text-xs space-y-1.5 pt-1 border-t border-border/50 mt-1">
+                <p
+                  className="text-violet-900/90 dark:text-violet-100/90 leading-snug border-l-2 border-violet-300/60 pl-2"
+                  data-testid="dormant-gem-reason-line"
+                >
+                  {reasonFor(c)}
+                </p>
+                <p
+                  className="text-emerald-900/90 dark:text-emerald-100/85 leading-snug border-l-2 border-emerald-400/50 pl-2"
+                  data-testid="dormant-gem-revive-recommendation"
+                >
+                  {reviveFor(c)}
+                </p>
+                <p className="text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-paused">
+                  {whyPausedFor(c)}
+                </p>
+                <p className="text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-revive">
+                  {whyReviveFor(c)}
+                </p>
               </div>
-              <p
-                className="text-[11px] text-violet-900/90 dark:text-violet-100/90 leading-snug border-l-2 border-violet-300/60 pl-2"
-                data-testid="dormant-gem-reason-line"
-              >
-                {reasonFor(c)}
-              </p>
-              <p
-                className="text-[11px] text-emerald-900/90 dark:text-emerald-100/85 leading-snug border-l-2 border-emerald-400/50 pl-2"
-                data-testid="dormant-gem-revive-recommendation"
-              >
-                {reviveFor(c)}
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-paused">
-                {whyPausedFor(c)}
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-revive">
-                {whyReviveFor(c)}
-              </p>
+            </ActionCard>
             </div>
           ))}
         </CardContent>

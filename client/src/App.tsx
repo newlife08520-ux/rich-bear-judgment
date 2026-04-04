@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ComponentType } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,10 +6,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { AuthProvider, useAuth } from "@/lib/auth";
+import { AuthProvider, useAuth, canAccess } from "@/lib/auth";
+import AccessDeniedPage from "@/pages/access-denied";
 import { EmployeeProvider } from "@/lib/employee-context";
 import { AppScopeProvider } from "@/hooks/use-app-scope";
 import { WorkbenchFilterProvider } from "@/lib/workbench-filter-context";
+import { ProductViewScopeProvider } from "@/hooks/use-product-view-scope";
 import { MetaApiErrorProvider } from "@/context/meta-api-error-context";
 import { MetaGlobalErrorBanner } from "@/components/meta/MetaGlobalErrorBanner";
 import LoginPage from "@/pages/login";
@@ -51,7 +53,11 @@ function LoadingScreen() {
   );
 }
 
-function AuthenticatedApp({ user }: { user: { id: string } }) {
+function gatePage(user: { role?: string }, path: string, Page: ComponentType) {
+  return canAccess(user.role, path) ? <Page /> : <AccessDeniedPage />;
+}
+
+function AuthenticatedApp({ user }: { user: { id: string; role?: string } }) {
   const sidebarStyle = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3.5rem",
@@ -73,6 +79,7 @@ function AuthenticatedApp({ user }: { user: { id: string } }) {
     <EmployeeProvider>
       <AppScopeProvider userId={user.id}>
         <WorkbenchFilterProvider>
+        <ProductViewScopeProvider>
         <MetaApiErrorProvider>
         <SidebarProvider style={sidebarStyle as React.CSSProperties}>
         <div className="flex h-screen w-full">
@@ -81,27 +88,41 @@ function AuthenticatedApp({ user }: { user: { id: string } }) {
             <MetaGlobalErrorBanner />
             <main className="flex-1 min-h-0 overflow-auto">
               <Switch>
-                <Route path="/" component={DashboardPage} />
-                <Route path="/products" component={ProductsPage} />
-                <Route path="/tasks" component={TasksPage} />
-                <Route path="/mapping" component={ProductMappingPage} />
-                <Route path="/judgment" component={JudgmentPage} />
-                <Route path="/fb-ads" component={FbAdsPage} />
-                <Route path="/ga4" component={GA4AnalysisPage} />
-                <Route path="/history" component={HistoryPage} />
-                <Route path="/assets" component={AssetsPage} />
-                <Route path="/creative-lifecycle" component={CreativeLifecyclePage} />
-                <Route path="/creative-intelligence" component={CreativeIntelligencePage} />
-                <Route path="/creatives" component={CreativesPage} />
-                <Route path="/scorecard" component={ScorecardPage} />
-                <Route path="/publish/history" component={PublishHistoryPlaceholderPage} />
-                <Route path="/publish" component={PublishCenterPage} />
-                <Route path="/execution-history" component={ExecutionHistoryPage} />
-                <Route path="/settings/team" component={TeamSettingsPage} />
-                <Route path="/settings/thresholds" component={SettingsThresholdsPage} />
-                <Route path="/settings/prompts" component={SettingsPromptsPage} />
-                <Route path="/settings/profit-rules" component={SettingsProfitRulesPage} />
-                <Route path="/settings" component={SettingsPage} />
+                <Route path="/">{() => gatePage(user, "/", DashboardPage)}</Route>
+                <Route path="/products">{() => gatePage(user, "/products", ProductsPage)}</Route>
+                <Route path="/tasks">{() => gatePage(user, "/tasks", TasksPage)}</Route>
+                <Route path="/mapping">{() => gatePage(user, "/mapping", ProductMappingPage)}</Route>
+                <Route path="/judgment">{() => gatePage(user, "/judgment", JudgmentPage)}</Route>
+                <Route path="/fb-ads">{() => gatePage(user, "/fb-ads", FbAdsPage)}</Route>
+                <Route path="/ga4">{() => gatePage(user, "/ga4", GA4AnalysisPage)}</Route>
+                <Route path="/history">{() => gatePage(user, "/history", HistoryPage)}</Route>
+                <Route path="/assets">{() => gatePage(user, "/assets", AssetsPage)}</Route>
+                <Route path="/creative-lifecycle">
+                  {() => gatePage(user, "/creative-lifecycle", CreativeLifecyclePage)}
+                </Route>
+                <Route path="/creative-intelligence">
+                  {() => gatePage(user, "/creative-intelligence", CreativeIntelligencePage)}
+                </Route>
+                <Route path="/creatives">{() => gatePage(user, "/creatives", CreativesPage)}</Route>
+                <Route path="/scorecard">{() => gatePage(user, "/scorecard", ScorecardPage)}</Route>
+                <Route path="/publish/history">
+                  {() => gatePage(user, "/publish/history", PublishHistoryPlaceholderPage)}
+                </Route>
+                <Route path="/publish">{() => gatePage(user, "/publish", PublishCenterPage)}</Route>
+                <Route path="/execution-history">
+                  {() => gatePage(user, "/execution-history", ExecutionHistoryPage)}
+                </Route>
+                <Route path="/settings/team">{() => gatePage(user, "/settings/team", TeamSettingsPage)}</Route>
+                <Route path="/settings/thresholds">
+                  {() => gatePage(user, "/settings/thresholds", SettingsThresholdsPage)}
+                </Route>
+                <Route path="/settings/prompts">
+                  {() => gatePage(user, "/settings/prompts", SettingsPromptsPage)}
+                </Route>
+                <Route path="/settings/profit-rules">
+                  {() => gatePage(user, "/settings/profit-rules", SettingsProfitRulesPage)}
+                </Route>
+                <Route path="/settings">{() => gatePage(user, "/settings", SettingsPage)}</Route>
                 <Route component={NotFound} />
               </Switch>
             </main>
@@ -109,6 +130,7 @@ function AuthenticatedApp({ user }: { user: { id: string } }) {
         </div>
         </SidebarProvider>
         </MetaApiErrorProvider>
+        </ProductViewScopeProvider>
         </WorkbenchFilterProvider>
       </AppScopeProvider>
     </EmployeeProvider>
