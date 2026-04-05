@@ -2,7 +2,9 @@
 
 ## 環境變數
 
-- **DATABASE_URL**：PostgreSQL 連線字串（須含 `schema=public` 若使用非預設 schema）。本機可參考 `.env.example`。
+- **DATABASE_URL**：PostgreSQL 連線字串（須以 `postgresql://` 或 `postgres://` 開頭）。本機可參考 `.env.example`。
+- **PRISMA_DATABASE_URL**（選用）：若平台誤將 `DATABASE_URL` 設成舊版 SQLite（`file:…`），可另設本變數為 Postgres 連線字串；Prisma 與 `server/db.ts` 會**優先**使用本值。
+- **切勿**在生產環境把 `DATABASE_URL` 設為 `file:/app/data/workbench.db` 等 SQLite 路徑：本專案 `schema.prisma` 的 provider 為 **postgresql**，否則 `prisma migrate deploy` 會報 **P1013**。
 - **SESSION_SECRET**：生產環境請設強隨機字串。
 - 其餘 Meta／GA4／Gemini 等金鑰依既有 `README` 或營運文件設定。
 

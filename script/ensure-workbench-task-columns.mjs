@@ -10,6 +10,25 @@ import Database from "better-sqlite3";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 
+function isPostgresUrl(u) {
+  if (!u || typeof u !== "string") return false;
+  const t = u.trim();
+  return t.startsWith("postgresql://") || t.startsWith("postgres://");
+}
+
+/** PostgreSQL 時欄位由 prisma migrate 管理，此腳本僅處理舊 SQLite 檔 */
+if (
+  isPostgresUrl(process.env.PRISMA_DATABASE_URL) ||
+  isPostgresUrl(process.env.DATABASE_URL) ||
+  isPostgresUrl(process.env.POSTGRES_PRISMA_URL) ||
+  isPostgresUrl(process.env.POSTGRES_URL)
+) {
+  console.log(
+    "[ensure-workbench-task-columns] 偵測到 PostgreSQL，略過 SQLite 欄位修補（由 prisma migrate 負責）。"
+  );
+  process.exit(0);
+}
+
 const rawDbFile = process.env.DATABASE_URL?.replace(/^file:/, "") ?? path.join(rootDir, ".data", "workbench.db");
 const dbPath = path.isAbsolute(rawDbFile) ? rawDbFile : path.resolve(rootDir, rawDbFile);
 

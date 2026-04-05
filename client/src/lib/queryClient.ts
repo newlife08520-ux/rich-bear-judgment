@@ -7,7 +7,8 @@ async function throwIfResNotOk(res: Response) {
     try {
       const body = JSON.parse(text) as { message?: string };
       if (body?.message && typeof body.message === "string") {
-        message = body.message;
+        // 保留狀態碼前綴，讓呼叫端（如 login）能判斷 401/429 等
+        message = `${res.status}: ${body.message}`;
       }
     } catch {
       // keep message as status + text

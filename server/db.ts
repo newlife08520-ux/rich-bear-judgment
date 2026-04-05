@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { resolvePostgresDatabaseUrl } from "./resolve-postgres-url";
 
 /** 從專案根目錄 .env 載入變數（tsx 腳本／測試未經 prisma.config 時仍可用） */
 function loadDotenvFromProjectRoot(): void {
@@ -27,10 +28,7 @@ function loadDotenvFromProjectRoot(): void {
 
 loadDotenvFromProjectRoot();
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required (PostgreSQL connection string). See .env.example and docs/DEPLOYMENT.md.");
-}
+const connectionString = resolvePostgresDatabaseUrl();
 
 const adapter = new PrismaPg(connectionString);
 export const prisma = new PrismaClient({ adapter });

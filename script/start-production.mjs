@@ -40,7 +40,13 @@ if (migrate.status !== 0) {
 }
 
 console.log("[start-production] 執行 ensure-workbench-task-columns（不論 migrate 成敗皆執行）…");
-console.log("[start-production] 當前 DATABASE_URL:", process.env.DATABASE_URL ?? "(未設，將用預設 .data/workbench.db)");
+console.log(
+  "[start-production] DATABASE_URL 開頭:",
+  (process.env.DATABASE_URL ?? "(未設)").slice(0, 48) + (process.env.DATABASE_URL && process.env.DATABASE_URL.length > 48 ? "…" : "")
+);
+if (process.env.PRISMA_DATABASE_URL) {
+  console.log("[start-production] 已設定 PRISMA_DATABASE_URL（供 PostgreSQL 覆寫用）");
+}
 const ensure = spawnSync(execPath, [path.join(rootDir, "script", "ensure-workbench-task-columns.mjs")], {
   cwd: rootDir,
   env: process.env,

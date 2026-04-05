@@ -27,9 +27,10 @@ export default function LoginPage() {
       await login(username, password);
     } catch (err: any) {
       const msg = String(err?.message || "");
-      if (msg.includes("401")) setError("帳號或密碼錯誤");
-      else if (msg.includes("400")) setError("請輸入有效的帳號與密碼");
-      else if (msg.includes("500") || msg.includes("500:")) setError("伺服器錯誤，請稍後再試");
+      if (msg.includes("401") || msg.includes("帳號或密碼錯誤")) setError("帳號或密碼錯誤");
+      else if (msg.includes("400") || msg.includes("請輸入帳號與密碼")) setError("請輸入有效的帳號與密碼");
+      else if (msg.includes("429") || msg.includes("登入嘗試過多")) setError("登入嘗試過多，請稍後再試");
+      else if (msg.includes("500") || msg.includes("500:") || msg.includes("Session")) setError("伺服器錯誤，請稍後再試");
       else if (msg.includes("fetch") || msg.includes("Network") || msg.includes("Failed")) setError("無法連線，請確認服務是否已啟動（npm run dev）");
       else setError("登入失敗，請稍後再試");
     } finally {

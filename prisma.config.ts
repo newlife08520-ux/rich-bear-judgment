@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { defineConfig } from "prisma/config";
+import { resolvePostgresDatabaseUrl } from "./server/resolve-postgres-url";
 
 /** Prisma CLI 讀取設定時未必已載入 .env，手動注入根目錄 .env */
 function loadRootEnv(): void {
@@ -30,8 +31,6 @@ loadRootEnv();
 export default defineConfig({
   schema: path.join(process.cwd(), "prisma", "schema.prisma"),
   datasource: {
-    url:
-      process.env.DATABASE_URL ??
-      "postgresql://postgres:postgres@localhost:5432/richbear?schema=public",
+    url: resolvePostgresDatabaseUrl(),
   },
 });
