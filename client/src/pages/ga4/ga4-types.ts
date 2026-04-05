@@ -24,16 +24,23 @@ export type SortKey =
 export type SortDir = "asc" | "desc";
 
 export const aiLabelColors: Record<string, string> = {
-  最值得放量: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-  流量有但接不住: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  首屏太弱: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
-  說服力不足: "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
-  加購意圖低: "bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
-  "checkout阻力高": "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
-  可當模板: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  先修再投: "bg-pink-50 text-pink-700 dark:bg-pink-950 dark:text-pink-300",
-  結帳前掉最兇: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
-  不適合導購: "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  最值得放量:
+    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
+  流量有但接不住:
+    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
+  首屏太弱: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  說服力不足:
+    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
+  加購意圖低:
+    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
+  "checkout阻力高":
+    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  可當模板:
+    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50",
+  先修再投: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  結帳前掉最兇:
+    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  不適合導購: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
 export const recommendationPageLabels: Record<string, string> = {
@@ -44,10 +51,14 @@ export const recommendationPageLabels: Record<string, string> = {
 };
 
 export const recommendationPageColors: Record<string, string> = {
-  add_traffic: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-  fix_first: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
-  use_as_template: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  monitor: "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  add_traffic:
+    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
+  fix_first:
+    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  use_as_template:
+    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50",
+  monitor:
+    "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
 export const pageGroupLabels: Record<PageGroup, string> = {
@@ -106,9 +117,9 @@ export const assetViewPageGroups: Record<AssetView, AssetPageGroup[]> = {
 };
 
 export const priorityColors: Record<string, string> = {
-  high: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
-  medium: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  low: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
+  high: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  medium: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
+  low: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
 };
 
 export const priorityLabels: Record<string, string> = {

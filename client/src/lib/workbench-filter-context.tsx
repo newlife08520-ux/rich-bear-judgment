@@ -25,7 +25,7 @@ export interface WorkbenchFilterState {
   minSpend: number;
   sortBy: SortKey;
   sortDesc: boolean;
-  /** 預設「需處理」：排除純觀察桶；pareto_marked 僅顯示落在 Pareto 標記集合的商品／對應素材列 */
+  /** 預設「重點 Top 20%」：對齊 80／20；無標記時後備為需處理視角（見各頁 workbench） */
   paretoListMode: ParetoListMode;
 }
 
@@ -40,7 +40,7 @@ const defaultState: WorkbenchFilterState = {
   minSpend: 0,
   sortBy: "dormant_priority",
   sortDesc: true,
-  paretoListMode: "needs_attention",
+  paretoListMode: "pareto_marked",
 };
 
 function load(): WorkbenchFilterState {

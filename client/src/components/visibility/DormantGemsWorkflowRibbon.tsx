@@ -21,9 +21,9 @@ export function DormantGemsWorkflowRibbon({
     <section
       data-testid={tid}
       aria-label="沉睡復活主工作物件 Top 3"
-      className="rounded-lg border border-violet-300/60 bg-violet-50/40 dark:bg-violet-950/25 px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2"
+      className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 shadow-sm dark:border-border dark:bg-card"
     >
-      <span className="text-xs font-semibold text-violet-950 dark:text-violet-100 shrink-0">
+      <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-100 shrink-0">
         主工作物件 · 復活排序 Top 3（P 分）
       </span>
       {top.map((c) => (

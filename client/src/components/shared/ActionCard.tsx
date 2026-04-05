@@ -22,16 +22,16 @@ export function ActionCard({
   children?: ReactNode;
   className?: string;
 }) {
-  const { bar } = statusClasses(semantic);
+  const { leftStripe } = statusClasses(semantic);
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border/60 bg-card p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden pl-5",
+        "rounded-xl border border-slate-200 bg-white p-5 pl-4 shadow-sm hover:shadow-md transition-shadow border-l-4 dark:border-border dark:bg-card",
+        leftStripe,
         className
       )}
     >
-      <div className={cn("absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl", bar)} />
-      <div className="pl-1 space-y-2">
+      <div className="space-y-2">
         <div className="flex flex-wrap items-start gap-2">
           <StatusDot semantic={semantic} size="md" className="mt-1" />
           <div className="min-w-0 flex-1">

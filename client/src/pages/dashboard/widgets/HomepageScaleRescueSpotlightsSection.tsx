@@ -22,12 +22,12 @@ export function HomepageScaleRescueSpotlightsSection({
 
   return (
     <section data-testid="section-homepage-scale-rescue-spotlights" aria-label="今日放大與止血焦點">
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/[0.06] to-transparent shadow-sm hover:shadow-md transition-shadow">
+      <Card className="border-slate-200 bg-white border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-shadow dark:border-border dark:bg-card">
         <CardContent className="p-4 sm:p-5">
           <p className="text-xs font-semibold text-foreground mb-3">指揮焦點 · 放大與止血（精簡列；完整三桶見下方「營運細節」）</p>
           <div className="grid gap-4 md:grid-cols-2">
             <div
-              className="rounded-lg border border-emerald-200/70 dark:border-emerald-900/50 bg-background/80 p-3 space-y-2"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-emerald-500 p-3 space-y-2 dark:border-border dark:bg-card"
               data-testid="homepage-scale-spotlight"
             >
               <h3 className="text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
@@ -53,10 +53,10 @@ export function HomepageScaleRescueSpotlightsSection({
               )}
             </div>
             <div
-              className="rounded-lg border border-red-200/60 dark:border-red-900/40 bg-background/80 p-3 space-y-2"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-rose-500 p-3 space-y-2 dark:border-border dark:bg-card"
               data-testid="homepage-rescue-spotlight"
             >
-              <h3 className="text-xs font-semibold text-red-900 dark:text-red-200 flex items-center gap-1.5">
+              <h3 className="text-xs font-semibold text-rose-900 dark:text-rose-200 flex items-center gap-1.5">
                 <Siren className="w-3.5 h-3.5 shrink-0" />
                 今日最需要止血
               </h3>
@@ -65,16 +65,14 @@ export function HomepageScaleRescueSpotlightsSection({
                   {rescueOrdered.map((r) => (
                     <li
                       key={r.campaignId}
-                      className={`rounded-md px-2 py-1.5 border-l-2 ${
-                        r.suggestedPct === "關閉"
-                          ? "border-red-500/80 bg-red-50/30 dark:bg-red-950/20"
-                          : "border-amber-500/70 bg-muted/30"
+                      className={`rounded-md border border-slate-100 bg-slate-50/80 px-2 py-1.5 border-l-4 dark:border-border dark:bg-muted/20 ${
+                        r.suggestedPct === "關閉" ? "border-l-rose-500" : "border-l-amber-500"
                       }`}
                     >
                       <span className="font-medium line-clamp-2">{r.campaignName}</span>
                       <p className="text-[11px] text-muted-foreground">
                         {r.suggestedPct === "關閉" ? (
-                          <span className="text-red-700 dark:text-red-300">建議關閉</span>
+                          <span className="text-rose-700 dark:text-rose-300">建議關閉</span>
                         ) : (
                           <>
                             {r.suggestedAction} {r.suggestedPct}%

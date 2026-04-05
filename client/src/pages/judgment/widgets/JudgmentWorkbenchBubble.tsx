@@ -218,7 +218,9 @@ export function JudgmentWorkbenchBubble({
                   </Badge>
                 )}
                 {parsed.suggestTask === true && (
-                  <Badge className="text-xs bg-primary/15 text-primary border-0">建議產任務</Badge>
+                  <Badge className="text-xs bg-indigo-50 text-indigo-800 border-indigo-200 border dark:bg-indigo-950/50 dark:text-indigo-200 dark:border-indigo-800/50">
+                    建議產任務
+                  </Badge>
                 )}
               </div>
             </div>
@@ -240,7 +242,7 @@ export function JudgmentWorkbenchBubble({
                   <span className="text-muted-foreground">門檻分數</span>
                   <span className="font-medium">{DEFAULT_REVIEW_THRESHOLD}</span>
                   <span className="text-muted-foreground">結果</span>
-                  <span className={passed ? "font-medium text-green-700" : "font-medium text-amber-700"}>
+                  <span className={passed ? "font-medium text-emerald-700" : "font-medium text-amber-700"}>
                     {passed ? "通過" : "未通過"}
                   </span>
                 </div>

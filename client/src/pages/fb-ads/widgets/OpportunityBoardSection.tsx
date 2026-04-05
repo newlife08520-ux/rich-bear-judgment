@@ -140,8 +140,8 @@ export function OpportunityBoardSection() {
     <Card data-testid="card-opportunity-board">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center shrink-0">
-            <Target className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center shrink-0">
+            <Target className="w-4 h-4 text-indigo-600" />
           </div>
           <h3 className="text-sm font-semibold" data-testid="text-opportunity-board-title">機會看板</h3>
           <Badge variant="secondary" className="text-xs ml-auto">{opportunities.length} 個機會</Badge>

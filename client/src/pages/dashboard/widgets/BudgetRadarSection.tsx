@@ -71,14 +71,14 @@ export function BudgetRadarSection({ radar }: { radar: BudgetRadarDerived }) {
               )}
             </div>
             <div>
-              <h3 className="text-xs font-medium text-red-600 dark:text-red-400 mb-2 flex items-center gap-1">
+              <h3 className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-2 flex items-center gap-1">
                 <StopCircle className="w-3.5 h-3.5" />
                 建議停止
               </h3>
               {stop.length > 0 ? (
                 <ul className="space-y-2">
                   {stop.map((s, i) => (
-                    <li key={s.campaignId || i} className="rounded-lg border border-red-200/60 dark:border-red-800/40 p-2 text-sm">
+                    <li key={s.campaignId || i} className="rounded-lg border border-rose-200/60 dark:border-rose-800/40 p-2 text-sm">
                       <span className="font-medium truncate block">{s.productName ? `${s.productName} · ` : ""}{s.campaignName}</span>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {formatCurrency(s.spend)} · {s.suggestedAction}

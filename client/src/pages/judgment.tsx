@@ -47,7 +47,7 @@ export default function JudgmentPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-slate-50">
       <JudgmentHeader
         historyOpen={wb.historyOpen}
         onToggleHistory={() => wb.setHistoryOpen((o) => !o)}
@@ -77,9 +77,9 @@ export default function JudgmentPage() {
           />
         )}
 
-        <main className="flex-1 flex flex-col min-w-0 bg-gray-50">
+        <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
           {wb.loadingSession && wb.sessionIdFromUrl ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="flex-1 flex items-center justify-center bg-slate-50">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : (

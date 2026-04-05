@@ -23,7 +23,7 @@ export function Ga4PageDetailDialog(w: Pick<
               {selectedDetail?.pageName}
               {selectedDetail && (
                 <Badge
-                  variant="secondary"
+                  variant="outline"
                   className={`no-default-hover-elevate no-default-active-elevate ${aiLabelColors[selectedDetail.aiLabel] || ""}`}
                 >
                   {selectedDetail.aiLabel}
@@ -81,7 +81,7 @@ export function Ga4PageDetailDialog(w: Pick<
               {selectedDetail.opportunityBreakdown && <OpportunityBreakdownDisplay breakdown={selectedDetail.opportunityBreakdown} />}
 
               {selectedDetail.suggestedAction && (
-                <div className="flex items-start gap-2 p-3 rounded-md bg-emerald-50/50 dark:bg-emerald-950/30">
+                <div className="flex items-start gap-2 p-3 rounded-xl border border-slate-200 bg-white border-l-4 border-l-emerald-500 dark:border-border dark:bg-card">
                   <Lightbulb className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-0.5">建議動作</p>
@@ -91,9 +91,9 @@ export function Ga4PageDetailDialog(w: Pick<
               )}
 
               {selectedDetail.estimatedImpact && (
-                <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50/50 dark:bg-blue-950/30">
-                  <TrendingUp className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed" data-testid="text-detail-estimated-impact">{selectedDetail.estimatedImpact}</p>
+                <div className="flex items-start gap-2 p-3 rounded-md bg-indigo-50/50 dark:bg-indigo-950/30">
+                  <TrendingUp className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300 leading-relaxed" data-testid="text-detail-estimated-impact">{selectedDetail.estimatedImpact}</p>
                 </div>
               )}
 
@@ -105,7 +105,7 @@ export function Ga4PageDetailDialog(w: Pick<
                     <h4 className="text-sm font-semibold mb-2">頁面排名建議</h4>
                     <div className="flex items-center gap-2 mb-2">
                       <Badge
-                        variant="secondary"
+                        variant="outline"
                         className={`no-default-hover-elevate no-default-active-elevate ${recommendationPageColors[ranking.recommendation] || ""}`}
                         data-testid="badge-detail-recommendation"
                       >

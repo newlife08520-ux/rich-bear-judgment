@@ -79,7 +79,11 @@ export default function CreativesPage() {
             const isHelp = c.roas >= 2;
             const isDrag = c.roas < 1 || isFatigue;
             const worthExtend = isBlackHorse && (c.creativeEdge ?? 0) >= 1.2;
-            const cardVariant = isBlackHorse ? "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20" : isDrag ? "border-red-200/80 bg-red-50/30 dark:bg-red-950/20" : "border-border bg-card";
+            const cardVariant = isBlackHorse
+              ? "border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
+              : isDrag
+                ? "border-slate-200 bg-white border-l-4 border-l-rose-500 dark:border-border dark:bg-card"
+                : "border-border bg-card";
 
             const forBuyer = c.budgetReason
               ? `${c.suggestedAction ?? ""} ${c.suggestedPct === "關閉" ? "關閉" : c.suggestedPct != null ? c.suggestedPct + "%" : ""} — ${c.budgetReason}`
@@ -102,7 +106,7 @@ export default function CreativesPage() {
                       <p className="mt-0.5">{c.productName}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground font-medium flex items-center gap-1">{isHelp ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-red-600" />} 幫還是拖</span>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1">{isHelp ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />} 幫還是拖</span>
                       <p className="mt-0.5">{isHelp ? "幫" : isDrag ? "拖" : "觀察中"}</p>
                     </div>
                     <div>

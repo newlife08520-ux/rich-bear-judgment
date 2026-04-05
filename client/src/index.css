@@ -8,51 +8,53 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 40 25% 97%;
-  --foreground: 224 10% 15%;
-  --border: 220 9% 91%;
-  --card: 40 20% 99%;
-  --card-foreground: 224 10% 15%;
-  --card-border: 220 9% 91%;
-  --sidebar: 220 14% 96%;
-  --sidebar-foreground: 224 10% 15%;
-  --sidebar-border: 220 9% 91%;
-  --sidebar-primary: 221 83% 53%;
+  /* Phase 8：Slate 中性底 + Indigo 品牌主色（≈ slate-50 / indigo-600） */
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
+  --sidebar: 210 40% 98%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-primary: 243 75% 58%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 14% 93%;
-  --sidebar-accent-foreground: 224 10% 15%;
-  --sidebar-ring: 221 83% 53%;
+  --sidebar-accent: 210 40% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-ring: 243 75% 58%;
   --popover: 0 0% 100%;
-  --popover-foreground: 224 10% 15%;
-  --popover-border: 220 9% 91%;
-  --primary: 221 83% 53%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
+  --primary: 243 75% 58%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 224 10% 30%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 9% 46%;
-  --accent: 220 14% 96%;
-  --accent-foreground: 224 10% 15%;
-  --destructive: 0 72% 51%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 26%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  /* 對齊四色：錯誤／嚴重 = rose（≈ Tailwind rose-600） */
+  --destructive: 346.8 77.2% 49.8%;
   --destructive-foreground: 0 0% 100%;
-  --input: 220 9% 91%;
-  --ring: 221 83% 53%;
+  --input: 214 32% 91%;
+  --ring: 243 75% 58%;
 
   --status-profit: #059669;
-  --status-profit-light: #A7F3D0;
-  --status-profit-surface: #D1FAE5;
-  --status-loss: #DC2626;
-  --status-loss-light: #FECACA;
-  --status-loss-surface: #FEE2E2;
-  --status-watch: #D97706;
-  --status-watch-light: #FDE68A;
-  --status-watch-surface: #FEF3C7;
-  --status-dormant: #7C3AED;
-  --status-dormant-light: #C4B5FD;
-  --status-dormant-surface: #EDE9FE;
-  --status-info: #0284C7;
-  --status-info-light: #BAE6FD;
-  --status-info-surface: #E0F2FE;
+  --status-profit-light: #6ee7b7;
+  --status-profit-surface: #d1fae5;
+  --status-loss: #e11d48;
+  --status-loss-light: #fecdd3;
+  --status-loss-surface: #ffe4e6;
+  --status-watch: #b45309;
+  --status-watch-light: #fcd34d;
+  --status-watch-surface: #fef3c7;
+  --status-dormant: #6366f1;
+  --status-dormant-light: #c7d2fe;
+  --status-dormant-surface: #e0e7ff;
+  --status-info: #4f46e5;
+  --status-info-light: #a5b4fc;
+  --status-info-surface: #e0e7ff;
   --chart-1: 221 83% 53%;
   --chart-2: 142 71% 45%;
   --chart-3: 25 95% 53%;
@@ -113,22 +115,24 @@
   --secondary-foreground: 220 14% 85%;
   --accent-foreground: 220 14% 90%;
   --input: 224 10% 20%;
+  --destructive: 346.8 65% 50%;
+  --destructive-foreground: 0 0% 100%;
 
-  --status-profit: #34D399;
+  --status-profit: #34d399;
   --status-profit-light: rgba(16, 185, 129, 0.15);
   --status-profit-surface: rgba(16, 185, 129, 0.08);
-  --status-loss: #F87171;
-  --status-loss-light: rgba(239, 68, 68, 0.15);
-  --status-loss-surface: rgba(239, 68, 68, 0.08);
-  --status-watch: #FBBF24;
+  --status-loss: #fb7185;
+  --status-loss-light: rgba(244, 63, 94, 0.2);
+  --status-loss-surface: rgba(244, 63, 94, 0.1);
+  --status-watch: #fbbf24;
   --status-watch-light: rgba(245, 158, 11, 0.15);
   --status-watch-surface: rgba(245, 158, 11, 0.08);
-  --status-dormant: #A78BFA;
-  --status-dormant-light: rgba(139, 92, 246, 0.15);
-  --status-dormant-surface: rgba(139, 92, 246, 0.08);
-  --status-info: #38BDF8;
-  --status-info-light: rgba(14, 165, 233, 0.15);
-  --status-info-surface: rgba(14, 165, 233, 0.08);
+  --status-dormant: #818cf8;
+  --status-dormant-light: rgba(99, 102, 241, 0.2);
+  --status-dormant-surface: rgba(99, 102, 241, 0.1);
+  --status-info: #818cf8;
+  --status-info-light: rgba(99, 102, 241, 0.2);
+  --status-info-surface: rgba(99, 102, 241, 0.1);
 }
 
 @layer base {
@@ -179,20 +183,20 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .semantic-danger { @apply text-red-600 dark:text-red-400; }
+  .semantic-danger { @apply text-rose-600 dark:text-rose-400; }
   .semantic-warning { @apply text-amber-600 dark:text-amber-400; }
   .semantic-stable { @apply text-emerald-600 dark:text-emerald-400; }
-  .semantic-opportunity { @apply text-blue-600 dark:text-blue-400; }
-  .semantic-low-confidence { @apply text-gray-500 dark:text-gray-400; }
+  .semantic-opportunity { @apply text-indigo-600 dark:text-indigo-400; }
+  .semantic-low-confidence { @apply text-slate-500 dark:text-slate-400; }
 
-  .semantic-danger-bg { @apply bg-red-50 dark:bg-red-950; }
+  .semantic-danger-bg { @apply bg-rose-50 dark:bg-rose-950; }
   .semantic-warning-bg { @apply bg-amber-50 dark:bg-amber-950; }
   .semantic-stable-bg { @apply bg-emerald-50 dark:bg-emerald-950; }
-  .semantic-opportunity-bg { @apply bg-blue-50 dark:bg-blue-950; }
-  .semantic-low-confidence-bg { @apply bg-gray-50 dark:bg-gray-900; }
+  .semantic-opportunity-bg { @apply bg-indigo-50 dark:bg-indigo-950; }
+  .semantic-low-confidence-bg { @apply bg-slate-100 dark:bg-slate-900; }
 
   .page-title {
-    @apply text-lg font-bold tracking-tight;
+    @apply text-xl font-bold tracking-tight text-slate-900 dark:text-foreground;
   }
 
   .section-title {

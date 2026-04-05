@@ -94,7 +94,7 @@ export function FilterBar({
       <div className="flex items-center gap-2">
         <Label className="text-xs text-muted-foreground whitespace-nowrap">清單視角</Label>
         <Select
-          value={filter.paretoListMode ?? "needs_attention"}
+          value={filter.paretoListMode ?? "pareto_marked"}
           onValueChange={(v) => setParetoListMode(v as ParetoListMode)}
         >
           <SelectTrigger className="w-[148px]" data-testid="select-pareto-list-mode">

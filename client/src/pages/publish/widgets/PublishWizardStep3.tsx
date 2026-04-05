@@ -48,7 +48,7 @@ export function PublishWizardStep3({ wb }: { wb: PublishWorkbench }) {
 <>
             {guardCheck?.metaWritesAllowed === false && (
               <div
-                className="rounded-md border border-amber-500/60 bg-amber-50/90 dark:bg-amber-950/40 px-3 py-2 text-xs text-amber-950 dark:text-amber-50"
+                className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-amber-500 px-3 py-2 text-xs text-amber-950 dark:border-border dark:bg-card dark:text-amber-100"
                 data-testid="publish-wizard-meta-guard-hint"
               >
                 <span className="font-semibold">Meta 寫入未啟用</span>
@@ -81,15 +81,15 @@ export function PublishWizardStep3({ wb }: { wb: PublishWorkbench }) {
                 <p className="text-xs text-muted-foreground mb-3">建立草稿前請確認以下項目</p>
                 <ul className="space-y-1.5 text-sm">
                   <li className={cn("flex items-center gap-2", preflight.hasAccount ? "text-foreground" : "text-destructive")}>
-                    {preflight.hasAccount ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.hasAccount ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     已選廣告帳號
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.hasPage ? "text-foreground" : "text-destructive")}>
-                    {preflight.hasPage ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.hasPage ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     已選 Facebook 粉專
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.hasIgWhenRequired ? "text-foreground" : "text-destructive")}>
-                    {preflight.hasIgWhenRequired ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.hasIgWhenRequired ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     {placementIncludesIg ? "已選 IG 帳號（placement 含 IG 必填）" : "IG 選填"}
                   </li>
                   {selectedPageHasNoIg && (
@@ -99,27 +99,27 @@ export function PublishWizardStep3({ wb }: { wb: PublishWorkbench }) {
                     </li>
                   )}
                   <li className={cn("flex items-center gap-2", preflight.ctaValid ? "text-foreground" : "text-amber-600")}>
-                    {preflight.ctaValid ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.ctaValid ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     CTA 有效（未填時預設「來去逛逛」）
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.hasVersions ? "text-foreground" : "text-destructive")}>
-                    {preflight.hasVersions ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.hasVersions ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     已選素材版本
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.allHaveTypeAndRatio ? "text-foreground" : "text-destructive")}>
-                    {preflight.allHaveTypeAndRatio ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.allHaveTypeAndRatio ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     每個版本皆有類型與比例
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.hasFallbackInSelection ? "text-amber-600" : "text-foreground")}>
-                    {preflight.hasFallbackInSelection ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4 text-green-600" />}
+                    {preflight.hasFallbackInSelection ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4 text-emerald-600" />}
                     {preflight.hasFallbackInSelection ? "選中含 fallback 分組，不建議直接批次建組" : "無 fallback 分組或未選中"}
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.singleSizeWarning ? "text-amber-600" : "text-foreground")}>
-                    {preflight.singleSizeWarning ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4 text-green-600" />}
+                    {preflight.singleSizeWarning ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4 text-emerald-600" />}
                     {preflight.singleSizeWarning ? "僅單一尺寸，建議補齊多比例（不阻擋）" : "多尺寸或未選版本"}
                   </li>
                   <li className={cn("flex items-center gap-2", preflight.landingPageExists ? "text-foreground" : "text-amber-600")}>
-                    {preflight.landingPageExists ? <Check className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4" />}
+                    {preflight.landingPageExists ? <Check className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4" />}
                     落地頁網址 {preflight.landingPageExists ? "已填" : "未填"}
                   </li>
                 </ul>

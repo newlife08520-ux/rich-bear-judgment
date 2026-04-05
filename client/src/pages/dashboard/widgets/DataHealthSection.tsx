@@ -50,7 +50,7 @@ export function DataHealthSection({ health }: { health: DataHealthDerived }) {
               最後更新：{formatTimestamp(lastRefreshedAt)}
             </li>
             {homepagePartial && (
-              <li className="text-sky-800 dark:text-sky-200">
+              <li className="text-indigo-800 dark:text-indigo-200">
                 目前為「摘要缺失、決策層可用」狀態：下方五區與行動中心同源，可依活動／商品資料操作；執行刷新可補齊帳號級摘要。
               </li>
             )}
@@ -71,7 +71,7 @@ export function DataHealthSection({ health }: { health: DataHealthDerived }) {
             {dormantGemCount > 0 && (
               <li className="text-muted-foreground">
                 沉睡贏家／休眠高潛候選 {dormantGemCount} 筆（主視窗花費為 0，但 7／14 日視窗曾有表現）；見{" "}
-                <Link href="/fb-ads" className="text-primary/80 hover:underline">
+                <Link href="/fb-ads" className="text-indigo-600/90 hover:underline dark:text-indigo-400/90">
                   FB 廣告
                 </Link>{" "}
                 或政策文件 DEFAULT-VISIBILITY-POLICY。
@@ -96,7 +96,7 @@ export function DataHealthSection({ health }: { health: DataHealthDerived }) {
             )}
             <li className="text-muted-foreground pt-1">
               規則缺失或樣本不足時請先別亂動；欲減少「規則缺失」請至{" "}
-              <Link href="/settings/profit-rules" className="text-primary/80 hover:underline inline-flex items-center gap-1">
+              <Link href="/settings/profit-rules" className="text-indigo-600/90 hover:underline inline-flex items-center gap-1 dark:text-indigo-400/90">
                 <Calculator className="w-3 h-3" />
                 獲利規則中心
               </Link>{" "}

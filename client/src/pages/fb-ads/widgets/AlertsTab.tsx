@@ -125,7 +125,7 @@ export function AlertsTab() {
       {warnings.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
+            <AlertTriangle className="w-4 h-4 text-rose-500" />
             <h4 className="text-sm font-semibold">異常警示</h4>
           </div>
           <div className="space-y-3">

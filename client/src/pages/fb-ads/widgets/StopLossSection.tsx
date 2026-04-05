@@ -123,15 +123,17 @@ export function StopLossSection() {
     <Card data-testid="card-stop-loss">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-md bg-red-50 flex items-center justify-center shrink-0">
-            <StopCircle className="w-4 h-4 text-red-600" />
+          <div className="w-8 h-8 rounded-md bg-rose-50 flex items-center justify-center shrink-0">
+            <StopCircle className="w-4 h-4 text-rose-600" />
           </div>
           <h3 className="section-title" data-testid="text-stop-loss-title">該停下來的活動</h3>
-          <Badge variant="secondary" className="bg-red-100 text-red-700 border-transparent text-xs ml-auto">{stopCampaigns.length}</Badge>
+          <Badge variant="outline" className="bg-rose-50 text-rose-700 border border-rose-200 text-xs ml-auto dark:border-rose-800/50">
+            {stopCampaigns.length}
+          </Badge>
         </div>
         <div className="space-y-3">
           {stopCampaigns.map((c, idx) => (
-            <div key={`${c.campaignId}-${idx}`} className="p-3 rounded-md bg-red-50/50" data-testid={`card-stop-loss-${idx}`}>
+            <div key={`${c.campaignId}-${idx}`} className="p-3 rounded-md bg-rose-50/50" data-testid={`card-stop-loss-${idx}`}>
               <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
                 <div>
                   <p className="text-sm font-semibold" data-testid={`text-stop-campaign-${idx}`}>{c.campaignName}</p>
@@ -160,7 +162,7 @@ export function StopLossSection() {
               {c.stopLoss?.reasons && c.stopLoss.reasons.length > 0 && (
                 <div className="space-y-1" data-testid={`stop-reasons-${idx}`}>
                   {c.stopLoss.reasons.map((reason, ri) => (
-                    <div key={ri} className="flex items-start gap-1.5 text-xs text-red-700">
+                    <div key={ri} className="flex items-start gap-1.5 text-xs text-rose-700">
                       <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
                       <span>{reason}</span>
                     </div>
@@ -168,7 +170,7 @@ export function StopLossSection() {
                 </div>
               )}
               {(c.stopLoss?.timeWindow || c.stopLoss?.benchmark || c.stopLoss?.sustainedPattern || c.stopLoss?.possiblePageIssue) && (
-                <div className="mt-2 pt-2 border-t border-red-200/50 space-y-1.5" data-testid={`stop-details-${idx}`}>
+                <div className="mt-2 pt-2 border-t border-rose-200/50 space-y-1.5" data-testid={`stop-details-${idx}`}>
                   {c.stopLoss?.timeWindow && (
                     <p className="text-[11px] text-muted-foreground">{c.stopLoss.timeWindow}</p>
                   )}
@@ -183,8 +185,8 @@ export function StopLossSection() {
                   )}
                   {c.stopLoss?.possiblePageIssue && (
                     <div className="flex items-start gap-1.5 text-[11px]">
-                      <Globe className="w-3 h-3 mt-0.5 shrink-0 text-blue-500" />
-                      <span className="text-blue-700 dark:text-blue-400">{c.stopLoss.possiblePageIssue}</span>
+                      <Globe className="w-3 h-3 mt-0.5 shrink-0 text-indigo-500" />
+                      <span className="text-indigo-700 dark:text-indigo-400">{c.stopLoss.possiblePageIssue}</span>
                     </div>
                   )}
                 </div>

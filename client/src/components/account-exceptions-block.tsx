@@ -47,7 +47,7 @@ export function AccountExceptionsBlock({
 
   if (compact) {
     return (
-      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+      <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
         <CardHeader className="py-2 px-3">
           <CardTitle className="text-sm flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -72,7 +72,7 @@ export function AccountExceptionsBlock({
   }
 
   return (
-    <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+    <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-600" />

@@ -316,8 +316,12 @@ export function useProductsWorkbench() {
     if (filter.paretoListMode === "needs_attention") {
       f = f.filter((r) => r.productStatus !== "watch");
     }
-    if (filter.paretoListMode === "pareto_marked" && paretoMarkedIdSet && paretoMarkedIdSet.size > 0) {
-      f = f.filter((r) => paretoMarkedIdSet.has(r.productName));
+    if (filter.paretoListMode === "pareto_marked") {
+      if (paretoMarkedIdSet && paretoMarkedIdSet.size > 0) {
+        f = f.filter((r) => paretoMarkedIdSet.has(r.productName));
+      } else {
+        f = f.filter((r) => r.productStatus !== "watch");
+      }
     }
     if (filter.statusFilter.length > 0) {
       f = f.filter((r) => filter.statusFilter.includes(r.productStatus));

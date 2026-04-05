@@ -96,22 +96,22 @@ export function DormantGemsSurfaceSection({
       <div data-testid="dormant-gems-surface-v2">
         <div data-testid="dormant-gem-primary-work-object-v6" className="min-w-0">
         <Card
-          className="border-dashed border-violet-300/60 bg-violet-50/12 dark:bg-violet-950/10"
+          className="border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card"
           data-testid={testId}
           id={anchorId}
         >
           <CardHeader className="py-3 pb-2">
-            <CardTitle className="text-base font-semibold text-violet-950 dark:text-violet-100">
+            <CardTitle className="text-base font-semibold text-indigo-950 dark:text-indigo-100">
               沉睡復活候選
             </CardTitle>
             <p className="text-xs text-muted-foreground font-normal leading-snug">
-              目前無符合條件的候選。其他零花費列（尚未投遞、樣本不足等）請見可見性政策與預算頁診斷，與本區分開檢視。
+              目前無符合條件的候選。尚未投遞、樣本不足等請見上方補充說明或預算頁診斷，與本區分開檢視。
             </p>
             <div
-              className="rounded-md border border-violet-200/60 dark:border-violet-800/40 bg-background/60 px-2.5 py-2 text-[11px] text-muted-foreground leading-snug"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-2 text-[11px] text-muted-foreground leading-snug dark:border-border dark:bg-muted/20"
               data-testid="dormant-zero-spend-classification-legend"
             >
-              <p className="font-medium text-violet-950 dark:text-violet-100 mb-1">零花費怎麼看</p>
+              <p className="font-medium text-indigo-900 dark:text-indigo-200 mb-1">零花費怎麼看</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>
                   <strong>沉睡高潛／暫停贏家</strong>：本區主要操作對象。
@@ -145,11 +145,11 @@ export function DormantGemsSurfaceSection({
     <div data-testid="dormant-gems-operational-shell-v6">
     <div data-testid="dormant-gems-surface-v2">
       <div data-testid="dormant-gem-primary-work-object-v6" className="min-w-0">
-      <Card className="border border-violet-300/55 bg-violet-50/20 dark:bg-violet-950/12 shadow-sm" data-testid={testId} id={anchorId}>
+      <Card className="border border-slate-200 bg-white border-l-4 border-l-indigo-500 shadow-sm dark:border-border dark:bg-card" data-testid={testId} id={anchorId}>
         <CardHeader className="py-3 pb-2 space-y-2">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <CardTitle className="text-base font-semibold text-violet-950 dark:text-violet-100">
+              <CardTitle className="text-base font-semibold text-indigo-950 dark:text-indigo-100">
                 主工作物件：沉睡／暫停高潛名單（可復活）
               </CardTitle>
               <p className="text-xs text-muted-foreground font-normal leading-snug mt-1">
@@ -193,7 +193,7 @@ export function DormantGemsSurfaceSection({
             ) : null}
           </div>
           <div
-            className="rounded-md border border-violet-200/50 dark:border-violet-800/40 bg-background/50 px-2.5 py-1.5 text-xs text-muted-foreground"
+            className="rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-1.5 text-xs text-muted-foreground dark:border-border dark:bg-muted/20"
             data-testid="dormant-zero-spend-classification-legend"
           >
             零花費時：本列為高潛復活主對象；其餘診斷列請見政策與預算頁。
@@ -223,7 +223,6 @@ export function DormantGemsSurfaceSection({
               confidenceLabel={
                 c.revivalPriorityScore != null && c.revivalPriorityScore > 70 ? "高信心" : "中信心"
               }
-              className="border-violet-300/50 dark:border-violet-800/40 bg-violet-50/10 dark:bg-violet-950/15"
             >
               <Button type="button" size="sm" className="h-8 text-xs rounded-lg" asChild>
                 <Link href="/judgment">審判下指令</Link>
@@ -233,7 +232,7 @@ export function DormantGemsSurfaceSection({
               </Button>
               <div className="w-full basis-full text-xs space-y-1.5 pt-1 border-t border-border/50 mt-1">
                 <p
-                  className="text-violet-900/90 dark:text-violet-100/90 leading-snug border-l-2 border-violet-300/60 pl-2"
+                  className="text-indigo-900 dark:text-indigo-100 leading-snug border-l-2 border-indigo-300 dark:border-indigo-600/50 pl-2"
                   data-testid="dormant-gem-reason-line"
                 >
                   {reasonFor(c)}

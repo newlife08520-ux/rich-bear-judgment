@@ -135,7 +135,7 @@ export default function CreativeIntelligencePage() {
             </div>
           )}
           {data?.degraded === true && (
-            <Card className="border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" data-testid="ci-patterns-degraded-banner">
+            <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card" data-testid="ci-patterns-degraded-banner">
               <CardContent className="py-3 px-4 text-sm flex gap-2 items-start">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
                 <div>

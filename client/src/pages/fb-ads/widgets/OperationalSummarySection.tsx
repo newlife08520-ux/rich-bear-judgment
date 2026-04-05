@@ -124,7 +124,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
     const isNegative = change < 0;
     const isGood = inverseMetrics.has(metricKey) ? isNegative : isPositive;
     return (
-      <span className={`flex items-center gap-0.5 text-[11px] font-medium ${isGood ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+      <span className={`flex items-center gap-0.5 text-[11px] font-medium ${isGood ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
         {isPositive ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />}
         vs 前期 {Math.abs(change).toFixed(1)}%
       </span>
@@ -156,8 +156,8 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
     <Card data-testid="card-operational-summary" className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-md bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
-            <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="w-8 h-8 rounded-md bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center shrink-0">
+            <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h2 className="section-title text-muted-foreground" data-testid="text-summary-title">整體操盤狀況</h2>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
@@ -177,7 +177,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
               className="p-3 rounded-md bg-muted/40"
               data-testid={`summary-metric-${m.key}`}
             >
-              <p className="text-[11px] text-muted-foreground mb-1">{m.label}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
               <p className="text-xl font-bold tracking-tight mb-1" data-testid={`summary-value-${m.key}`}>
                 {m.value}
               </p>
@@ -196,7 +196,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
               className="p-3 rounded-md bg-muted/40 text-center"
               data-testid={`summary-metric-${m.key}`}
             >
-              <p className="text-[11px] text-muted-foreground mb-1">{m.label}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
               <p className="text-lg font-bold tracking-tight" data-testid={`summary-value-${m.key}`}>
                 {m.value}
               </p>
@@ -205,11 +205,11 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           ))}
 
           <div
-            className={`p-3 rounded-md text-center ${data.stopSuggestionCount > 0 ? "bg-red-50 dark:bg-red-950/40" : "bg-muted/40"}`}
+            className={`p-3 rounded-md text-center ${data.stopSuggestionCount > 0 ? "bg-rose-50 dark:bg-rose-950/40" : "bg-muted/40"}`}
             data-testid="summary-metric-dangerCount"
           >
-            <p className="text-[11px] text-muted-foreground mb-1">危險數量</p>
-            <p className={`text-lg font-bold tracking-tight ${data.stopSuggestionCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`} data-testid="summary-value-dangerCount">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">危險數量</p>
+            <p className={`text-lg font-bold tracking-tight ${data.stopSuggestionCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`} data-testid="summary-value-dangerCount">
               {data.stopSuggestionCount}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
@@ -218,11 +218,11 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           </div>
 
           <div
-            className={`p-3 rounded-md text-center ${data.highPotentialCount > 0 ? "bg-blue-50 dark:bg-blue-950/40" : "bg-muted/40"}`}
+            className={`p-3 rounded-md text-center ${data.highPotentialCount > 0 ? "bg-indigo-50 dark:bg-indigo-950/40" : "bg-muted/40"}`}
             data-testid="summary-metric-scalableCount"
           >
-            <p className="text-[11px] text-muted-foreground mb-1">可擴量數量</p>
-            <p className={`text-lg font-bold tracking-tight ${data.highPotentialCount > 0 ? "text-blue-600 dark:text-blue-400" : "text-foreground"}`} data-testid="summary-value-scalableCount">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">可擴量數量</p>
+            <p className={`text-lg font-bold tracking-tight ${data.highPotentialCount > 0 ? "text-indigo-600 dark:text-indigo-400" : "text-foreground"}`} data-testid="summary-value-scalableCount">
               {data.highPotentialCount}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">

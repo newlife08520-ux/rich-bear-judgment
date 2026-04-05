@@ -14,10 +14,10 @@ export function LifecycleColumn({
 }) {
   const bg =
     variant === "success"
-      ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200"
+      ? "bg-white dark:bg-card border-slate-200 border-l-4 border-l-emerald-500 dark:border-border"
       : variant === "underfunded"
-        ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200"
-        : "bg-slate-100 dark:bg-slate-800/50 border-slate-200";
+        ? "bg-white dark:bg-card border-slate-200 border-l-4 border-l-amber-500 dark:border-border"
+        : "bg-white dark:bg-card border-slate-200 border-l-4 border-l-slate-400 dark:border-border";
   return (
     <Card className={`border ${bg}`}>
       <CardHeader className="py-2 px-3">

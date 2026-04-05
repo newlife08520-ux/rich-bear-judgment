@@ -134,13 +134,16 @@ export function HistoryReportDialog({
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-semibold text-red-600 mb-2 flex items-center gap-1.5">
+                      <h4 className="text-sm font-semibold text-rose-600 mb-2 flex items-center gap-1.5">
                         <AlertTriangle className="w-4 h-4" />
                         重大問題
                       </h4>
                       <div className="space-y-2">
                         {selectedReport.summary.topIssues.map((issue, i) => (
-                          <div key={i} className="p-3 rounded-md bg-red-500/[0.04] border border-red-500/10">
+                          <div
+                            key={i}
+                            className="p-3 rounded-xl border border-slate-200 bg-white border-l-4 border-l-rose-500 dark:border-border dark:bg-card"
+                          >
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{issue.title}</span>
                               <SeverityBadge severity={issue.severity} />
@@ -162,9 +165,9 @@ export function HistoryReportDialog({
                       <div className="space-y-1.5">
                         {selectedReport.summary.priorityActions.map((action, i) => {
                           const impactColors: Record<string, string> = {
-                            high: "text-red-700 bg-red-50",
-                            medium: "text-amber-700 bg-amber-50",
-                            low: "text-blue-700 bg-blue-50",
+                            high: "text-rose-700 bg-rose-50 border border-rose-200 dark:border-rose-800/50",
+                            medium: "text-amber-700 bg-amber-50 border border-amber-200 dark:border-amber-800/50",
+                            low: "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:border-indigo-800/50",
                           };
                           const impactLabels: Record<string, string> = {
                             high: "高影響",
@@ -174,10 +177,10 @@ export function HistoryReportDialog({
                           return (
                             <div
                               key={i}
-                              className="flex items-start gap-2 p-2 rounded-md bg-emerald-500/[0.04] border border-emerald-500/10"
+                              className="flex items-start gap-2 p-3 rounded-md bg-white border border-slate-200 border-l-4 border-l-emerald-500 dark:border-border dark:bg-card"
                               data-testid={`card-priority-action-${i}`}
                             >
-                              <span className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                              <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 dark:border-emerald-800/50">
                                 {action.order}
                               </span>
                               <div className="flex-1 min-w-0">
@@ -217,7 +220,7 @@ export function HistoryReportDialog({
                       {Object.entries(selectedReport.detail.diagnosis).map(([key, dim]) => {
                         const d = dim as { score: number; analysis: string };
                         const scoreColor =
-                          d.score >= 70 ? "text-emerald-700" : d.score >= 40 ? "text-amber-700" : "text-red-700";
+                          d.score >= 70 ? "text-emerald-700" : d.score >= 40 ? "text-amber-700" : "text-rose-700";
                         return (
                           <div key={key} className="p-2 border-b last:border-0">
                             <div className="flex items-center justify-between">

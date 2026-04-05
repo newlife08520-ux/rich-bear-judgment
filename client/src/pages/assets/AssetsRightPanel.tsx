@@ -148,7 +148,7 @@ export function AssetsRightPanel({ wb }: { wb: AssetsWorkbench }) {
 
       <div ref={wb.versionSectionRef}>
         {wb.creativeBatchSummary && (
-          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-sm flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-amber-500 px-3 py-2 text-sm flex flex-wrap items-center justify-between gap-2 mb-3 dark:border-border dark:bg-card">
             <p className="text-foreground">
               {wb.creativeBatchSummary.total} 個素材已送審，{wb.creativeBatchSummary.completed} 個完成，
               {wb.creativeBatchSummary.failed} 個失敗（可於各版本卡重試）

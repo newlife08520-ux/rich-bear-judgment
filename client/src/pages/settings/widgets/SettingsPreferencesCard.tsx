@@ -62,7 +62,7 @@ export function SettingsPreferencesCard({
         <SettingsPillToggleGroup
           label="深度"
           icon={BarChart3}
-          iconColor="text-blue-500"
+          iconColor="text-indigo-500"
           description="決定報告的詳細程度"
           options={[
             { value: "summary", label: "快速" },
@@ -77,7 +77,7 @@ export function SettingsPreferencesCard({
         <SettingsPillToggleGroup
           label="語氣"
           icon={Palette}
-          iconColor="text-violet-500"
+          iconColor="text-indigo-600 dark:text-indigo-400"
           description="AI 說話的風格"
           options={[
             { value: "professional", label: "專業" },
@@ -114,7 +114,7 @@ export function SettingsPreferencesCard({
               <SettingsPillToggleGroup
                 label="嚴格度"
                 icon={Shield}
-                iconColor="text-red-500"
+                iconColor="text-rose-500"
                 description="控制 AI 審判的標準高低"
                 options={[
                   { value: "lenient", label: "寬鬆" },
@@ -154,7 +154,7 @@ export function SettingsPreferencesCard({
               <div className="border-t" />
               <div className="space-y-4">
                 <Label className="flex items-center gap-2 text-sm font-medium">
-                  <Info className="w-4 h-4 text-blue-500" />
+                  <Info className="w-4 h-4 text-indigo-500" />
                   其他偏好
                 </Label>
                 <div className="space-y-4 text-sm">

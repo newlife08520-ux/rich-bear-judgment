@@ -3,9 +3,7 @@ import { recommendationLevelLabels, recommendationLevelColors, type Recommendati
 
 export function RecommendationLevelBadge({ level }: { level: RecommendationLevel }) {
   return (
-    <Badge
-      variant="secondary"
-      className={`${recommendationLevelColors[level]} border`}
+    <Badge variant="outline" className={recommendationLevelColors[level]}
       data-testid={`badge-rec-level-${level}`}
     >
       {recommendationLevelLabels[level]}

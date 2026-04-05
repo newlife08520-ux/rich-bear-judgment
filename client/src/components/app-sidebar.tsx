@@ -160,7 +160,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-0 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-4 py-4 border-b border-sidebar-border">
-          <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center dark:bg-muted dark:border-border">
             <Scale className="w-4 h-4 text-primary" />
           </div>
           <span className="text-sm font-bold tracking-tight" data-testid="text-app-title">
@@ -191,7 +191,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Avatar className="w-7 h-7 shrink-0">
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">
+              <AvatarFallback className="text-xs bg-slate-100 text-primary dark:bg-muted">
                 {user?.displayName?.[0] || "U"}
               </AvatarFallback>
             </Avatar>

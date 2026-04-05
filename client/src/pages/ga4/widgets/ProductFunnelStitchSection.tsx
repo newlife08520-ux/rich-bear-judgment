@@ -58,7 +58,7 @@ export function ProductFunnelStitchSection(props: {
   return (
     <div className="space-y-3" data-testid="section-product-funnel-stitch">
       {partial.length > 0 && (
-        <Alert variant="default" className="border-amber-500/40 bg-amber-500/5">
+        <Alert variant="default" className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertTitle>漏斗縫合未完全</AlertTitle>
           <AlertDescription className="text-sm">

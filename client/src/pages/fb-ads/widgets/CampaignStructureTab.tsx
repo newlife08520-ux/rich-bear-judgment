@@ -334,7 +334,7 @@ export function CampaignStructureTab({
                             <RecommendationLevelBadge level={s.recommendationLevel} />
                           </TableCell>
                           <TableCell className="align-top">
-                            <Badge variant="secondary" className={`${getAiLabelClass(s.aiLabel)} border-transparent`}>
+                            <Badge variant="outline" className={getAiLabelClass(s.aiLabel)}>
                               {s.aiLabel}
                             </Badge>
                           </TableCell>
@@ -495,7 +495,7 @@ export function CampaignStructureTab({
                             <RecommendationLevelBadge level={s.recommendationLevel} />
                           </TableCell>
                           <TableCell className="align-top">
-                            <Badge variant="outline" className={`${getAiLabelClass(s.aiLabel)} border-transparent text-[11px]`}>
+                            <Badge variant="outline" className={`${getAiLabelClass(s.aiLabel)} text-[11px]`}>
                               {s.aiLabel}
                             </Badge>
                           </TableCell>

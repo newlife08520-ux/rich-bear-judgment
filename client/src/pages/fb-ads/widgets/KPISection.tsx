@@ -101,7 +101,7 @@ export function KPISection({ data, isLoading }: { data?: FbAccountOverview; isLo
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-4">
+              <CardContent className="p-5">
                 <Skeleton className="w-20 h-3 mb-2" />
                 <Skeleton className="w-24 h-6 mb-2" />
                 <Skeleton className="w-16 h-4 mb-1" />
@@ -133,14 +133,14 @@ export function KPISection({ data, isLoading }: { data?: FbAccountOverview; isLo
 
           return (
             <Card key={kpi.key} data-testid={`kpi-card-${kpi.key}`}>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
+              <CardContent className="p-5">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{kpi.label}</p>
                 <p className="text-xl font-bold tracking-tight mb-1" data-testid={`kpi-value-${kpi.key}`}>
                   {formatKPIValue(kpi.value, kpi.format)}
                 </p>
                 <div className="flex items-center gap-1 mb-2">
                   {kpi.change !== 0 && (
-                    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-red-600"}`}>
+                    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-rose-600"}`}>
                       {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                       {Math.abs(kpi.change).toFixed(1)}%
                     </span>

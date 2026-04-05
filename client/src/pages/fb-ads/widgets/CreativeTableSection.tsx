@@ -307,7 +307,7 @@ export function CreativeTable({
                             </Badge>
                           ) : null}
                           {pb.hiddenDiamond ? (
-                            <Badge variant="outline" className="text-[11px] h-5 border-violet-500/50 text-violet-800">
+                            <Badge variant="outline" className="text-[11px] h-5 border-indigo-500/50 text-indigo-800 dark:text-indigo-200">
                               Hidden
                             </Badge>
                           ) : null}
@@ -324,7 +324,7 @@ export function CreativeTable({
                 <TableCell className="text-xs align-top">
                   {dScore > 0 ? (
                     <div className="space-y-1" data-testid={`dormant-revival-cell-${c.id}`}>
-                      <Badge variant="outline" className="text-xs border-violet-400 text-violet-800 dark:text-violet-200">
+                      <Badge variant="outline" className="text-xs border-indigo-400 text-indigo-800 dark:text-indigo-200">
                         沉睡 {dScore}
                       </Badge>
                       <div>
@@ -344,7 +344,7 @@ export function CreativeTable({
                   <RecommendationLevelBadge level={c.recommendationLevel} />
                 </TableCell>
                 <TableCell className="align-top">
-                  <Badge variant="secondary" className={`${getAiLabelClass(c.aiLabel)} border-transparent`} data-testid={`badge-label-${c.id}`}>
+                  <Badge variant="outline" className={getAiLabelClass(c.aiLabel)} data-testid={`badge-label-${c.id}`}>
                     {c.aiLabel}
                   </Badge>
                 </TableCell>
@@ -355,7 +355,7 @@ export function CreativeTable({
                   <span className="line-clamp-2">{c.campaign} / {c.adSet}</span>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Badge variant="secondary" className={`${statusColors[c.status] || ""} border-transparent`} data-testid={`badge-status-${c.id}`}>
+                  <Badge variant="outline" className={statusColors[c.status] || ""} data-testid={`badge-status-${c.id}`}>
                     {statusLabels[c.status] || c.status}
                   </Badge>
                 </TableCell>

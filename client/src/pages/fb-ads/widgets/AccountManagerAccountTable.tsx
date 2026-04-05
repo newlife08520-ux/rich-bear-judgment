@@ -50,7 +50,7 @@ export function AccountManagerAccountTable({
             filteredAccounts.map((acct) => (
               <TableRow
                 key={acct.accountId}
-                className={`cursor-pointer text-[12px] ${selectedAccountIds.includes(acct.accountId) ? "bg-primary/5" : ""}`}
+                className={`cursor-pointer text-[12px] ${selectedAccountIds.includes(acct.accountId) ? "bg-slate-100 dark:bg-muted/50" : ""}`}
                 onClick={() => toggleSelect(acct.accountId)}
                 data-testid={`row-account-${acct.accountId}`}
               >
@@ -71,7 +71,7 @@ export function AccountManagerAccountTable({
                     data-testid={`button-star-account-${acct.accountId}`}
                   >
                     <Star
-                      className={`w-3.5 h-3.5 transition-colors ${acct.isFavorite ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
+                      className={`w-3.5 h-3.5 transition-colors ${acct.isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
                     />
                   </button>
                 </TableCell>
@@ -83,8 +83,8 @@ export function AccountManagerAccountTable({
                 </TableCell>
                 <TableCell className="px-2">
                   <Badge
-                    variant="secondary"
-                    className={`text-xs px-1.5 py-0 ${metaAccountStatusColors[acct.accountStatus] || "bg-gray-100 text-gray-700"}`}
+                    variant="outline"
+                    className={`text-xs px-1.5 py-0 ${metaAccountStatusColors[acct.accountStatus] || "bg-slate-100 text-slate-600 border border-slate-200"}`}
                   >
                     {acct.accountStatusLabel}
                   </Badge>

@@ -123,9 +123,9 @@ export function HighRiskAccountsSection() {
   return (
     <div data-testid="section-high-risk-accounts">
       <div className="flex items-center gap-2 mb-3">
-        <ShieldAlert className="w-4 h-4 text-red-500" />
+        <ShieldAlert className="w-4 h-4 text-rose-500" />
         <h3 className="section-title">這些帳號需要多留意</h3>
-        <Badge variant="secondary" className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 border-transparent">
+        <Badge variant="outline" className="bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800/50">
           {risks.length}
         </Badge>
       </div>

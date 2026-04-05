@@ -23,7 +23,7 @@ export function ScaleRescueHoldSection({
 
   return (
     <section data-testid="section-scale-rescue-hold" aria-label="戰略三桶">
-      <Card className="border-emerald-200/40 dark:border-emerald-900/40 bg-gradient-to-b from-emerald-50/30 to-transparent dark:from-emerald-950/10 hover:shadow-md transition-shadow">
+      <Card className="border-slate-200 bg-white border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow dark:border-border dark:bg-card">
         <CardContent className="p-5 space-y-3">
           <div>
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -74,9 +74,9 @@ export function ScaleRescueHoldSection({
                     </li>
                   ))}
                   {rescueStop.map((r) => (
-                    <li key={`s-${r.campaignId}`} className="rounded-md border-l-2 border-red-500/70 pl-2 py-1">
+                    <li key={`s-${r.campaignId}`} className="rounded-md border-l-2 border-rose-500/70 pl-2 py-1">
                       <span className="font-medium line-clamp-2">{r.campaignName}</span>
-                      <p className="text-[11px] text-red-600 dark:text-red-400">建議關閉</p>
+                      <p className="text-[11px] text-rose-600 dark:text-rose-400">建議關閉</p>
                     </li>
                   ))}
                 </ul>

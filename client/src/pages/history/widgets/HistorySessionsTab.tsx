@@ -42,7 +42,7 @@ export function HistorySessionsTab({
           <Card className="hover-elevate cursor-pointer" data-testid={`card-session-${s.id}`}>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-md bg-slate-100 dark:bg-muted flex items-center justify-center shrink-0">
                   <MessageSquare className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">

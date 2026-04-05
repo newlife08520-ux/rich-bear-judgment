@@ -42,11 +42,11 @@ import { Scale } from "lucide-react";
 function LoadingScreen() {
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
-      <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center dark:bg-muted dark:border-border">
         <Scale className="w-6 h-6 text-primary" />
       </div>
       <div className="flex items-center gap-2">
-        <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <span className="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin dark:border-indigo-800 dark:border-t-indigo-400" />
         <span className="text-sm text-muted-foreground">載入中...</span>
       </div>
     </div>

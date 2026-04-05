@@ -84,12 +84,12 @@ export function ProductsBattleCard({
   const statusLabel = PRODUCT_STATUS[r.productStatus as keyof typeof PRODUCT_STATUS];
   const statusColor =
     r.productStatus === "scale"
-      ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20"
+      ? "border-slate-200 bg-white border-l-4 border-l-emerald-500 dark:border-border dark:bg-card"
       : r.productStatus === "stop"
-        ? "border-red-300 bg-red-50/50 dark:bg-red-950/20"
+        ? "border-slate-200 bg-white border-l-4 border-l-rose-500 dark:border-border dark:bg-card"
         : r.productStatus === "danger"
-          ? "border-amber-300 bg-amber-50/50 dark:bg-amber-950/20"
-          : "border-border bg-muted/20";
+          ? "border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
+          : "border-slate-200 bg-white dark:border-border dark:bg-card";
   const supporting = (r.creatives ?? [])
     .filter((c) => c.roas >= 2)
     .sort((a, b) => b.roas - a.roas);
@@ -129,24 +129,30 @@ export function ProductsBattleCard({
                 variant="secondary"
                 className={cn(
                   "text-xs rounded-md",
-                  r.productStatus === "scale" ? "text-emerald-700" : r.productStatus === "stop" ? "text-red-700" : ""
+                  r.productStatus === "scale" ? "text-emerald-700" : r.productStatus === "stop" ? "text-rose-700" : ""
                 )}
               >
                 {statusLabel}
               </Badge>
               {paretoFlags?.top20 ? (
-                <Badge className="text-xs rounded-md bg-emerald-100 text-emerald-900 border-0">Top 20%</Badge>
+                <Badge className="text-xs rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50">
+                  Top 20%
+                </Badge>
               ) : null}
               {paretoFlags?.hiddenDiamond ? (
-                <Badge className="text-xs rounded-md bg-sky-100 text-sky-900 border-0">Hidden Diamond</Badge>
+                <Badge className="text-xs rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50">
+                  Hidden Diamond
+                </Badge>
               ) : null}
               {paretoFlags?.moneyPit ? (
-                <Badge className="text-xs rounded-md bg-red-100 text-red-900 border-0">Money Pit</Badge>
+                <Badge className="text-xs rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50">
+                  Money Pit
+                </Badge>
               ) : null}
               {dormantGemCount > 0 ? (
                 <Badge
                   variant="outline"
-                  className="text-xs border-violet-300 text-violet-800 dark:text-violet-200 rounded-md"
+                  className="text-xs border-indigo-200 text-indigo-800 dark:border-indigo-800/50 dark:text-indigo-200 rounded-md"
                   data-testid="products-battle-card-dormant-hint"
                 >
                   沉睡復活 {dormantGemCount}
@@ -155,9 +161,9 @@ export function ProductsBattleCard({
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 text-center rounded-xl border border-border/50 bg-muted/20 p-3">
+        <div className="grid grid-cols-3 gap-3 text-center rounded-xl border border-border/50 bg-muted/20 p-4">
           <div>
-            <p className="text-xs text-muted-foreground">花費</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">花費</p>
             <p className="text-lg font-bold tabular-nums">{formatCurrency(r.spend)}</p>
           </div>
           <div>
@@ -165,12 +171,12 @@ export function ProductsBattleCard({
             <p className="text-lg font-bold tabular-nums">{formatCurrency(r.revenue)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">ROAS</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">ROAS</p>
             <p
               className={cn(
                 "text-lg font-bold tabular-nums",
                 roasSemantic === "profit" && "text-emerald-600",
-                roasSemantic === "loss" && "text-red-600",
+                roasSemantic === "loss" && "text-rose-600",
                 roasSemantic === "watch" && "text-amber-600"
               )}
             >
@@ -180,17 +186,17 @@ export function ProductsBattleCard({
         </div>
         {dormantGemCount > 0 && dormantRevivalHint ? (
           <p
-            className="text-xs rounded-md border border-violet-400/35 bg-violet-500/[0.06] px-2 py-1.5 text-violet-950 dark:text-violet-100 leading-snug"
+            className="text-xs rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 px-2 py-1.5 text-indigo-950 dark:text-indigo-100 leading-snug dark:border-border dark:bg-card"
             data-testid="products-inline-dormant-revival-v4"
           >
             <span className="font-semibold">復活建議 · </span>
             {dormantRevivalHint}{" "}
-            <Link href="/tasks" className="underline font-medium text-violet-800 dark:text-violet-200">
+            <Link href="/tasks" className="underline font-medium text-indigo-700 dark:text-indigo-300">
               前往任務工作台
             </Link>
           </p>
         ) : null}
-        <p className="text-sm text-foreground leading-snug border-l-2 border-primary/40 pl-2 py-0.5">{pacingSummary}</p>
+        <p className="text-sm text-foreground leading-snug border-l-4 border-l-indigo-500 pl-2 py-0.5">{pacingSummary}</p>
         <Collapsible open={detailOpen} onOpenChange={setDetailOpen}>
           <CollapsibleTrigger asChild>
             <Button
@@ -205,12 +211,12 @@ export function ProductsBattleCard({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-1">
-            <p className="text-sm font-medium text-foreground border-l-2 border-primary/50 pl-2 py-0.5" title={r.aiSuggestion}>
+            <p className="text-sm font-medium text-foreground border-l-4 border-l-slate-400 pl-2 py-0.5 dark:border-l-slate-500" title={r.aiSuggestion}>
               總監判語：{r.aiSuggestion}
             </p>
             {goalPacing && (
               <div
-                className="text-xs rounded border border-dashed border-primary/30 bg-primary/5 px-2 py-1.5 space-y-1"
+                className="text-xs rounded-xl border border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 px-2 py-1.5 space-y-1 dark:border-border dark:bg-card"
                 data-testid="product-goal-pacing"
               >
                 <p className="font-medium text-foreground">目標／節奏建議</p>
@@ -342,12 +348,12 @@ export function ProductsBattleCard({
             </p>
           </div>
           <div>
-            <span className="text-muted-foreground font-medium flex items-center gap-1">breakEven／target／headroom</span>
+            <span className="text-muted-foreground font-medium flex items-center gap-1">保本／目標／利潤空間</span>
             <p className="mt-0.5 text-xs">
               {r.hasRule && r.breakEvenRoas != null && r.targetRoas != null
-                ? `保本 ${Number(r.breakEvenRoas).toFixed(1)} · 目標 ${Number(r.targetRoas).toFixed(1)}${
+                ? `保本 ROAS ${Number(r.breakEvenRoas).toFixed(1)} · 目標 ROAS ${Number(r.targetRoas).toFixed(1)}${
                     r.profitHeadroom != null
-                      ? ` · headroom ${Number(r.profitHeadroom) >= 0 ? "+" : ""}${(Number(r.profitHeadroom) * 100).toFixed(0)}%`
+                      ? ` · 利潤空間 ${Number(r.profitHeadroom) >= 0 ? "+" : ""}${(Number(r.profitHeadroom) * 100).toFixed(0)}%`
                       : ""
                   }`
                 : "需先設定成本規則"}

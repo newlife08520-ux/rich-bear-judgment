@@ -119,7 +119,7 @@ export function PublishWizardStep1({ wb }: { wb: PublishWorkbench }) {
                         </PopoverContent>
                       </Popover>
                     ) : (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/50 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                      <div className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-amber-500 px-3 py-2 text-sm text-amber-900 dark:border-border dark:bg-card dark:text-amber-100">
                         請先至設定中心綁定 Meta 並點「立即同步帳號」，同步後此處會出現可選廣告帳號。
                         <Link href="/settings" className="ml-2 font-medium underline">前往設定</Link>
                       </div>

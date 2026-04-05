@@ -3,46 +3,47 @@ import { cn } from "@/lib/utils";
 import type { ScoringResult, V2Scores, DiagnosisType, RecommendedAction } from "@shared/schema";
 import { DIAGNOSIS_LABELS, ACTION_LABELS } from "@shared/schema";
 
-const diagnosisColors: Record<DiagnosisType, { bg: string; text: string }> = {
-  healthy: { bg: "bg-emerald-100", text: "text-emerald-700" },
-  scaling_ready: { bg: "bg-blue-100", text: "text-blue-700" },
-  creative_fatigue: { bg: "bg-amber-100", text: "text-amber-700" },
-  roas_declining: { bg: "bg-orange-100", text: "text-orange-700" },
-  roas_critical: { bg: "bg-red-100", text: "text-red-700" },
-  ctr_declining: { bg: "bg-amber-100", text: "text-amber-700" },
-  cpc_spike: { bg: "bg-orange-100", text: "text-orange-700" },
-  budget_waste: { bg: "bg-red-100", text: "text-red-700" },
-  audience_saturation: { bg: "bg-violet-100", text: "text-violet-700" },
-  conversion_drop: { bg: "bg-amber-100", text: "text-amber-700" },
-  funnel_leak: { bg: "bg-orange-100", text: "text-orange-700" },
-  checkout_abandon: { bg: "bg-red-100", text: "text-red-700" },
-  page_bounce: { bg: "bg-amber-100", text: "text-amber-700" },
-  insufficient_data: { bg: "bg-gray-100", text: "text-gray-600" },
+/** Phase 8 Badge 四色 + slate 中性，皆含 border */
+const diagnosisChip: Record<DiagnosisType, string> = {
+  healthy: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
+  scaling_ready: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  creative_fatigue: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  roas_declining: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  roas_critical: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+  ctr_declining: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  cpc_spike: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  budget_waste: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+  audience_saturation: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  conversion_drop: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  funnel_leak: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  checkout_abandon: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+  page_bounce: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  insufficient_data: "bg-slate-100 text-slate-600 border border-slate-200 dark:border-border",
 };
 
-const actionColors: Record<RecommendedAction, { bg: string; text: string }> = {
-  maintain: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  scale_budget: { bg: "bg-blue-50", text: "text-blue-700" },
-  reduce_budget: { bg: "bg-amber-50", text: "text-amber-700" },
-  pause: { bg: "bg-red-50", text: "text-red-700" },
-  refresh_creative: { bg: "bg-violet-50", text: "text-violet-700" },
-  expand_audience: { bg: "bg-sky-50", text: "text-sky-700" },
-  narrow_audience: { bg: "bg-indigo-50", text: "text-indigo-700" },
-  ab_test: { bg: "bg-cyan-50", text: "text-cyan-700" },
-  optimize_landing: { bg: "bg-teal-50", text: "text-teal-700" },
-  simplify_checkout: { bg: "bg-emerald-50", text: "text-emerald-700" },
-  add_trust_signals: { bg: "bg-blue-50", text: "text-blue-700" },
-  monitor: { bg: "bg-gray-50", text: "text-gray-700" },
-  restart: { bg: "bg-sky-50", text: "text-sky-700" },
-  investigate: { bg: "bg-amber-50", text: "text-amber-700" },
+const actionChip: Record<RecommendedAction, string> = {
+  maintain: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
+  scale_budget: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  reduce_budget: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  pause: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+  refresh_creative: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  expand_audience: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  narrow_audience: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  ab_test: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  optimize_landing: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  simplify_checkout: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
+  add_trust_signals: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  monitor: "bg-slate-100 text-slate-600 border border-slate-200 dark:border-border",
+  restart: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  investigate: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
 };
 
 export function DiagnosisBadge({ diagnosis, className }: { diagnosis: DiagnosisType; className?: string }) {
-  const colors = diagnosisColors[diagnosis] || diagnosisColors.insufficient_data;
+  const chip = diagnosisChip[diagnosis] || diagnosisChip.insufficient_data;
   return (
     <Badge
-      variant="secondary"
-      className={cn("text-xs px-1.5 py-0 border-transparent", colors.bg, colors.text, className)}
+      variant="outline"
+      className={cn("text-xs px-1.5 py-0", chip, className)}
       data-testid={`badge-diagnosis-${diagnosis}`}
     >
       {DIAGNOSIS_LABELS[diagnosis]}
@@ -51,13 +52,9 @@ export function DiagnosisBadge({ diagnosis, className }: { diagnosis: DiagnosisT
 }
 
 export function ActionBadge({ action, className }: { action: RecommendedAction; className?: string }) {
-  const colors = actionColors[action] || actionColors.monitor;
+  const chip = actionChip[action] || actionChip.monitor;
   return (
-    <Badge
-      variant="outline"
-      className={cn("text-xs px-1.5 py-0", colors.bg, colors.text, className)}
-      data-testid={`badge-action-${action}`}
-    >
+    <Badge variant="outline" className={cn("text-xs px-1.5 py-0", chip, className)} data-testid={`badge-action-${action}`}>
       {ACTION_LABELS[action]}
     </Badge>
   );
@@ -68,8 +65,8 @@ export function V2ScoreMini({ scoring }: { scoring?: ScoringResult }) {
   const items = [
     { label: "健康", value: scoring.scores.health, color: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
     { label: "急迫", value: scoring.scores.urgency, color: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
-    { label: "機會", value: scoring.scores.opportunity, color: "bg-blue-500", textColor: "text-blue-600 dark:text-blue-400" },
-    { label: "信心", value: scoring.scores.confidence, color: "bg-violet-500", textColor: "text-violet-600 dark:text-violet-400" },
+    { label: "機會", value: scoring.scores.opportunity, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
+    { label: "信心", value: scoring.scores.confidence, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
   ];
   return (
     <div className="flex items-center gap-2" data-testid="v2-score-mini">
@@ -92,8 +89,8 @@ export function V2ScoreBar({ scoring }: { scoring?: ScoringResult }) {
   const items = [
     { label: "健康", value: scoring.scores.health, color: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
     { label: "急迫", value: scoring.scores.urgency, color: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
-    { label: "機會", value: scoring.scores.opportunity, color: "bg-blue-500", textColor: "text-blue-600 dark:text-blue-400" },
-    { label: "信心", value: scoring.scores.confidence, color: "bg-violet-500", textColor: "text-violet-600 dark:text-violet-400" },
+    { label: "機會", value: scoring.scores.opportunity, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
+    { label: "信心", value: scoring.scores.confidence, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
   ];
   return (
     <div className="flex gap-3" data-testid="v2-score-bar">
@@ -122,17 +119,20 @@ export function ScoringDetailTooltip({ scoring }: { scoring: ScoringResult }) {
       <V2ScoreBar scoring={scoring} />
       {scoring.benchmarkBasis && (
         <p className="text-muted-foreground">
-          <span className="font-medium">判斷依據：</span>{scoring.benchmarkBasis}
+          <span className="font-medium">判斷依據：</span>
+          {scoring.benchmarkBasis}
         </p>
       )}
       {scoring.timeWindowBasis && (
         <p className="text-muted-foreground">
-          <span className="font-medium">時間窗口：</span>{scoring.timeWindowBasis}
+          <span className="font-medium">時間窗口：</span>
+          {scoring.timeWindowBasis}
         </p>
       )}
       {scoring.notes.length > 0 && (
         <p className="text-muted-foreground">
-          <span className="font-medium">備註：</span>{scoring.notes.join("；")}
+          <span className="font-medium">備註：</span>
+          {scoring.notes.join("；")}
         </p>
       )}
     </div>

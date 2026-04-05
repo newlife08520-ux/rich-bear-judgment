@@ -9,7 +9,7 @@ export function ProductsOverviewBoard(props: {
 }) {
   const { count, totalSpend, totalRevenue, avgRoas } = props;
   return (
-    <Card className="border-primary/20">
+    <Card className="border-slate-200 bg-white dark:border-border dark:bg-card">
       <CardContent className="py-3 px-4">
         <div className="flex flex-wrap items-center gap-6 text-sm">
           <span>
@@ -26,7 +26,7 @@ export function ProductsOverviewBoard(props: {
           </span>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          每張卡回答七件事：值不值得砸、為什麼、靠哪些素材撐、被哪些素材拖、下一步、成本規則、breakEven／target／headroom。
+          每張卡整理：值不值得加碼、原因、強弱素材、下一步，以及保本／目標 ROAS 與利潤空間。
         </p>
       </CardContent>
     </Card>

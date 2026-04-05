@@ -46,7 +46,7 @@ export function JudgmentDecisionCardsSection({
                 key={block.key}
                 className={cn(
                   "bg-card border border-border",
-                  rulesMissing && "border-amber-400 ring-1 ring-amber-300/60 bg-amber-50/40"
+                  rulesMissing && "border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
                 )}
               >
                 <CardContent className="p-3 space-y-2">

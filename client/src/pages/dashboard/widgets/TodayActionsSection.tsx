@@ -1,5 +1,5 @@
 /**
- * 區塊 1：War room — 今日最優先（首頁僅傳入 Top N，通常 3 筆）。資料來源：actionData.todayActions
+ * 區塊 1：今日最優先動作（首頁僅傳入 Top N，通常 3 筆）。資料來源：actionData.todayActions
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,15 +35,15 @@ export function TodayActionsSection({
 }) {
   return (
     <section data-testid="section-today-actions">
-      <Card className="border-primary/30 bg-gradient-to-b from-primary/8 to-transparent shadow-md ring-1 ring-primary/10">
+      <Card className="border-slate-200 bg-white shadow-md border-l-4 border-l-indigo-500 dark:border-border dark:bg-card">
         <CardContent className="p-6 sm:p-7">
           <div className="mb-4 sm:mb-5">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 sm:text-xl" data-testid="heading-war-room-top-actions">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 sm:text-xl" data-testid="heading-today-top-actions">
               <ListChecks className="w-5 h-5 text-primary shrink-0" />
-              今日先打這三件（War room）
+              今日優先三件事
             </h2>
             <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-snug">
-              先看結論與建議動作；細節在下方「資料真相」與各主戰場。
+              先看結論與建議動作；細節在下方「資料狀態」與各主戰場。
             </p>
           </div>
           {todayActions.length > 0 ? (

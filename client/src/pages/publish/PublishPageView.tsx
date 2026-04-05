@@ -39,9 +39,9 @@ function publishListStatusLabel(status: PublishStatus): string {
 function publishListStatusBadgeClass(status: PublishStatus): string {
   switch (status) {
     case "draft":
-      return "bg-muted text-muted-foreground border-transparent font-normal";
+      return "bg-muted text-muted-foreground border border-slate-200 font-normal dark:border-border";
     case "ready":
-      return "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100 border-transparent font-normal";
+      return "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-200 dark:border-indigo-800/50 font-normal";
     case "published":
       return "bg-emerald-600 text-white hover:bg-emerald-600 border-transparent font-normal";
     case "failed":
@@ -81,7 +81,7 @@ export function PublishPageView({ wb }: { wb: ReturnType<typeof usePublishWorkbe
           {guardCheck?.metaWritesAllowed === false && (
             <div
               role="status"
-              className="rounded-lg border-2 border-amber-500/80 bg-amber-50 dark:bg-amber-950/50 px-4 py-4 text-sm shadow-sm"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-amber-500 px-4 py-4 text-sm shadow-sm dark:border-border dark:bg-card"
               data-testid="publish-meta-write-guard-banner"
             >
               <p className="font-semibold text-amber-950 dark:text-amber-50">🔒 Meta 投放功能未啟用</p>

@@ -17,17 +17,17 @@ const riskLevelLabels: Record<RiskLevel, string> = {
 };
 
 const riskLevelStyles: Record<RiskLevel, string> = {
-  danger: "bg-red-100 text-red-700",
-  warning: "bg-amber-100 text-amber-700",
-  watch: "bg-yellow-100 text-yellow-700",
-  stable: "bg-green-100 text-green-700",
-  potential: "bg-blue-100 text-blue-700",
+  danger: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+  warning: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  watch: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  stable: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
+  potential: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
 };
 
 export function RiskLevelBadge({ level }: { level: RiskLevel }) {
   return (
     <Badge
-      variant="secondary"
+      variant="outline"
       className={`no-default-hover-elevate no-default-active-elevate ${riskLevelStyles[level]}`}
       data-testid={`badge-risk-${level}`}
     >
@@ -58,7 +58,7 @@ export function TriScoreDisplay({ triScore }: { triScore: TriScore }) {
                 strokeDasharray={`${(item.value / 100) * 94.2} 94.2`}
                 strokeLinecap="round"
                 className={
-                  item.value >= 70 ? "text-emerald-500" : item.value >= 40 ? "text-amber-500" : "text-red-500"
+                  item.value >= 70 ? "text-emerald-500" : item.value >= 40 ? "text-amber-500" : "text-rose-500"
                 }
                 stroke="currentColor"
               />
@@ -75,28 +75,28 @@ export function TriScoreDisplay({ triScore }: { triScore: TriScore }) {
 export function PageRecommendationCard({ recommendation }: { recommendation: PageRecommendation }) {
   const borderColor =
     recommendation.priority === "high"
-      ? "border-red-200 dark:border-red-800"
+      ? "border-rose-200 dark:border-rose-800/50"
       : recommendation.priority === "medium"
-        ? "border-amber-200 dark:border-amber-800"
-        : "border-green-200 dark:border-green-800";
+        ? "border-amber-200 dark:border-amber-800/50"
+        : "border-emerald-200 dark:border-emerald-800/50";
 
   return (
     <div className="p-3" data-testid="card-page-recommendation">
       <Card className={`${borderColor}`}>
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-5 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <AlertTriangle
               className={`w-4 h-4 shrink-0 ${
                 recommendation.priority === "high"
-                  ? "text-red-500"
+                  ? "text-rose-500"
                   : recommendation.priority === "medium"
                     ? "text-amber-500"
-                    : "text-green-500"
+                    : "text-emerald-500"
               }`}
             />
             <span className="text-sm font-semibold">{recommendation.diagnosis}</span>
             <Badge
-              variant="secondary"
+              variant="outline"
               className={`no-default-hover-elevate no-default-active-elevate ${priorityColors[recommendation.priority]}`}
               data-testid="badge-priority"
             >
@@ -125,7 +125,7 @@ export function ChangeIndicator({ current, previous, inverse = false }: { curren
   const isGood = inverse ? change < 0 : change > 0;
   const absChange = Math.abs(change);
   return (
-    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-red-600"}`}>
+    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-rose-600"}`}>
       {isGood ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
       {absChange.toFixed(1)}
     </span>
@@ -171,9 +171,12 @@ export function HighRiskSection({ items, isLoading }: { items?: HighRiskItem[]; 
     <Card data-testid="card-high-risk">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <AlertTriangle className="w-4 h-4 text-rose-500" />
           <h3 className="section-title">這些頁面需要特別關注</h3>
-          <Badge variant="secondary" className="no-default-hover-elevate no-default-active-elevate bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300">
+          <Badge
+            variant="outline"
+            className="no-default-hover-elevate no-default-active-elevate bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50"
+          >
             {ga4Items.length}
           </Badge>
         </div>

@@ -45,7 +45,7 @@ export function ExternalMetaDriftBanner(props: { surface: string }) {
   return (
     <Alert
       variant="default"
-      className="border-amber-500/60 bg-amber-50/90 dark:bg-amber-950/40 mx-4 md:mx-6 mt-2"
+      className="border-slate-200 bg-white border-l-4 border-l-amber-500 mx-4 md:mx-6 mt-2 dark:border-border dark:bg-card"
       data-testid="external-meta-drift-banner"
       data-surface={props.surface}
     >

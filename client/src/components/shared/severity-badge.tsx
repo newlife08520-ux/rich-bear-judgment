@@ -3,9 +3,11 @@ import { Badge } from "@/components/ui/badge";
 export type SeverityLevel = "critical" | "high" | "medium";
 
 const severityStyles: Record<SeverityLevel, string> = {
-  critical: "text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800",
-  high: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:border-amber-800",
-  medium: "text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:border-blue-800",
+  critical:
+    "text-rose-700 bg-rose-50 border border-rose-200 dark:text-rose-300 dark:bg-rose-950 dark:border-rose-800/50",
+  high: "text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-950 dark:border-amber-800/50",
+  medium:
+    "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:text-indigo-300 dark:bg-indigo-950 dark:border-indigo-800/50",
 };
 
 const severityLabels: Record<SeverityLevel, string> = {

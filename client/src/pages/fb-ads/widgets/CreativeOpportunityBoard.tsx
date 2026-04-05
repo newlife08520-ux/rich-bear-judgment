@@ -128,7 +128,7 @@ export function CreativeOpportunityBoard({ creatives, isLoading }: { creatives?:
   return (
     <div data-testid="section-opportunity-board">
       <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-4 h-4 text-blue-500" />
+        <TrendingUp className="w-4 h-4 text-indigo-500" />
         <h3 className="section-title">值得加碼的素材</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -140,7 +140,7 @@ export function CreativeOpportunityBoard({ creatives, isLoading }: { creatives?:
                 <OpportunityScoreBadge score={c.opportunityScore} size="md" />
               </div>
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <Badge variant="secondary" className={`${getAiLabelClass(c.aiLabel)} border-transparent`}>
+                <Badge variant="outline" className={getAiLabelClass(c.aiLabel)}>
                   {c.aiLabel}
                 </Badge>
                 <RecommendationLevelBadge level={c.recommendationLevel} />

@@ -42,7 +42,7 @@ export function AssetsPageView({ wb }: { wb: AssetsWorkbench }) {
                     key={pkg.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       wb.selectedPackageId === pkg.id && !wb.createPackageMode
-                        ? "border-primary bg-primary/5"
+                        ? "border-indigo-600 bg-slate-50 dark:border-indigo-500 dark:bg-muted/40"
                         : "hover:bg-muted/50"
                     }`}
                     onClick={() => wb.openPackage(pkg)}

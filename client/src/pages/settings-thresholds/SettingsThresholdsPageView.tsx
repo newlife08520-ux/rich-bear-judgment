@@ -82,7 +82,7 @@ export function SettingsThresholdsPageView({ wb }: { wb: SettingsThresholdsWorkb
                     const draftVal = draft[f.key] ?? DEFAULT[f.key];
                     const diff = pubVal !== draftVal;
                     return (
-                      <tr key={f.key} className={diff ? "bg-amber-50/50 dark:bg-amber-950/20" : ""}>
+                      <tr key={f.key} className={diff ? "bg-slate-50 border-l-4 border-l-amber-500 dark:bg-muted/30" : ""}>
                         <td className="p-2">{f.label}</td>
                         <td className="p-2 text-muted-foreground">{formatDisplayValue(f.key, pubVal, f)}</td>
                         <td className="p-2 font-medium">{formatDisplayValue(f.key, draftVal, f)}</td>
@@ -106,7 +106,7 @@ export function SettingsThresholdsPageView({ wb }: { wb: SettingsThresholdsWorkb
         </Card>
 
         {extremeWarnings.length > 0 && (
-          <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+          <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
                 <AlertTriangle className="w-4 h-4" />

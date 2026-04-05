@@ -225,14 +225,17 @@ export function useFbAdsWorkbench() {
       return false;
     }
 
-    const mode = filter.paretoListMode ?? "needs_attention";
+    const mode = filter.paretoListMode ?? "pareto_marked";
     if (mode === "all") return list;
     if (mode === "needs_attention") return list.filter(needsAttention);
-    if (mode === "pareto_marked" && paretoMarked && paretoMarked.size > 0) {
-      return list.filter((c) => {
-        const pn = guessProductName(c);
-        return pn != null && paretoMarked.has(pn);
-      });
+    if (mode === "pareto_marked") {
+      if (paretoMarked && paretoMarked.size > 0) {
+        return list.filter((c) => {
+          const pn = guessProductName(c);
+          return pn != null && paretoMarked.has(pn);
+        });
+      }
+      return list.filter(needsAttention);
     }
     return list;
   }, [creativesFromApi, filter.paretoListMode, paretoPayload, actionCenterData?.productLevel]);

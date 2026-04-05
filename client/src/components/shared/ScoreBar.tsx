@@ -1,4 +1,4 @@
-﻿import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export type ReportGradeLetter = "S" | "A" | "B" | "C" | "D" | "F";
 
@@ -13,16 +13,16 @@ export function scoreToGradeLetter(score: number): ReportGradeLetter {
 
 function gradeTone(g: ReportGradeLetter): string {
   if (g === "S" || g === "A") return "text-emerald-600 dark:text-emerald-400";
-  if (g === "B") return "text-sky-600 dark:text-sky-400";
+  if (g === "B") return "text-indigo-600 dark:text-indigo-400";
   if (g === "C") return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  return "text-rose-600 dark:text-rose-400";
 }
 
 function gradeBarColor(g: ReportGradeLetter): string {
   if (g === "S" || g === "A") return "bg-emerald-500";
-  if (g === "B") return "bg-sky-500";
+  if (g === "B") return "bg-indigo-500";
   if (g === "C") return "bg-amber-500";
-  return "bg-red-500";
+  return "bg-rose-500";
 }
 
 export function ScoreBar({

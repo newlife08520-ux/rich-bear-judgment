@@ -30,7 +30,7 @@ export function Ga4CompareTabContent(w: Ga4Workbench) {
                   <label
                     key={page.pagePath}
                     className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
-                      isSelected ? "bg-emerald-50/60 dark:bg-emerald-950/30" : "bg-muted/20"
+                      isSelected ? "bg-slate-100 border-l-4 border-l-emerald-500 dark:bg-muted/40" : "bg-muted/20"
                     }`}
                     data-testid={`checkbox-compare-${idx}`}
                   >
@@ -95,8 +95,9 @@ export function Ga4CompareTabContent(w: Ga4Workbench) {
                             {comparePageData.map((p) => {
                               const val = p[metric.key] as number;
                               let cellClass = "";
-                              if (values.length > 1 && val === bestVal) cellClass = "bg-emerald-50/50 dark:bg-emerald-950/30";
-                              if (values.length > 1 && val === worstVal) cellClass = "bg-red-50/50 dark:bg-red-950/30";
+                              if (values.length > 1 && val === bestVal)
+                                cellClass = "bg-slate-50 border-l-2 border-l-emerald-500 dark:bg-muted/30";
+                              if (values.length > 1 && val === worstVal) cellClass = "bg-rose-50/50 dark:bg-rose-950/30";
                               const isBest = values.length > 1 && val === bestVal;
                               const isWorst = values.length > 1 && val === worstVal;
                               return (
@@ -106,7 +107,7 @@ export function Ga4CompareTabContent(w: Ga4Workbench) {
                                   data-testid={`cell-compare-detailed-${metric.key as string}-${p.pagePath}`}
                                 >
                                   <div className="flex items-center gap-1">
-                                    <span className={isBest ? "font-bold text-emerald-600 dark:text-emerald-400" : isWorst ? "font-bold text-red-600 dark:text-red-400" : ""}>
+                                    <span className={isBest ? "font-bold text-emerald-600 dark:text-emerald-400" : isWorst ? "font-bold text-rose-600 dark:text-rose-400" : ""}>
                                       {metric.format(val)}
                                     </span>
                                     {isBest && <Star className="w-3 h-3 text-emerald-500" />}

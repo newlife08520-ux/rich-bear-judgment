@@ -24,10 +24,10 @@ export function CreativeIntelligenceStrategicCallout({ patterns }: { patterns: P
   const diamonds = patterns.hiddenDiamondEvidence?.length ?? 0;
 
   return (
-    <Card className="border-violet-200/60 dark:border-violet-900/50 bg-violet-50/20 dark:bg-violet-950/10" data-testid="ci-strategic-callout">
+    <Card className="border-slate-200 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card" data-testid="ci-strategic-callout">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-violet-600" />
+          <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           可執行結論（模式層）
         </CardTitle>
         <p className="text-xs text-muted-foreground font-normal leading-relaxed">
@@ -53,7 +53,7 @@ export function CreativeIntelligenceStrategicCallout({ patterns }: { patterns: P
           )}
         </div>
         <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-          <h3 className="text-xs font-semibold text-red-800 dark:text-red-300 flex items-center gap-1 mb-2">
+          <h3 className="text-xs font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-1 mb-2">
             <Skull className="w-3.5 h-3.5" />
             較常與落後共現（Top）
           </h3>

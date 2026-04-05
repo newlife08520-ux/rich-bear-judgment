@@ -46,7 +46,7 @@ export function JudgmentFocusStrip({
   return (
     <div data-testid="judgment-focus-v12-executive-shell" className="space-y-1 max-w-3xl">
       <div
-        className="rounded-md border-l-4 border-l-primary/60 bg-primary/[0.03] pl-3 py-2 space-y-1"
+        className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 pl-3 py-2 space-y-1 shadow-sm dark:border-border dark:bg-card"
         data-testid="judgment-focus-strip-v12"
       >
         <p className="text-sm font-semibold text-foreground leading-snug tracking-tight">{conclusion}</p>

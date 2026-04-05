@@ -84,7 +84,7 @@ export function TasksDataTable({ wb }: { wb: TasksWorkbench }) {
                     data-task-id={t.id}
                     className={cn(
                       "border-b hover:bg-muted/30",
-                      highlightTaskId === t.id && "bg-primary/10 ring-2 ring-primary ring-inset"
+                      highlightTaskId === t.id && "bg-indigo-50 ring-2 ring-indigo-200 ring-inset dark:bg-indigo-950/30 dark:ring-indigo-800/50"
                     )}
                   >
                     <td className="p-2">
@@ -115,8 +115,8 @@ export function TasksDataTable({ wb }: { wb: TasksWorkbench }) {
                     <td
                       className={cn(
                         "p-2 whitespace-nowrap",
-                        getDueDateState(t.dueDate ?? undefined) === "overdue" && "text-red-600 font-medium",
-                        getDueDateState(t.dueDate ?? undefined) === "today" && "text-orange-600 font-medium",
+                        getDueDateState(t.dueDate ?? undefined) === "overdue" && "text-rose-600 font-medium",
+                        getDueDateState(t.dueDate ?? undefined) === "today" && "text-amber-600 font-medium",
                         getDueDateState(t.dueDate ?? undefined) === "within3" && "text-amber-600"
                       )}
                     >

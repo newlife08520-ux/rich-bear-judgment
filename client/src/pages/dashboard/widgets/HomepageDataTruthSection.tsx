@@ -42,13 +42,13 @@ export function HomepageDataTruthSection({
 
   const tone =
     status === "has_data"
-      ? "border-emerald-200/80 bg-emerald-50/40 dark:bg-emerald-950/20 dark:border-emerald-900/50"
+      ? "border-slate-200 border-l-4 border-l-emerald-500 dark:border-border"
       : status === "partial_data"
-        ? "border-sky-400/90 bg-sky-50/70 dark:bg-sky-950/30 dark:border-sky-700/60"
-        : "border-border bg-muted/20";
+        ? "border-slate-200 border-l-4 border-l-indigo-500 dark:border-border"
+        : "border-slate-200 dark:border-border";
 
   const partialRing = partialHomepage
-    ? "ring-2 ring-sky-500/80 dark:ring-sky-500/50 ring-offset-4 ring-offset-background shadow-lg shadow-sky-500/10"
+    ? "ring-2 ring-indigo-400/35 dark:ring-indigo-500/30 ring-offset-2 ring-offset-background"
     : "";
 
   const firstDoLine =
@@ -65,15 +65,19 @@ export function HomepageDataTruthSection({
   return (
     <section data-testid="section-homepage-data-truth" aria-label="資料狀態與覆蓋度">
       <Card
-        data-testid="block-war-room-truth-salience"
-        className={cn("shadow-md ring-1 ring-black/5 hover:shadow-lg transition-shadow", tone, partialRing)}
+        data-testid="block-homepage-data-truth-card"
+        className={cn(
+          "bg-white shadow-md ring-1 ring-black/5 hover:shadow-lg transition-shadow dark:bg-card",
+          tone,
+          partialRing
+        )}
       >
         <CardContent className="p-4 sm:p-5 space-y-3">
           <div
-            className="rounded-lg border border-primary/15 bg-primary/5 px-3 py-2.5 space-y-2"
+            className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 px-3 py-2.5 space-y-2 dark:border-border dark:bg-card"
             data-testid="block-strategic-decision-framing"
           >
-            <p className="text-xs font-semibold text-primary">決策取景（約 30–60 秒）</p>
+            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">決策取景（約 30–60 秒）</p>
             <ol className="text-xs text-foreground/90 space-y-1 list-decimal list-inside leading-relaxed">
               <li>
                 <strong>今日戰略指令</strong>：最優先動作（放大／救援／觀察等）。
@@ -104,7 +108,7 @@ export function HomepageDataTruthSection({
               variant={status === "partial_data" ? "default" : "secondary"}
               className={cn(
                 "shrink-0 text-xs font-semibold",
-                status === "partial_data" && "bg-sky-600 hover:bg-sky-600 text-white"
+                status === "partial_data" && "bg-indigo-600 hover:bg-indigo-600 text-white"
               )}
               data-testid="badge-homepage-data-status"
             >
@@ -122,14 +126,14 @@ export function HomepageDataTruthSection({
           </p>
 
           <p
-            className="text-sm font-medium text-primary border-l-4 border-primary/40 pl-3 py-1.5 bg-primary/[0.04] rounded-r-md"
+            className="text-sm font-medium text-indigo-800 dark:text-indigo-200 rounded-xl border border-slate-200 border-l-4 border-l-indigo-500 bg-white pl-3 py-1.5 dark:border-border dark:bg-card"
             data-testid="strip-first-do-line"
           >
             {firstDoLine}
           </p>
 
           <div
-            className="rounded-lg border border-border/80 bg-muted/25 px-3 py-2.5 space-y-1.5"
+            className="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 space-y-1.5 dark:border-border dark:bg-muted/20"
             data-testid="strip-trusted-vs-reference-zones"
           >
             <p className="text-[11px] font-semibold text-foreground">可信區 vs 僅供參考</p>
@@ -147,14 +151,14 @@ export function HomepageDataTruthSection({
 
           {partialHomepage && (
             <div
-              className="rounded-lg border-[3px] border-sky-500/85 dark:border-sky-500/70 bg-sky-50/50 dark:bg-sky-950/25 px-3 py-2.5 space-y-2 shadow-md shadow-sky-500/15"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 px-3 py-2.5 space-y-2 shadow-sm dark:border-border dark:bg-card"
               data-testid="strip-partial-data-guidance"
             >
-              <p className="text-xs font-semibold text-sky-950 dark:text-sky-100 flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5" />
                 部分資料：與「全無資料」不同 — 請優先信賴下列區塊
               </p>
-              <ul className="text-xs text-sky-900/90 dark:text-sky-100/90 space-y-1 list-disc list-inside">
+              <ul className="text-xs text-indigo-900/90 dark:text-indigo-100/90 space-y-1 list-disc list-inside">
                 <li>
                   <strong>今日戰略指令、戰略三桶（加碼／救援／觀察）、賺賠總覽</strong>
                 </li>
@@ -198,24 +202,26 @@ export function HomepageDataTruthSection({
           {(coverageNote || scopeMismatch || batchWeak) && (
             <div className="flex flex-wrap gap-2 text-[11px] text-amber-900 dark:text-amber-100">
               {coverageNote && (
-                <span className="inline-flex items-center gap-1 rounded border border-amber-300/50 px-2 py-1 bg-amber-50/50 dark:bg-amber-950/30">
+                <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-white px-2 py-1 text-amber-900 dark:border-amber-800/50 dark:bg-card dark:text-amber-100">
                   <AlertCircle className="w-3 h-3" />
                   覆蓋度：{coverageNote}
                 </span>
               )}
               {scopeMismatch && (
-                <span className="inline-flex items-center gap-1 rounded border border-amber-300/50 px-2 py-1">
+                <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-white px-2 py-1 text-amber-900 dark:border-amber-800/50 dark:bg-card dark:text-amber-100">
                   範圍與資料不一致（請更新資料）
                 </span>
               )}
               {batchWeak && (
-                <span className="inline-flex items-center gap-1 rounded border px-2 py-1">資料有效度偏低，建議更新後再參考</span>
+                <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-muted-foreground dark:border-border dark:bg-card">
+                  資料有效度偏低，建議更新後再參考
+                </span>
               )}
             </div>
           )}
 
           <p className="text-[11px] text-muted-foreground">
-            可見性政策與診斷細節在下方「資料狀態」摺疊區；不與今日指令混排。
+            零花費／樣本不足等診斷在下方摺疊區；不與今日指令混排。
           </p>
         </CardContent>
       </Card>

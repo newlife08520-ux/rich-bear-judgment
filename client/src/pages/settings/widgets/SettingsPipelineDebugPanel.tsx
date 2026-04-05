@@ -81,7 +81,7 @@ export function SettingsPipelineDebugPanel() {
               <span className="text-sm font-medium">{row.value}</span>
               {row.status === "ok" && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
               {row.status === "warn" && <Clock className="w-3.5 h-3.5 text-amber-500" />}
-              {row.status === "error" && <XCircle className="w-3.5 h-3.5 text-red-500" />}
+              {row.status === "error" && <XCircle className="w-3.5 h-3.5 text-rose-500" />}
             </div>
           </div>
         ))}

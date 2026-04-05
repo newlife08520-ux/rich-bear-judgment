@@ -6,12 +6,12 @@ export function VisibilityPolicyStrip({
   dormantGemCandidates = [],
   noDeliveryCount = 0,
   underSampleCount = 0,
-  visibilityPolicyVersion,
   surface,
 }: {
   dormantGemCandidates?: DormantGemCandidateItem[];
   noDeliveryCount?: number;
   underSampleCount?: number;
+  /** 保留供 API 相容；畫面不再顯示內部版本字串 */
   visibilityPolicyVersion?: string;
   surface: "dashboard" | "fb-ads" | "creative-intelligence" | "products";
 }) {
@@ -20,16 +20,11 @@ export function VisibilityPolicyStrip({
 
   return (
     <Card
-      className="border-violet-200 dark:border-violet-900/50 bg-violet-50/35 dark:bg-violet-950/20"
+      className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
       data-testid={`visibility-policy-strip-${surface}`}
     >
       <CardContent className="py-3 px-4 text-sm space-y-1">
-        <p className="font-medium text-violet-900 dark:text-violet-100">
-          可見性政策（零花費分層）
-          {visibilityPolicyVersion ? (
-            <span className="ml-2 text-xs font-normal text-muted-foreground">版本 {visibilityPolicyVersion}</span>
-          ) : null}
-        </p>
+        <p className="font-medium text-amber-900 dark:text-amber-100">零花費與樣本狀態（補充說明）</p>
         {dormantN > 0 && (
           <p className="text-muted-foreground">
             沉睡贏家／休眠高潛 <strong className="text-foreground">{dormantN}</strong> 筆（主視窗零花費、近期曾有花費＋品質訊號）— 不與「尚未投遞」混列。

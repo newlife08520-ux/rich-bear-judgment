@@ -243,7 +243,7 @@ export function FbAdsPageView(w: Workbench) {
         <OperationalSummarySection data={overview} isLoading={overviewLoading} />
 
         {!directorLoading && !directorSummary && (
-          <Card className="border-dashed border-primary/30 bg-primary/5 hover:shadow-md transition-shadow">
+          <Card className="border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow dark:border-border dark:bg-card">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">預算控制 — 使用步驟</h3>
               <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">

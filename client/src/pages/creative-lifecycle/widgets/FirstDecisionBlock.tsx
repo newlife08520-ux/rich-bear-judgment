@@ -46,7 +46,7 @@ export function FirstDecisionBlock({
     }
   };
   return (
-    <div className="rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-2 text-xs">
+    <div className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-amber-500 p-2 text-xs dark:border-border dark:bg-card">
       <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">第一次決策點（花費 {firstDecisionMin}–{firstDecisionMax}）</p>
       <p>建議：<strong>{suggestedAction ?? "—"}</strong>{" "}
         {suggestedPct === "關閉" ? "關閉" : typeof suggestedPct === "number" ? (suggestedPct > 0 ? `+${suggestedPct}%` : `${suggestedPct}%`) : ""}

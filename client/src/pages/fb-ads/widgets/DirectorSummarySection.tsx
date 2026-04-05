@@ -115,8 +115,8 @@ export function DirectorSummarySection({ data, isLoading }: { data?: FbAIDirecto
     <Card data-testid="card-director-summary" className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-md bg-amber-50 dark:bg-amber-950 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-muted flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h2 className="section-title text-muted-foreground">AI 總監怎麼看</h2>
         </div>

@@ -70,24 +70,24 @@ export function ProductProfitOverviewSection({ overview }: { overview: ProductOv
           </div>
           <div className="flex flex-wrap gap-4 text-sm mb-4">
             <span className="text-emerald-600 dark:text-emerald-400">賺錢 {countProfit}</span>
-            <span className="text-red-600 dark:text-red-400">賠錢 {countLoss}</span>
+            <span className="text-rose-600 dark:text-rose-400">賠錢 {countLoss}</span>
             <span className="text-muted-foreground">觀察 {countWatch}</span>
             <span className="text-amber-600 dark:text-amber-400">待補規則 {countRulesMissing}</span>
             {countZeroSpend > 0 && (
-              <span className="text-sky-800 dark:text-sky-200 border border-sky-300/50 dark:border-sky-700/50 rounded px-2 py-0.5 text-xs">
+              <span className="text-indigo-800 dark:text-indigo-200 border border-indigo-300/50 dark:border-indigo-700/50 rounded px-2 py-0.5 text-xs">
                 零花費（另區） {countZeroSpend}
               </span>
             )}
           </div>
           {countZeroSpend > 0 && (
             <div
-              className="mb-4 rounded-lg border border-sky-200/80 dark:border-sky-800/60 bg-sky-50/40 dark:bg-sky-950/20 px-3 py-2.5"
+              className="mb-4 rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 px-3 py-2.5 dark:border-border dark:bg-card"
               data-testid="strip-zero-spend-products"
             >
-              <p className="text-xs font-medium text-sky-900 dark:text-sky-100 mb-1.5">
+              <p className="text-xs font-medium text-indigo-900 dark:text-indigo-100 mb-1.5">
                 本資料窗為 $0 花費之商品（未與賺賠列混排）
               </p>
-              <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-sky-900/85 dark:text-sky-100/85">
+              <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-indigo-900/85 dark:text-indigo-100/85">
                 {zeroSample.map((p) => (
                   <li key={p.productName}>
                     <Link href="/products" className="hover:underline font-medium">
@@ -129,11 +129,11 @@ export function ProductProfitOverviewSection({ overview }: { overview: ProductOv
               {topRescue.length > 0 ? (
                 <ul className="space-y-1.5">
                   {topRescue.slice(0, 5).map((r) => (
-                    <li key={r.campaignId} className="rounded-lg border-l-4 border-red-500 bg-muted/20 p-2 pl-3">
+                    <li key={r.campaignId} className="rounded-lg border-l-4 border-rose-500 bg-muted/20 p-2 pl-3">
                       <span className="font-medium text-foreground truncate block">
                         {r.productName} · {r.campaignName}
                       </span>
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                      <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5">
                         花費 {formatCurrency(r.spend)} · 建議 {r.suggestedAction}{" "}
                         {r.suggestedPct === "關閉" ? "關閉" : `${r.suggestedPct}%`}
                       </p>

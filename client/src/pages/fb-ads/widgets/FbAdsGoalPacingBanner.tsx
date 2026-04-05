@@ -10,7 +10,7 @@ export function FbAdsGoalPacingBanner({
   if (entries.length === 0) return null;
   return (
     <div
-      className="mx-4 mb-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs"
+      className="mx-4 mb-2 rounded-xl border border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 px-3 py-2 text-xs dark:border-border dark:bg-card"
       data-testid="fb-ads-goal-pacing-banner"
     >
       <p className="font-medium text-foreground mb-1">目標／節奏摘要（前 4 個商品）</p>

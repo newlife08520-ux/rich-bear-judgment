@@ -16,7 +16,7 @@ export function DashboardWelcomeEmpty({
       className="flex flex-col items-center justify-center py-16 gap-4 px-4"
       data-testid="dashboard-welcome-empty"
     >
-      <Scale className="w-12 h-12 text-primary/60" />
+      <Scale className="w-12 h-12 text-indigo-600/70 dark:text-indigo-400/70" />
       <h2 className="text-xl font-bold text-center">歡迎使用華麗熊審判官</h2>
       <p className="text-muted-foreground text-center max-w-md text-sm">
         還沒有資料可以分析。請先完成以下設定：

@@ -45,11 +45,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.06)_0%,_transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(245,158,11,0.04)_0%,_transparent_50%)]" />
-
-      <div className="absolute top-20 left-1/3 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-[100px]" />
-      <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] rounded-full bg-amber-400/[0.04] blur-[100px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(215_25%_95%/0.9)_0%,_transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_hsl(215_20%_92%/0.5)_0%,_transparent_50%)]" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -63,7 +60,7 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-5">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 mb-5 dark:bg-muted dark:border-border">
             <Scale className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">

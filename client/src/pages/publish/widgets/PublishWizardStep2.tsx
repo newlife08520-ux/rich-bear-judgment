@@ -113,7 +113,9 @@ export function PublishWizardStep2({ wb }: { wb: PublishWorkbench }) {
                           key={v.id}
                           className={cn(
                             "flex items-center gap-3 p-2 rounded-lg border transition-colors cursor-pointer",
-                            isSelected ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "hover:bg-muted/50"
+                            isSelected
+                              ? "border-indigo-600 bg-slate-50 ring-2 ring-indigo-200 dark:border-indigo-500 dark:bg-muted/40 dark:ring-indigo-900/40"
+                              : "hover:bg-muted/50"
                           )}
                           onClick={() => toggleVersion(v.id)}
                         >
@@ -162,7 +164,7 @@ export function PublishWizardStep2({ wb }: { wb: PublishWorkbench }) {
                                   variant="outline"
                                   className={cn(
                                     "text-xs font-normal",
-                                    v.detectStatus === "success" && "border-green-500/50 text-green-700",
+                                    v.detectStatus === "success" && "border-emerald-500/50 text-emerald-700",
                                     v.detectStatus === "manual_confirmed" && "text-muted-foreground",
                                     v.detectStatus === "fallback" && "border-amber-400/50 text-amber-600",
                                     v.detectStatus === "failed" && "border-amber-500/50 text-amber-700"
@@ -173,7 +175,9 @@ export function PublishWizardStep2({ wb }: { wb: PublishWorkbench }) {
                                 </Badge>
                               )}
                               {v.isPrimary && (
-                                <Badge className="text-xs bg-primary/20 text-primary border-0">主版本</Badge>
+                                <Badge className="text-xs bg-indigo-50 text-indigo-800 border-indigo-200 border dark:bg-indigo-950/50 dark:text-indigo-200 dark:border-indigo-800/50">
+                                  主版本
+                                </Badge>
                               )}
                             </span>
                           </label>
@@ -192,7 +196,7 @@ export function PublishWizardStep2({ wb }: { wb: PublishWorkbench }) {
                             key={g.groupKey}
                             className={cn(
                               "rounded-lg border p-3 space-y-2",
-                              g.isFallback && "border-amber-500/50 bg-amber-500/5"
+                              g.isFallback && "border-slate-200 bg-slate-50 border-l-4 border-l-amber-500 dark:border-border dark:bg-muted/30"
                             )}
                           >
                             <label className="flex items-start gap-2 cursor-pointer">

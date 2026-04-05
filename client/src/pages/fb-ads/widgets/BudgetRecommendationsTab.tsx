@@ -127,10 +127,10 @@ export function BudgetRecommendationsTab({
   if (!recs || recs.length === 0) return null;
 
   const typeConfig: Record<string, { icon: typeof ArrowUp; colorClass: string; bgClass: string }> = {
-    increase: { icon: ArrowUp, colorClass: "text-emerald-600", bgClass: "bg-emerald-50 dark:bg-emerald-950" },
-    decrease: { icon: ArrowDown, colorClass: "text-amber-600", bgClass: "bg-amber-50 dark:bg-amber-950" },
-    pause: { icon: Pause, colorClass: "text-red-600", bgClass: "bg-red-50 dark:bg-red-950" },
-    test: { icon: FlaskConical, colorClass: "text-blue-600", bgClass: "bg-blue-50 dark:bg-blue-950" },
+    increase: { icon: ArrowUp, colorClass: "text-emerald-600", bgClass: "bg-slate-100 dark:bg-muted" },
+    decrease: { icon: ArrowDown, colorClass: "text-amber-600", bgClass: "bg-slate-100 dark:bg-muted" },
+    pause: { icon: Pause, colorClass: "text-rose-600", bgClass: "bg-slate-100 dark:bg-muted" },
+    test: { icon: FlaskConical, colorClass: "text-indigo-600 dark:text-indigo-400", bgClass: "bg-slate-100 dark:bg-muted" },
   };
 
   return (

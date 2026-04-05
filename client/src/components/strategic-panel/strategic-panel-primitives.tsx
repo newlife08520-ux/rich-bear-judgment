@@ -13,7 +13,7 @@ export function CommandBand({ className, children, ...rest }: BandProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border-l-4 border-l-emerald-600/85 bg-gradient-to-r from-emerald-500/[0.08] to-transparent pl-3 py-2.5",
+        "rounded-xl border border-slate-200 bg-white shadow-sm border-l-4 border-l-emerald-500 p-5 dark:border-border dark:bg-card",
         className
       )}
       {...rest}
@@ -27,7 +27,10 @@ export function CommandBand({ className, children, ...rest }: BandProps) {
 export function TrustBand({ className, children, ...rest }: BandProps) {
   return (
     <div
-      className={cn("rounded-md border-y border-border/45 bg-muted/[0.12] py-2 px-2 md:px-3", className)}
+      className={cn(
+        "rounded-xl border border-slate-200 bg-white shadow-sm py-2 px-3 md:px-4 dark:border-border dark:bg-card",
+        className
+      )}
       {...rest}
     >
       {children}
@@ -40,7 +43,7 @@ export function SpotlightRail({ className, children, ...rest }: BandProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border-l-4 border-l-amber-500/75 bg-amber-500/[0.06] pl-3 py-2 space-y-2",
+        "rounded-xl border border-slate-200 bg-white shadow-sm border-l-4 border-l-amber-500 p-5 space-y-2 dark:border-border dark:bg-card",
         className
       )}
       {...rest}
@@ -55,7 +58,7 @@ export function DormantActionStrip({ className, children, ...rest }: BandProps) 
   return (
     <div
       className={cn(
-        "rounded-lg border-l-4 border-violet-500/80 bg-violet-500/[0.07] pl-3 py-2",
+        "rounded-xl border border-slate-200 bg-white shadow-sm border-l-4 border-l-indigo-500 p-5 dark:border-border dark:bg-card",
         className
       )}
       {...rest}
@@ -70,7 +73,7 @@ export function DiagnosticsFold({ className, children, ...rest }: BandProps) {
   return (
     <div
       className={cn(
-        "rounded-md border border-dashed border-muted-foreground/40 bg-muted/[0.08] px-2 py-1.5 text-xs text-muted-foreground",
+        "rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:border-border dark:bg-muted/30 dark:text-muted-foreground",
         className
       )}
       {...rest}

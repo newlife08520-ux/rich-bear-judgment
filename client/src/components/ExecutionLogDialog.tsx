@@ -120,7 +120,7 @@ export function ExecutionLogDialog({ open, onOpenChange }: Props) {
                         <span
                           className={
                             e.status === "applied"
-                              ? "text-green-600"
+                              ? "text-emerald-600"
                               : e.status === "applied_stub"
                                 ? "text-destructive"
                                 : ""

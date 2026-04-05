@@ -265,7 +265,7 @@ export function SettingsPageView({ wb }: { wb: SettingsWorkbench }) {
                 </Button>
               </div>
               {showPostSaveGuide && (
-                <Card className="mt-4 border-primary/30 bg-primary/5" data-testid="card-post-save-guide">
+                <Card className="mt-4 border-slate-200 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card" data-testid="card-post-save-guide">
                   <CardContent className="pt-4 pb-4">
                     <p className="font-medium text-sm mb-2">設定已儲存。下一步：</p>
                     <p className="text-sm text-muted-foreground mb-4">

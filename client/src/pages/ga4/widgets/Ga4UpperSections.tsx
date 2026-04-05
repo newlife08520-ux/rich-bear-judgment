@@ -30,7 +30,7 @@ export function Ga4UpperSections({
   return (
     <>
         {!directorLoading && !directorSummary && (
-          <Card className="border-dashed border-primary/30 bg-primary/5">
+          <Card className="border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">漏斗 / 站內證據 — 使用步驟</h3>
               <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
@@ -92,7 +92,7 @@ export function Ga4UpperSections({
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {Array.from({ length: 10 }).map((_, i) => (
-                <Card key={i}><CardContent className="p-4"><Skeleton className="h-16" /></CardContent></Card>
+                <Card key={i}><CardContent className="p-5"><Skeleton className="h-16" /></CardContent></Card>
               ))}
             </div>
             <Skeleton className="h-24" />
@@ -124,7 +124,7 @@ export function Ga4UpperSections({
                           <ChangeIndicator current={kpi.change + kpi.prev} previous={kpi.prev} inverse={kpi.inverse} />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{kpi.label}</p>
                       <p className="text-lg font-bold" data-testid={`kpi-value-${idx}`}>{kpi.value}</p>
                     </CardContent>
                   </Card>
@@ -150,7 +150,7 @@ export function Ga4UpperSections({
                       "bg-emerald-400",
                       "bg-emerald-300",
                       "bg-amber-400",
-                      "bg-red-400",
+                      "bg-rose-400",
                     ];
                     const rawDrop = idx > 0 && arr[idx - 1].count > 0 ? ((arr[idx - 1].count - stage.count) / arr[idx - 1].count) * 100 : 0;
                     const dropRate = idx > 0 ? Math.max(0, rawDrop).toFixed(2) : null;
@@ -164,7 +164,7 @@ export function Ga4UpperSections({
                         />
                         <span className="text-xs text-muted-foreground text-center mt-1">{stage.label}</span>
                         {dropRate && (
-                          <span className="text-xs text-red-500">
+                          <span className="text-xs text-rose-500">
                             -{dropRate}%
                           </span>
                         )}

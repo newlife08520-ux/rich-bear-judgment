@@ -4,10 +4,14 @@ import type { ReportGrade, OpportunityBreakdown } from "@shared/schema";
 import { getOpportunityIndexLabel } from "@shared/schema";
 
 export function ScoreBadge({ score, label }: { score: number; label?: string }) {
-  let colorClass = "text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300";
-  if (score < 40) colorClass = "text-red-700 bg-red-50 dark:bg-red-950 dark:text-red-300";
-  else if (score < 60) colorClass = "text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300";
-  else if (score < 75) colorClass = "text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300";
+  let colorClass =
+    "text-emerald-700 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50";
+  if (score < 40)
+    colorClass = "text-rose-700 bg-rose-50 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50";
+  else if (score < 60)
+    colorClass = "text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50";
+  else if (score < 75)
+    colorClass = "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50";
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${colorClass}`} data-testid="badge-score">
@@ -19,21 +23,21 @@ export function ScoreBadge({ score, label }: { score: number; label?: string }) 
 
 export function scoreColor(score: number): string {
   if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 60) return "text-blue-600 dark:text-blue-400";
+  if (score >= 60) return "text-indigo-600 dark:text-indigo-400";
   if (score >= 40) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  return "text-rose-600 dark:text-rose-400";
 }
 
 export function scoreBgColor(score: number): string {
   if (score >= 80) return "bg-emerald-50 dark:bg-emerald-950";
-  if (score >= 60) return "bg-blue-50 dark:bg-blue-950";
+  if (score >= 60) return "bg-indigo-50 dark:bg-indigo-950";
   if (score >= 40) return "bg-amber-50 dark:bg-amber-950";
-  return "bg-red-50 dark:bg-red-950";
+  return "bg-rose-50 dark:bg-rose-950";
 }
 
 export function ScorePill({ score, label }: { score: number; label: string }) {
   return (
-    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${scoreBgColor(score)}`} data-testid="pill-score">
+    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border border-slate-200 dark:border-border ${scoreBgColor(score)}`} data-testid="pill-score">
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className={`text-sm font-bold ${scoreColor(score)}`}>{score}</span>
     </div>
@@ -43,42 +47,35 @@ export function ScorePill({ score, label }: { score: number; label: string }) {
 export function OpportunityScoreBadge({ score, size = "sm" }: { score: number; size?: "sm" | "md" }) {
   const color =
     score >= 21
-      ? "text-red-700 bg-red-50 border-red-200"
+      ? "text-rose-700 bg-rose-50 border border-rose-200 dark:text-rose-300 dark:bg-rose-950 dark:border-rose-800/50"
       : score >= 14
-      ? "text-amber-700 bg-amber-50 border-amber-200"
-      : score >= 8
-      ? "text-blue-700 bg-blue-50 border-blue-200"
-      : "text-muted-foreground bg-muted/50 border-border";
+        ? "text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-950 dark:border-amber-800/50"
+        : score >= 8
+          ? "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:text-indigo-300 dark:bg-indigo-950 dark:border-indigo-800/50"
+          : "text-muted-foreground bg-muted/50 border border-border";
   const sizeClass = size === "md" ? "text-xs px-2 py-0.5" : "text-xs px-1.5 py-0";
   return (
     <Badge variant="outline" className={`${color} ${sizeClass} font-bold tabular-nums`} data-testid="badge-opportunity-score">
-      <Sparkles className={size === "md" ? "w-3 h-3 mr-1" : "w-2.5 h-2.5 mr-0.5"} />
-      +{score}
+      <Sparkles className={size === "md" ? "w-3 h-3 mr-1" : "w-2.5 h-2.5 mr-0.5"} />+{score}
     </Badge>
   );
 }
 
 export function OpportunityIndexDisplay({ index, compact = false }: { index: number; compact?: boolean }) {
   const color =
-    index >= 61
-      ? "text-red-700"
-      : index >= 41
-      ? "text-amber-700"
-      : index >= 21
-      ? "text-blue-700"
-      : "text-muted-foreground";
+    index >= 61 ? "text-rose-700" : index >= 41 ? "text-amber-700" : index >= 21 ? "text-indigo-700" : "text-muted-foreground";
   const bgColor =
     index >= 61
-      ? "bg-red-50 border-red-200"
+      ? "bg-rose-50 border border-rose-200 dark:border-rose-800/50"
       : index >= 41
-      ? "bg-amber-50 border-amber-200"
-      : index >= 21
-      ? "bg-blue-50 border-blue-200"
-      : "bg-muted/50 border-border";
+        ? "bg-amber-50 border border-amber-200 dark:border-amber-800/50"
+        : index >= 21
+          ? "bg-indigo-50 border border-indigo-200 dark:border-indigo-800/50"
+          : "bg-muted/50 border border-border";
 
   if (compact) {
     return (
-      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${bgColor}`} data-testid="display-opportunity-index">
+      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${bgColor}`} data-testid="display-opportunity-index">
         <TrendingUp className={`w-3 h-3 ${color}`} />
         <span className={`text-xs font-bold ${color}`}>{index}</span>
         <span className="text-xs text-muted-foreground">/100</span>
@@ -87,7 +84,7 @@ export function OpportunityIndexDisplay({ index, compact = false }: { index: num
   }
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${bgColor}`} data-testid="display-opportunity-index">
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgColor}`} data-testid="display-opportunity-index">
       <TrendingUp className={`w-4 h-4 ${color}`} />
       <div>
         <div className="flex items-baseline gap-1">
@@ -114,10 +111,7 @@ export function OpportunityBreakdownDisplay({ breakdown }: { breakdown: Opportun
           <span className="text-[11px] text-muted-foreground">{d.label}</span>
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full ${i < d.value ? "bg-amber-500" : "bg-gray-200"}`}
-              />
+              <div key={i} className={`w-2 h-2 rounded-full ${i < d.value ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"}`} />
             ))}
           </div>
         </div>
@@ -136,12 +130,12 @@ export function GradeBadge({ grade }: { grade: ReportGrade }) {
     F: "不合格",
   };
   const colors: Record<ReportGrade, string> = {
-    S: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    A: "bg-blue-100 text-blue-800 border-blue-300",
-    B: "bg-sky-100 text-sky-800 border-sky-300",
-    C: "bg-amber-100 text-amber-800 border-amber-300",
-    D: "bg-orange-100 text-orange-800 border-orange-300",
-    F: "bg-red-100 text-red-800 border-red-300",
+    S: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
+    A: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+    B: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+    C: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+    D: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+    F: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
   };
   return (
     <Badge variant="outline" className={`${colors[grade]} text-lg font-display font-bold px-3 py-1`} data-testid="badge-grade">

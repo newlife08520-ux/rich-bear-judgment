@@ -110,7 +110,7 @@ export function CreativeDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap" data-testid="text-dialog-title">
             {creative.name}
-            <Badge variant="secondary" className={`${getAiLabelClass(creative.aiLabel)} border-transparent`}>
+            <Badge variant="outline" className={getAiLabelClass(creative.aiLabel)}>
               {creative.aiLabel}
             </Badge>
           </DialogTitle>
@@ -170,8 +170,8 @@ export function CreativeDetailDialog({
                   <p className="text-xs text-muted-foreground mb-1">{t.label}</p>
                   <span className={`flex items-center justify-center gap-0.5 text-sm font-semibold ${
                     t.label === "CPC"
-                      ? t.value < 0 ? "text-emerald-600" : t.value > 0 ? "text-red-600" : ""
-                      : t.value > 0 ? "text-emerald-600" : t.value < 0 ? "text-red-600" : ""
+                      ? t.value < 0 ? "text-emerald-600" : t.value > 0 ? "text-rose-600" : ""
+                      : t.value > 0 ? "text-emerald-600" : t.value < 0 ? "text-rose-600" : ""
                   }`}>
                     {t.value > 0 ? <ArrowUp className="w-3 h-3" /> : t.value < 0 ? <ArrowDown className="w-3 h-3" /> : null}
                     {t.value !== 0 ? Math.abs(t.value).toFixed(1) : "--"}

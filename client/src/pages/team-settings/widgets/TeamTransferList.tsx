@@ -67,7 +67,7 @@ export function TeamTransferList({
                 <button
                   type="button"
                   onClick={() => setLeftSel((s) => (s.has(id) ? (() => { const n = new Set(s); n.delete(id); return n; })() : new Set(s).add(id)))}
-                  className={`w-full text-left px-2 py-1.5 rounded text-sm truncate block ${leftSel.has(id) ? "bg-primary/20" : "hover:bg-muted"}`}
+                  className={`w-full text-left px-2 py-1.5 rounded text-sm truncate block ${leftSel.has(id) ? "bg-slate-200 dark:bg-muted" : "hover:bg-muted"}`}
                 >
                   {getLabel(id)}
                 </button>
@@ -111,7 +111,7 @@ export function TeamTransferList({
                 <button
                   type="button"
                   onClick={() => setRightSel((s) => (s.has(id) ? (() => { const n = new Set(s); n.delete(id); return n; })() : new Set(s).add(id)))}
-                  className={`w-full text-left px-2 py-1.5 rounded text-sm truncate block ${rightSel.has(id) ? "bg-primary/20" : "hover:bg-muted"}`}
+                  className={`w-full text-left px-2 py-1.5 rounded text-sm truncate block ${rightSel.has(id) ? "bg-slate-200 dark:bg-muted" : "hover:bg-muted"}`}
                 >
                   {getLabel(id)}
                 </button>

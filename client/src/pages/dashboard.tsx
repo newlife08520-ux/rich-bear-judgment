@@ -150,7 +150,7 @@ export default function DashboardPage() {
           </h1>
           {isDev && (
             <Select value={employee.id} onValueChange={setEmployeeById} data-testid="select-mock-employee">
-              <SelectTrigger className="w-[220px] border-amber-300 dark:border-amber-600 bg-amber-50/50 dark:bg-amber-950/30">
+              <SelectTrigger className="w-[220px] border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
                 <SelectValue placeholder="模擬登入者 (dev)" />
               </SelectTrigger>
               <SelectContent>
@@ -229,7 +229,7 @@ export default function DashboardPage() {
             {partialHomepage ? (
               <div
                 role="status"
-                className="rounded-lg border-2 border-sky-600 bg-sky-100/95 dark:bg-sky-950/50 px-3 py-3.5 text-sm text-sky-950 dark:text-sky-50 leading-snug space-y-3 shadow-lg shadow-sky-500/20"
+                className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-indigo-500 p-5 text-sm text-indigo-950 dark:text-indigo-100 leading-snug space-y-3 shadow-md dark:border-border dark:bg-card"
                 data-testid="banner-partial-first-screen-actionability-v12"
               >
                 <p>
@@ -239,14 +239,14 @@ export default function DashboardPage() {
                   className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]"
                   data-testid="grid-partial-data-usability-v11"
                 >
-                  <div className="rounded-md border border-emerald-400/50 bg-emerald-50/80 dark:bg-emerald-950/30 px-2.5 py-2">
-                    <p className="font-semibold text-emerald-900 dark:text-emerald-100">此刻可用（主決策）</p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 border-l-4 border-l-emerald-500 px-2.5 py-2 dark:border-border dark:bg-muted/20">
+                    <p className="font-semibold text-emerald-800 dark:text-emerald-200">此刻可用（主決策）</p>
                     <p className="text-muted-foreground mt-1">
                       今日戰略指令、五大決策區數值、加碼／救援焦點、沉睡復活名單（同一資料範圍）。
                     </p>
                   </div>
-                  <div className="rounded-md border border-amber-400/50 bg-amber-50/70 dark:bg-amber-950/25 px-2.5 py-2">
-                    <p className="font-semibold text-amber-900 dark:text-amber-100">僅供參考／易變</p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 border-l-4 border-l-amber-500 px-2.5 py-2 dark:border-border dark:bg-muted/20">
+                    <p className="font-semibold text-amber-900 dark:text-amber-200">僅供參考／易變</p>
                     <p className="text-muted-foreground mt-1">
                       跨帳摘要與營運敘事—若與數字牴觸，以左欄數值為準。
                     </p>
@@ -316,7 +316,7 @@ export default function DashboardPage() {
             visibilityPolicyVersion={actionData?.visibilityPolicyVersion}
           />
           {scopeMismatch && (
-            <Card className="border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/30">
+            <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
               <CardContent className="py-3 px-4 text-sm flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 目前查看範圍與資料範圍不一致，請點「更新資料」取得正確範圍的決策。
@@ -332,8 +332,8 @@ export default function DashboardPage() {
             <Card
               className={cn(
                 actionData?.batchValidity === "insufficient" || summaryData?.batchValidity === "insufficient"
-                  ? "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/30"
-                  : "border-muted bg-muted/30"
+                  ? "border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
+                  : "border-slate-200 bg-slate-50/80 dark:border-border dark:bg-muted/20"
               )}
             >
               <CardContent className="py-3 px-4 text-sm">

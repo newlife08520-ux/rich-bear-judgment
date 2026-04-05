@@ -146,9 +146,9 @@ export function SettingsApiConnectionSection({
               result.status === "success"
                 ? "text-emerald-700"
                 : result.status === "error"
-                  ? "text-red-600"
+                  ? "text-rose-600"
                   : result.status === "testing"
-                    ? "text-yellow-600"
+                    ? "text-amber-600"
                     : "text-muted-foreground"
             }`}
             data-testid={`status-text-${type}`}
@@ -167,7 +167,7 @@ export function SettingsApiConnectionSection({
         </div>
       </div>
       {result.status === "error" && result.message && (
-        <p className="text-xs text-red-600 pl-0.5" data-testid={`error-message-${type}`}>
+        <p className="text-xs text-rose-600 pl-0.5" data-testid={`error-message-${type}`}>
           {result.message}
         </p>
       )}
@@ -231,7 +231,7 @@ export function SettingsApiConnectionSection({
       )}
       {type === "ga4" && result.status === "error" && result.message?.includes("尚未設定") && (
         <div
-          className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 rounded-md px-2.5 py-1.5"
+          className="flex items-start gap-1.5 text-xs text-amber-800 border border-slate-200 bg-white border-l-4 border-l-amber-500 rounded-xl px-2.5 py-1.5 dark:border-border dark:bg-card dark:text-amber-200"
           data-testid="ga4-auth-hint"
         >
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -240,7 +240,7 @@ export function SettingsApiConnectionSection({
       )}
       {result.status === "success" && result.message && (
         <div
-          className="flex items-start gap-1.5 text-xs text-emerald-700 bg-emerald-50 rounded-md px-2.5 py-1.5"
+          className="flex items-start gap-1.5 text-xs text-emerald-800 border border-slate-200 bg-white border-l-4 border-l-emerald-500 rounded-xl px-2.5 py-1.5 dark:border-border dark:bg-card dark:text-emerald-200"
           data-testid={`status-detail-${type}`}
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -249,7 +249,7 @@ export function SettingsApiConnectionSection({
       )}
       {result.status === "error" && result.message && (
         <div
-          className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 rounded-md px-2.5 py-1.5"
+          className="flex items-start gap-1.5 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-2.5 py-1.5 dark:border-rose-800/50"
           data-testid={`status-error-${type}`}
         >
           <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />

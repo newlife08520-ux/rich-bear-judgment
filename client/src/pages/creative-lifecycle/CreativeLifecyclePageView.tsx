@@ -110,7 +110,10 @@ export function CreativeLifecyclePageView({ wb }: { wb: CreativeLifecycleWorkben
                     <Card
                       key={i.id}
                       ref={i.id === highlightId ? highlightCardRef : undefined}
-                      className={cn("border bg-card", i.id === highlightId && "ring-2 ring-primary bg-primary/5")}
+                      className={cn(
+                        "border bg-card",
+                        i.id === highlightId && "ring-2 ring-indigo-300 bg-slate-50 dark:ring-indigo-700 dark:bg-muted/40"
+                      )}
                     >
                       <CardContent className="p-3 text-sm space-y-2">
                         <div className="flex items-start justify-between gap-2">
@@ -171,10 +174,10 @@ export function CreativeLifecyclePageView({ wb }: { wb: CreativeLifecycleWorkben
         </Card>
 
         {!isLoading && inspirationPool.length > 0 && (
-          <Card className="border-violet-200 dark:border-violet-800">
+          <Card className="border-slate-200 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-violet-600" />
+                <Lightbulb className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 靈感池（設計可用的延伸素材）
               </CardTitle>
               <p className="text-sm text-muted-foreground">高 Creative Edge、漏斗不差、花費仍低，供設計與投手優先延伸。</p>

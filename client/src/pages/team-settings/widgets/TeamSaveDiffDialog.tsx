@@ -61,7 +61,7 @@ export function TeamSaveDiffDialog({
                   )}
                   {removedAccounts.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-0.5">帳號 · 移除（{removedAccounts.length}）</p>
+                      <p className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-0.5">帳號 · 移除（{removedAccounts.length}）</p>
                       <ul className="text-xs text-muted-foreground list-disc list-inside">{removedAccounts.slice(0, 10).map((id) => <li key={id}>{accountIdToName.get(id) || id}</li>)}{removedAccounts.length > 10 && <li>…共 {removedAccounts.length} 筆</li>}</ul>
                     </div>
                   )}
@@ -73,7 +73,7 @@ export function TeamSaveDiffDialog({
                   )}
                   {removedProducts.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-0.5">商品 · 移除（{removedProducts.length}）</p>
+                      <p className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-0.5">商品 · 移除（{removedProducts.length}）</p>
                       <ul className="text-xs text-muted-foreground list-disc list-inside">{removedProducts.slice(0, 10).map((p) => <li key={p}>{p}</li>)}{removedProducts.length > 10 && <li>…共 {removedProducts.length} 筆</li>}</ul>
                     </div>
                   )}

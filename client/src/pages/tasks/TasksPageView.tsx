@@ -68,14 +68,14 @@ export function TasksPageView({ wb }: { wb: TasksWorkbench }) {
 
       <div className="flex-1 p-4 md:p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-l-4 border-l-red-500/80 bg-card">
-            <CardContent className="py-4 px-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">高優先</p>
+          <Card className="border-l-4 border-l-rose-500/80 bg-card">
+            <CardContent className="p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">高優先</p>
               <p className="text-2xl font-bold mt-1">{highPriority.length}</p>
               <p className="text-xs text-muted-foreground mt-1">建議優先處理</p>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-orange-500/80 bg-card">
+          <Card className="border-l-4 border-l-amber-500/80 bg-card">
             <CardContent className="py-4 px-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">今日到期</p>
               <p className="text-2xl font-bold mt-1">{dueToday.length}</p>
@@ -83,15 +83,15 @@ export function TasksPageView({ wb }: { wb: TasksWorkbench }) {
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-amber-500/80 bg-card">
-            <CardContent className="py-4 px-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">高影響金額</p>
+            <CardContent className="p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">高影響金額</p>
               <p className="text-2xl font-bold mt-1">{highImpact.length}</p>
               <p className="text-xs text-muted-foreground mt-1">有標註影響金額</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-primary/20">
+        <Card className="border-slate-200 bg-white dark:border-border dark:bg-card">
           <CardContent className="py-3 px-4 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-6 text-sm">
@@ -127,7 +127,7 @@ export function TasksPageView({ wb }: { wb: TasksWorkbench }) {
         </Card>
 
         {tasksIsError && tasksError && (
-          <Card className="border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/20">
+          <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
             <CardContent className="py-4 px-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
