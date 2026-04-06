@@ -9,17 +9,29 @@ async function seed() {
   ];
   for (const u of users) {
     const passwordHash = await hashPassword(u.password);
-    await prisma.user.upsert({
-      where: { id: u.id },
-      update: {},
-      create: {
-        id: u.id,
-        username: u.username,
-        passwordHash,
-        role: u.role,
-        displayName: u.displayName,
-      },
+    const existing = await prisma.user.findFirst({
+      where: { username: { equals: u.username, mode: "insensitive" } },
     });
+    if (existing) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          role: u.role,
+          displayName: u.displayName,
+        },
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          id: u.id,
+          username: u.username,
+          passwordHash,
+          role: u.role,
+          displayName: u.displayName,
+        },
+      });
+    }
     console.log(`Seeded user: ${u.username}`);
   }
   await prisma.$disconnect();
