@@ -3,39 +3,49 @@ import { cn } from "@/lib/utils";
 import type { ScoringResult, V2Scores, DiagnosisType, RecommendedAction } from "@shared/schema";
 import { DIAGNOSIS_LABELS, ACTION_LABELS } from "@shared/schema";
 
-/** Phase 8 Badge 四色 + slate 中性，皆含 border */
+const CHIP_BASE =
+  "border px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-none";
+
+const chipProfit = `bg-[var(--status-profit-surface)] text-[var(--status-profit)] border-[var(--status-profit-light)] ${CHIP_BASE}`;
+const chipLoss = `bg-[var(--status-loss-surface)] text-[var(--status-loss)] border-[var(--status-loss-light)] ${CHIP_BASE}`;
+const chipWatch = `bg-[var(--status-watch-surface)] text-[var(--status-watch)] border-[var(--status-watch-light)] ${CHIP_BASE}`;
+const chipDormant = `bg-[var(--status-dormant-surface)] text-[var(--status-dormant)] border-[var(--status-dormant-light)] ${CHIP_BASE}`;
+const chipNeutral =
+  "bg-muted/30 text-muted-foreground border border-border px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-none";
+
+/** 奈米晶片徽章：對齊 var(--status-*) */
 const diagnosisChip: Record<DiagnosisType, string> = {
-  healthy: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-  scaling_ready: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  creative_fatigue: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  roas_declining: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  roas_critical: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  ctr_declining: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  cpc_spike: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  budget_waste: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  audience_saturation: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  conversion_drop: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  funnel_leak: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  checkout_abandon: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  page_bounce: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  insufficient_data: "bg-slate-100 text-slate-600 border border-slate-200 dark:border-border",
+  healthy: chipProfit,
+  scaling_ready: chipDormant,
+  creative_fatigue: chipWatch,
+  roas_declining: chipWatch,
+  roas_critical: chipLoss,
+  ctr_declining: chipWatch,
+  cpc_spike: chipWatch,
+  budget_waste: chipLoss,
+  audience_saturation: chipDormant,
+  conversion_drop: chipWatch,
+  funnel_leak: chipWatch,
+  checkout_abandon: chipLoss,
+  page_bounce: chipWatch,
+  insufficient_data: chipNeutral,
 };
 
 const actionChip: Record<RecommendedAction, string> = {
-  maintain: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-  scale_budget: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  reduce_budget: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  pause: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  refresh_creative: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  expand_audience: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  narrow_audience: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  ab_test: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  optimize_landing: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  simplify_checkout: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-  add_trust_signals: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  monitor: "bg-slate-100 text-slate-600 border border-slate-200 dark:border-border",
-  restart: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-  investigate: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
+  maintain: chipProfit,
+  scale_budget: chipDormant,
+  reduce_budget: chipWatch,
+  pause: chipLoss,
+  refresh_creative: chipDormant,
+  expand_audience: chipDormant,
+  narrow_audience: chipDormant,
+  ab_test: chipDormant,
+  optimize_landing: chipWatch,
+  simplify_checkout: chipProfit,
+  add_trust_signals: chipDormant,
+  monitor: chipNeutral,
+  restart: chipDormant,
+  investigate: chipWatch,
 };
 
 export function DiagnosisBadge({ diagnosis, className }: { diagnosis: DiagnosisType; className?: string }) {
@@ -63,10 +73,10 @@ export function ActionBadge({ action, className }: { action: RecommendedAction; 
 export function V2ScoreMini({ scoring }: { scoring?: ScoringResult }) {
   if (!scoring) return null;
   const items = [
-    { label: "健康", value: scoring.scores.health, color: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
-    { label: "急迫", value: scoring.scores.urgency, color: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
-    { label: "機會", value: scoring.scores.opportunity, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
-    { label: "信心", value: scoring.scores.confidence, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
+    { label: "健康", value: scoring.scores.health, color: "bg-[var(--status-profit)]", textColor: "text-[var(--status-profit)]" },
+    { label: "急迫", value: scoring.scores.urgency, color: "bg-[var(--status-watch)]", textColor: "text-[var(--status-watch)]" },
+    { label: "機會", value: scoring.scores.opportunity, color: "bg-[var(--status-dormant)]", textColor: "text-[var(--status-dormant)]" },
+    { label: "信心", value: scoring.scores.confidence, color: "bg-[var(--status-dormant)]", textColor: "text-[var(--status-dormant)]" },
   ];
   return (
     <div className="flex items-center gap-2" data-testid="v2-score-mini">
@@ -87,10 +97,10 @@ export function V2ScoreMini({ scoring }: { scoring?: ScoringResult }) {
 export function V2ScoreBar({ scoring }: { scoring?: ScoringResult }) {
   if (!scoring) return null;
   const items = [
-    { label: "健康", value: scoring.scores.health, color: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
-    { label: "急迫", value: scoring.scores.urgency, color: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
-    { label: "機會", value: scoring.scores.opportunity, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
-    { label: "信心", value: scoring.scores.confidence, color: "bg-indigo-500", textColor: "text-indigo-600 dark:text-indigo-400" },
+    { label: "健康", value: scoring.scores.health, color: "bg-[var(--status-profit)]", textColor: "text-[var(--status-profit)]" },
+    { label: "急迫", value: scoring.scores.urgency, color: "bg-[var(--status-watch)]", textColor: "text-[var(--status-watch)]" },
+    { label: "機會", value: scoring.scores.opportunity, color: "bg-[var(--status-dormant)]", textColor: "text-[var(--status-dormant)]" },
+    { label: "信心", value: scoring.scores.confidence, color: "bg-[var(--status-dormant)]", textColor: "text-[var(--status-dormant)]" },
   ];
   return (
     <div className="flex gap-3" data-testid="v2-score-bar">

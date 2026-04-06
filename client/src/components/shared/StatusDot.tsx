@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import type { StatusSemantic } from "./status-colors";
 import { statusClasses } from "./status-colors";
 
-const SIZE_MAP = { sm: "w-2 h-2", md: "w-3 h-3", lg: "w-4 h-4" } as const;
+const SIZE_MAP = { sm: "w-1.5 h-1.5", md: "w-2 h-2", lg: "w-2.5 h-2.5" } as const;
 
 export function StatusDot({
   semantic,
