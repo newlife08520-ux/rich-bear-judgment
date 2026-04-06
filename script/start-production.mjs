@@ -39,6 +39,20 @@ if (migrate.status !== 0) {
   }
 }
 
+if (migrate.status === 0) {
+  console.log("[start-production] 預設帳號種子／修復（node，不需 tsx）…");
+  const seed = spawnSync(execPath, [path.join(rootDir, "script", "seed-default-users.mjs")], {
+    cwd: rootDir,
+    env: process.env,
+    encoding: "utf8",
+  });
+  if (seed.stdout) process.stdout.write(seed.stdout);
+  if (seed.stderr) process.stderr.write(seed.stderr);
+  if (seed.status !== 0) {
+    console.error("[start-production] seed-default-users.mjs 失敗 exit=", seed.status, "；登入可能仍 401，請檢查 DATABASE_URL");
+  }
+}
+
 console.log("[start-production] 執行 ensure-workbench-task-columns（不論 migrate 成敗皆執行）…");
 console.log(
   "[start-production] DATABASE_URL 開頭:",

@@ -17,17 +17,12 @@
    npx prisma migrate deploy
    ```
 
-3. **首次部署必做**：種子預設帳號（`admin` / `admin123`、`manager` / `manager123`、`user` / `user123`）。若資料庫裡沒有有效 `passwordHash`，登入會一律回「帳號或密碼錯誤」。
+3. **預設帳號**：`admin` / `admin123`、`manager` / `manager123`、`user` / `user123`。
 
-   ```bash
-   npm run seed
-   ```
+   - **生產啟動**（`npm run start` → `script/start-production.mjs`）：在 `prisma migrate deploy` **成功後**會自動執行 **`node script/seed-default-users.mjs`**（不需 `tsx`）。若該三組帳號不存在會建立；若 `passwordHash` 為空或不是 bcrypt，會**自動修復**，避免 Railway 上「永遠帳密錯誤」。
+   - 手動種子：`npm run seed`（同上 mjs）。
 
-   種子會依 **username** upsert，並**每次覆寫**該三組帳號的 `passwordHash`（修復舊版 `update: {}` 種子留下的空雜湊）。若你忘記密碼，可再執行一次 `npm run seed` 還原為上列預設密碼。
-
-   Railway 單次執行：`railway run npm run seed`（需已設定正確的 `DATABASE_URL`）。
-
-   或設環境變數 **`SEED_DEFAULT_USERS_ON_BOOT=1`**，在 `migrate deploy` 成功後自動跑一次種子（建議僅第一次開通或修復密碼時開啟；長期開啟會在每次部署時把三個預設帳密重設為預設值）。
+   若三組帳號已有**有效 bcrypt** 但忘記密碼，請在 Railway 變數設 **`SEED_DEFAULT_USERS_ON_BOOT=1`** 後重新部署一次，會**強制**把三組密碼重設為上列預設值（成功後建議關閉此變數，否則每次部署都會重設）。
 
 ## 建置與啟動
 

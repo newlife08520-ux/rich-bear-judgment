@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
-    "seed": "tsx script/seed-default-users.ts",
+    "seed": "node script/seed-default-users.mjs",
     "build": "prisma generate && tsx script/build.ts",
     "start": "node script/start-production.mjs",
     "check": "tsc",
