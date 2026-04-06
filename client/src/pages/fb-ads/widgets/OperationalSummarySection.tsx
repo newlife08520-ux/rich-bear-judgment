@@ -125,7 +125,7 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
     const isNegative = change < 0;
     const isGood = inverseMetrics.has(metricKey) ? isNegative : isPositive;
     return (
-      <span className={`flex items-center gap-0.5 text-[11px] font-medium ${isGood ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+      <span className={`flex items-center gap-0.5 text-[11px] font-medium ${isGood ? "text-[var(--status-profit)]" : "text-[var(--status-loss)]"}`}>
         {isPositive ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />}
         vs 前期 {Math.abs(change).toFixed(1)}%
       </span>

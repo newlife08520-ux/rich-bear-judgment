@@ -55,7 +55,7 @@ export function TeamSaveDiffDialog({
                   <p className="font-medium text-muted-foreground">變更明細</p>
                   {addedAccounts.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-0.5">帳號 · 新增（{addedAccounts.length}）</p>
+                      <p className="text-xs font-medium text-[var(--status-profit)] mb-0.5">帳號 · 新增（{addedAccounts.length}）</p>
                       <ul className="text-xs text-muted-foreground list-disc list-inside">{addedAccounts.slice(0, 10).map((id) => <li key={id}>{accountIdToName.get(id) || id}</li>)}{addedAccounts.length > 10 && <li>…共 {addedAccounts.length} 筆</li>}</ul>
                     </div>
                   )}
@@ -67,7 +67,7 @@ export function TeamSaveDiffDialog({
                   )}
                   {addedProducts.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-0.5">商品 · 新增（{addedProducts.length}）</p>
+                      <p className="text-xs font-medium text-[var(--status-profit)] mb-0.5">商品 · 新增（{addedProducts.length}）</p>
                       <ul className="text-xs text-muted-foreground list-disc list-inside">{addedProducts.slice(0, 10).map((p) => <li key={p}>{p}</li>)}{addedProducts.length > 10 && <li>…共 {addedProducts.length} 筆</li>}</ul>
                     </div>
                   )}

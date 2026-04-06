@@ -14,7 +14,7 @@ export function LifecycleColumn({
 }) {
   const bg =
     variant === "success"
-      ? "bg-white dark:bg-card border-slate-200 border-l-4 border-l-emerald-500 dark:border-border"
+      ? "bg-white dark:bg-card border-slate-200 border-l-4 border-l-[var(--status-profit)] dark:border-border"
       : variant === "underfunded"
         ? "bg-white dark:bg-card border-slate-200 border-l-4 border-l-amber-500 dark:border-border"
         : "bg-white dark:bg-card border-slate-200 border-l-4 border-l-slate-400 dark:border-border";

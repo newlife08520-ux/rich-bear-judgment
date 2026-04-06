@@ -36,7 +36,7 @@ export function CreativeIntelligenceStrategicCallout({ patterns }: { patterns: P
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3 text-sm">
         <div className="rounded-lg border border-border/60 bg-background/80 p-3">
-          <h3 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1 mb-2">
+          <h3 className="text-xs font-semibold text-[var(--status-profit)] flex items-center gap-1 mb-2">
             <Sparkles className="w-3.5 h-3.5" />
             較常與贏家共現（Top）
           </h3>

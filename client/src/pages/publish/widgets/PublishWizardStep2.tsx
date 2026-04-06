@@ -164,7 +164,7 @@ export function PublishWizardStep2({ wb }: { wb: PublishWorkbench }) {
                                   variant="outline"
                                   className={cn(
                                     "text-xs font-normal",
-                                    v.detectStatus === "success" && "border-emerald-500/50 text-emerald-700",
+                                    v.detectStatus === "success" && "border-[var(--status-profit-light)] text-[var(--status-profit)]",
                                     v.detectStatus === "manual_confirmed" && "text-muted-foreground",
                                     v.detectStatus === "fallback" && "border-amber-400/50 text-amber-600",
                                     v.detectStatus === "failed" && "border-amber-500/50 text-amber-700"

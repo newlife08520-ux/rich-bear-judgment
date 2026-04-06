@@ -106,7 +106,7 @@ export default function CreativesPage() {
                       <p className="mt-0.5">{c.productName}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground font-medium flex items-center gap-1">{isHelp ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />} 幫還是拖</span>
+                      <span className="text-muted-foreground font-medium flex items-center gap-1">{isHelp ? <TrendingUp className="w-3 h-3 text-[var(--status-profit)]" /> : <TrendingDown className="w-3 h-3 text-[var(--status-loss)]" />} 幫還是拖</span>
                       <p className="mt-0.5">{isHelp ? "幫" : isDrag ? "拖" : "觀察中"}</p>
                     </div>
                     <div>

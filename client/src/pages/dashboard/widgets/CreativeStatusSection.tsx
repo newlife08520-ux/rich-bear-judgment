@@ -64,7 +64,7 @@ export function CreativeStatusSection({ status }: { status: CreativeStatusDerive
           <div className="flex flex-wrap gap-4 text-sm mb-4">
             <span className="text-rose-600 dark:text-rose-400">待換 {countReplace}</span>
             <span className="text-amber-600 dark:text-amber-400">疲勞 {countFatigue}</span>
-            <span className="text-emerald-600 dark:text-emerald-400">勝出 {countWin}</span>
+            <span className="text-[var(--status-profit)]">勝出 {countWin}</span>
             <span className="text-muted-foreground">續測 {countRetest}</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

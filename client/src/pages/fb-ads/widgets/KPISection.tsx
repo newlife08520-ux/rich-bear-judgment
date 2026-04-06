@@ -140,7 +140,7 @@ export function KPISection({ data, isLoading }: { data?: FbAccountOverview; isLo
                 </p>
                 <div className="flex items-center gap-1 mb-2">
                   {kpi.change !== 0 && (
-                    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-rose-600"}`}>
+                    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-[var(--status-profit)]" : "text-[var(--status-loss)]"}`}>
                       {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                       {Math.abs(kpi.change).toFixed(1)}%
                     </span>

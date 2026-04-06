@@ -48,7 +48,7 @@ export function SettingsPreferencesCard({
         <SettingsPillToggleGroup
           label="目的"
           icon={Target}
-          iconColor="text-emerald-500"
+          iconColor="text-[var(--status-profit)]"
           description="AI 會根據目的調整分析重點"
           options={[
             { value: "conversion", label: "賣貨" },

@@ -79,7 +79,7 @@ export function SettingsPipelineDebugPanel() {
             <span className="text-sm text-muted-foreground">{row.label}</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">{row.value}</span>
-              {row.status === "ok" && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+              {row.status === "ok" && <CheckCircle className="w-3.5 h-3.5 text-[var(--status-profit)]" />}
               {row.status === "warn" && <Clock className="w-3.5 h-3.5 text-amber-500" />}
               {row.status === "error" && <XCircle className="w-3.5 h-3.5 text-rose-500" />}
             </div>

@@ -87,7 +87,7 @@ export function AttributionVersionProbe() {
         </ul>
       ) : null}
       {data?.attribution?.whyWinning ? (
-        <p className="text-xs text-emerald-700 dark:text-emerald-400" data-testid="ci-attribution-why-winning">
+        <p className="text-xs text-[var(--status-profit)]" data-testid="ci-attribution-why-winning">
           {data.attribution.whyWinning}
         </p>
       ) : null}

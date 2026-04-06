@@ -6,7 +6,7 @@ export const CURRENT_AI_MODEL = "gemini-3.1-pro-preview";
 export const STATUS_LAMP_COLORS: Record<ConnectionStatus, string> = {
   idle: "bg-slate-300",
   testing: "bg-amber-400 animate-pulse",
-  success: "bg-emerald-500",
+  success: "bg-[var(--status-profit)]",
   error: "bg-rose-500",
 };
 

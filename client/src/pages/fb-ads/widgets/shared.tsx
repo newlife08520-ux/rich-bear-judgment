@@ -1,25 +1,26 @@
 import { Badge } from "@/components/ui/badge";
 import type { RiskLevel, TriScore } from "@shared/schema";
 
+const SEM_PROFIT =
+  "bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)]";
+const SEM_LOSS =
+  "bg-[var(--status-loss-surface)] text-[var(--status-loss)] border border-[var(--status-loss-light)]";
+const SEM_WATCH =
+  "bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)]";
+const SEM_DORMANT =
+  "bg-[var(--status-dormant-surface)] text-[var(--status-dormant)] border border-[var(--status-dormant-light)]";
+
 export const aiLabelColors: Record<string, string> = {
-  主力候選:
-    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800/50",
-  高潛力未放大:
-    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-200 dark:border-indigo-800/50",
-  已疲勞:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800/50",
-  先停再說: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800/50",
-  會騙點不會轉:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800/50",
-  再行銷限定:
-    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-800/50",
+  主力候選: SEM_PROFIT,
+  高潛力未放大: SEM_DORMANT,
+  已疲勞: SEM_WATCH,
+  先停再說: SEM_LOSS,
+  會騙點不會轉: SEM_WATCH,
+  再行銷限定: SEM_DORMANT,
   冷流量不適合: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
-  建議重做前3秒:
-    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800/50",
-  CTA太弱:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800/50",
-  "CTA 太弱":
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800/50",
+  建議重做前3秒: SEM_LOSS,
+  CTA太弱: SEM_WATCH,
+  "CTA 太弱": SEM_WATCH,
   角度太普通: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
@@ -30,10 +31,9 @@ export const statusLabels: Record<string, string> = {
 };
 
 export const statusColors: Record<string, string> = {
-  active:
-    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800/50",
+  active: SEM_PROFIT,
   paused: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
-  ended: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800/50",
+  ended: SEM_LOSS,
 };
 
 export function formatCurrency(v: number): string {
@@ -73,19 +73,19 @@ export type SortDir = "asc" | "desc";
 export type AccountFilter = "all" | "active" | "favorites";
 
 export const metaAccountStatusColors: Record<number, string> = {
-  1: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  2: "bg-rose-50 text-rose-700 border border-rose-200",
-  3: "bg-amber-50 text-amber-700 border border-amber-200",
-  7: "bg-amber-50 text-amber-700 border border-amber-200",
+  1: SEM_PROFIT,
+  2: SEM_LOSS,
+  3: SEM_WATCH,
+  7: SEM_WATCH,
   100: "bg-slate-100 text-slate-600 border border-slate-200",
 };
 
 const riskLevelChip: Record<RiskLevel, string> = {
-  danger: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  warning: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  watch: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  stable: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-  potential: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  danger: SEM_LOSS,
+  warning: SEM_WATCH,
+  watch: SEM_WATCH,
+  stable: SEM_PROFIT,
+  potential: SEM_DORMANT,
 };
 
 const riskLevelLabels: Record<RiskLevel, string> = {
@@ -108,9 +108,9 @@ export function FbRiskLevelBadge({ level }: { level?: RiskLevel }) {
 export function FbTriScoreMini({ triScore }: { triScore?: TriScore }) {
   if (!triScore) return null;
   const items = [
-    { label: "健康", value: triScore.health, color: "bg-emerald-500" },
-    { label: "急迫", value: triScore.urgency, color: "bg-amber-500" },
-    { label: "潛力", value: triScore.scalePotential, color: "bg-indigo-500" },
+    { label: "健康", value: triScore.health, color: "bg-[var(--status-profit)]" },
+    { label: "急迫", value: triScore.urgency, color: "bg-[var(--status-watch)]" },
+    { label: "潛力", value: triScore.scalePotential, color: "bg-[var(--status-dormant)]" },
   ];
   return (
     <div className="flex items-center gap-1.5" data-testid="tri-score-mini">

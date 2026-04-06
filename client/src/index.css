@@ -122,22 +122,22 @@
   --destructive: 346.8 65% 50%;
   --destructive-foreground: 0 0% 100%;
 
-  /* 暗色模式：與淺色同一基因，提高可讀性、避免螢光綠／紫 */
-  --status-profit: #5eead4;
-  --status-profit-light: rgba(15, 118, 110, 0.22);
-  --status-profit-surface: rgba(15, 118, 110, 0.1);
-  --status-loss: #fb7185;
-  --status-loss-light: rgba(190, 18, 60, 0.25);
-  --status-loss-surface: rgba(190, 18, 60, 0.12);
-  --status-watch: #fbbf24;
-  --status-watch-light: rgba(180, 83, 9, 0.22);
-  --status-watch-surface: rgba(180, 83, 9, 0.1);
-  --status-dormant: #94a3b8;
-  --status-dormant-light: rgba(51, 65, 85, 0.35);
-  --status-dormant-surface: rgba(51, 65, 85, 0.16);
-  --status-info: #94a3b8;
-  --status-info-light: rgba(51, 65, 85, 0.35);
-  --status-info-surface: rgba(51, 65, 85, 0.16);
+  /* 暗色模式：深青綠／緋紅／琥珀／冷鋼灰（可讀對比，禁止薄荷螢光） */
+  --status-profit: #0d9488;
+  --status-profit-light: rgba(13, 148, 136, 0.15);
+  --status-profit-surface: rgba(13, 148, 136, 0.08);
+  --status-loss: #e11d48;
+  --status-loss-light: rgba(225, 29, 72, 0.2);
+  --status-loss-surface: rgba(225, 29, 72, 0.1);
+  --status-watch: #d97706;
+  --status-watch-light: rgba(217, 119, 6, 0.15);
+  --status-watch-surface: rgba(217, 119, 6, 0.08);
+  --status-dormant: #64748b;
+  --status-dormant-light: rgba(100, 116, 139, 0.2);
+  --status-dormant-surface: rgba(100, 116, 139, 0.1);
+  --status-info: #64748b;
+  --status-info-light: rgba(100, 116, 139, 0.2);
+  --status-info-surface: rgba(100, 116, 139, 0.1);
 }
 
 @layer base {
@@ -188,16 +188,17 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .semantic-danger { @apply text-rose-600 dark:text-rose-400; }
-  .semantic-warning { @apply text-amber-600 dark:text-amber-400; }
-  .semantic-stable { @apply text-emerald-600 dark:text-emerald-400; }
-  .semantic-opportunity { @apply text-indigo-600 dark:text-indigo-400; }
+  /* 全站語意字色／底：對齊 var(--status-*)，勿再用刺眼的亮色綠／亮粉 */
+  .semantic-danger { color: var(--status-loss); }
+  .semantic-warning { color: var(--status-watch); }
+  .semantic-stable { color: var(--status-profit); }
+  .semantic-opportunity { color: var(--status-dormant); }
   .semantic-low-confidence { @apply text-slate-500 dark:text-slate-400; }
 
-  .semantic-danger-bg { @apply bg-rose-50 dark:bg-rose-950; }
-  .semantic-warning-bg { @apply bg-amber-50 dark:bg-amber-950; }
-  .semantic-stable-bg { @apply bg-emerald-50 dark:bg-emerald-950; }
-  .semantic-opportunity-bg { @apply bg-indigo-50 dark:bg-indigo-950; }
+  .semantic-danger-bg { background-color: var(--status-loss-surface); }
+  .semantic-warning-bg { background-color: var(--status-watch-surface); }
+  .semantic-stable-bg { background-color: var(--status-profit-surface); }
+  .semantic-opportunity-bg { background-color: var(--status-dormant-surface); }
   .semantic-low-confidence-bg { @apply bg-slate-100 dark:bg-slate-900; }
 
   .page-title {

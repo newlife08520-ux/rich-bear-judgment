@@ -144,7 +144,7 @@ export function SettingsApiConnectionSection({
           <span
             className={`text-xs truncate ${
               result.status === "success"
-                ? "text-emerald-700"
+                ? "text-[var(--status-profit)]"
                 : result.status === "error"
                   ? "text-rose-600"
                   : result.status === "testing"
@@ -240,7 +240,7 @@ export function SettingsApiConnectionSection({
       )}
       {result.status === "success" && result.message && (
         <div
-          className="flex items-start gap-1.5 text-xs text-emerald-800 border border-slate-200 bg-white border-l-4 border-l-emerald-500 rounded-xl px-2.5 py-1.5 dark:border-border dark:bg-card dark:text-emerald-200"
+          className="flex items-start gap-1.5 text-xs text-[var(--status-profit)] border border-slate-200 bg-white border-l-4 border-l-[var(--status-profit)] rounded-xl px-2.5 py-1.5 dark:border-border dark:bg-card"
           data-testid={`status-detail-${type}`}
         >
           <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />

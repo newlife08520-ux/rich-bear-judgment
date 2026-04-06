@@ -30,7 +30,7 @@ export function Ga4UpperSections({
   return (
     <>
         {!directorLoading && !directorSummary && (
-          <Card className="border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card">
+          <Card className="border-dashed border-slate-300 bg-white border-l-4 border-l-[var(--status-dormant)] dark:border-border dark:bg-card">
             <CardContent className="p-6">
               <h3 className="font-semibold mb-2">漏斗 / 站內證據 — 使用步驟</h3>
               <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
@@ -57,11 +57,11 @@ export function Ga4UpperSections({
             </CardContent>
           </Card>
         ) : directorSummary ? (
-          <Card className="border-emerald-200 dark:border-emerald-800" data-testid="card-director-summary">
+          <Card className="border border-border border-l-4 border-l-[var(--status-profit)]" data-testid="card-director-summary">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0">
-                  <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-8 h-8 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                  <Activity className="w-4 h-4 text-[var(--status-profit)]" />
                 </div>
                 <h3 className="section-title text-muted-foreground" data-testid="text-director-title">漏斗整體判斷</h3>
               </div>
@@ -117,8 +117,8 @@ export function Ga4UpperSections({
                   <Card key={idx} data-testid={`kpi-card-${idx}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-md bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0">
-                          <Icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <div className="w-8 h-8 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4 text-[var(--status-profit)]" />
                         </div>
                         {kpi.prev !== 0 && (
                           <ChangeIndicator current={kpi.change + kpi.prev} previous={kpi.prev} inverse={kpi.inverse} />
@@ -145,12 +145,12 @@ export function Ga4UpperSections({
                   ].map((stage, idx, arr) => {
                     const maxCount = arr[0].count || 1;
                     const heightPercent = Math.max((stage.count / maxCount) * 100, 15);
-                    const funnelColors = [
-                      "bg-emerald-500",
-                      "bg-emerald-400",
-                      "bg-emerald-300",
-                      "bg-amber-400",
-                      "bg-rose-400",
+                    const funnelBarBg: string[] = [
+                      "var(--status-profit)",
+                      "color-mix(in srgb, var(--status-profit) 70%, var(--status-dormant))",
+                      "color-mix(in srgb, var(--status-watch) 65%, var(--status-dormant))",
+                      "var(--status-watch)",
+                      "var(--status-loss)",
                     ];
                     const rawDrop = idx > 0 && arr[idx - 1].count > 0 ? ((arr[idx - 1].count - stage.count) / arr[idx - 1].count) * 100 : 0;
                     const dropRate = idx > 0 ? Math.max(0, rawDrop).toFixed(2) : null;
@@ -159,12 +159,16 @@ export function Ga4UpperSections({
                         <span className="text-xs font-medium">{formatNumber(stage.count)}</span>
                         <span className="text-xs text-muted-foreground">{stage.rate.toFixed(2)}%</span>
                         <div
-                          className={`w-full ${funnelColors[idx]} rounded-md transition-all`}
-                          style={{ height: `${heightPercent}px`, minHeight: "12px" }}
+                          className="w-full rounded-md transition-all"
+                          style={{
+                            height: `${heightPercent}px`,
+                            minHeight: "12px",
+                            backgroundColor: funnelBarBg[idx],
+                          }}
                         />
                         <span className="text-xs text-muted-foreground text-center mt-1">{stage.label}</span>
                         {dropRate && (
-                          <span className="text-xs text-rose-500">
+                          <span className="text-xs text-[var(--status-loss)]">
                             -{dropRate}%
                           </span>
                         )}

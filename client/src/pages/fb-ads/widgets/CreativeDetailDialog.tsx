@@ -170,8 +170,8 @@ export function CreativeDetailDialog({
                   <p className="text-xs text-muted-foreground mb-1">{t.label}</p>
                   <span className={`flex items-center justify-center gap-0.5 text-sm font-semibold ${
                     t.label === "CPC"
-                      ? t.value < 0 ? "text-emerald-600" : t.value > 0 ? "text-rose-600" : ""
-                      : t.value > 0 ? "text-emerald-600" : t.value < 0 ? "text-rose-600" : ""
+                      ? t.value < 0 ? "text-[var(--status-profit)]" : t.value > 0 ? "text-[var(--status-loss)]" : ""
+                      : t.value > 0 ? "text-[var(--status-profit)]" : t.value < 0 ? "text-[var(--status-loss)]" : ""
                   }`}>
                     {t.value > 0 ? <ArrowUp className="w-3 h-3" /> : t.value < 0 ? <ArrowDown className="w-3 h-3" /> : null}
                     {t.value !== 0 ? Math.abs(t.value).toFixed(1) : "--"}
@@ -186,7 +186,7 @@ export function CreativeDetailDialog({
             <p className="text-sm text-muted-foreground">
               {creative.suggestedAction}
             </p>
-            {creative.estimatedImpact && <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">預期效益: {creative.estimatedImpact}</p>}
+            {creative.estimatedImpact && <p className="text-xs text-[var(--status-profit)] mt-1">預期效益: {creative.estimatedImpact}</p>}
           </div>
         </div>
       </DialogContent>

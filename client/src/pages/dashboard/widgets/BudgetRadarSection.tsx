@@ -28,14 +28,14 @@ export function BudgetRadarSection({ radar }: { radar: BudgetRadarDerived }) {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <h3 className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-1">
+              <h3 className="text-xs font-medium text-[var(--status-profit)] mb-2 flex items-center gap-1">
                 <Rocket className="w-3.5 h-3.5" />
                 建議加碼
               </h3>
               {scaleUp.length > 0 ? (
                 <ul className="space-y-2">
                   {scaleUp.map((r) => (
-                    <li key={r.campaignId} className="rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 p-2 text-sm">
+                    <li key={r.campaignId} className="rounded-lg border border-[var(--status-profit-light)] p-2 text-sm">
                       <span className="font-medium truncate block">{r.productName} · {r.campaignName}</span>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {formatCurrency(r.spend)} · ROAS {r.roas.toFixed(2)} · {r.suggestedAction}{" "}

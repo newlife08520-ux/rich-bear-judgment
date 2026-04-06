@@ -44,7 +44,7 @@ export function ProductProfitOverviewSection({ overview }: { overview: ProductOv
         <CardContent className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Trophy className="w-4 h-4 text-[var(--status-profit)] shrink-0" />
               商品賺賠總覽
             </h2>
             <Link href="/products" className="text-xs text-muted-foreground hover:text-primary shrink-0">
@@ -62,19 +62,19 @@ export function ProductProfitOverviewSection({ overview }: { overview: ProductOv
               總花費 <strong className="text-lg">{formatCurrency(totalSpend)}</strong>
             </span>
             <span>
-              營收 <strong className="text-lg text-emerald-600 dark:text-emerald-400">{formatCurrency(totalRevenue)}</strong>
+              營收 <strong className="text-lg text-[var(--status-profit)] font-black tabular-nums">{formatCurrency(totalRevenue)}</strong>
             </span>
             <span>
               加權 ROAS <strong className="text-lg">{weightedRoas.toFixed(2)}</strong>
             </span>
           </div>
           <div className="flex flex-wrap gap-4 text-sm mb-4">
-            <span className="text-emerald-600 dark:text-emerald-400">賺錢 {countProfit}</span>
-            <span className="text-rose-600 dark:text-rose-400">賠錢 {countLoss}</span>
+            <span className="text-[var(--status-profit)]">賺錢 {countProfit}</span>
+            <span className="text-[var(--status-loss)]">賠錢 {countLoss}</span>
             <span className="text-muted-foreground">觀察 {countWatch}</span>
-            <span className="text-amber-600 dark:text-amber-400">待補規則 {countRulesMissing}</span>
+            <span className="text-[var(--status-watch)]">待補規則 {countRulesMissing}</span>
             {countZeroSpend > 0 && (
-              <span className="text-indigo-800 dark:text-indigo-200 border border-indigo-300/50 dark:border-indigo-700/50 rounded px-2 py-0.5 text-xs">
+              <span className="text-[var(--status-dormant)] border border-[var(--status-dormant-light)] rounded px-2 py-0.5 text-xs">
                 零花費（另區） {countZeroSpend}
               </span>
             )}

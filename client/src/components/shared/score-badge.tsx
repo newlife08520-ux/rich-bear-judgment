@@ -3,15 +3,20 @@ import { Sparkles, TrendingUp } from "lucide-react";
 import type { ReportGrade, OpportunityBreakdown } from "@shared/schema";
 import { getOpportunityIndexLabel } from "@shared/schema";
 
+const CHIP_PROFIT =
+  "bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)]";
+const CHIP_LOSS =
+  "bg-[var(--status-loss-surface)] text-[var(--status-loss)] border border-[var(--status-loss-light)]";
+const CHIP_WATCH =
+  "bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)]";
+const CHIP_DORMANT =
+  "bg-[var(--status-dormant-surface)] text-[var(--status-dormant)] border border-[var(--status-dormant-light)]";
+
 export function ScoreBadge({ score, label }: { score: number; label?: string }) {
-  let colorClass =
-    "text-emerald-700 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50";
-  if (score < 40)
-    colorClass = "text-rose-700 bg-rose-50 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50";
-  else if (score < 60)
-    colorClass = "text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50";
-  else if (score < 75)
-    colorClass = "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50";
+  let colorClass = CHIP_PROFIT;
+  if (score < 40) colorClass = CHIP_LOSS;
+  else if (score < 60) colorClass = CHIP_WATCH;
+  else if (score < 75) colorClass = CHIP_DORMANT;
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${colorClass}`} data-testid="badge-score">
@@ -22,17 +27,17 @@ export function ScoreBadge({ score, label }: { score: number; label?: string }) 
 }
 
 export function scoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 60) return "text-indigo-600 dark:text-indigo-400";
-  if (score >= 40) return "text-amber-600 dark:text-amber-400";
-  return "text-rose-600 dark:text-rose-400";
+  if (score >= 80) return "text-[var(--status-profit)]";
+  if (score >= 60) return "text-[var(--status-dormant)]";
+  if (score >= 40) return "text-[var(--status-watch)]";
+  return "text-[var(--status-loss)]";
 }
 
 export function scoreBgColor(score: number): string {
-  if (score >= 80) return "bg-emerald-50 dark:bg-emerald-950";
-  if (score >= 60) return "bg-indigo-50 dark:bg-indigo-950";
-  if (score >= 40) return "bg-amber-50 dark:bg-amber-950";
-  return "bg-rose-50 dark:bg-rose-950";
+  if (score >= 80) return "bg-[var(--status-profit-surface)]";
+  if (score >= 60) return "bg-[var(--status-dormant-surface)]";
+  if (score >= 40) return "bg-[var(--status-watch-surface)]";
+  return "bg-[var(--status-loss-surface)]";
 }
 
 export function ScorePill({ score, label }: { score: number; label: string }) {
@@ -47,11 +52,11 @@ export function ScorePill({ score, label }: { score: number; label: string }) {
 export function OpportunityScoreBadge({ score, size = "sm" }: { score: number; size?: "sm" | "md" }) {
   const color =
     score >= 21
-      ? "text-rose-700 bg-rose-50 border border-rose-200 dark:text-rose-300 dark:bg-rose-950 dark:border-rose-800/50"
+      ? CHIP_LOSS
       : score >= 14
-        ? "text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-300 dark:bg-amber-950 dark:border-amber-800/50"
+        ? CHIP_WATCH
         : score >= 8
-          ? "text-indigo-700 bg-indigo-50 border border-indigo-200 dark:text-indigo-300 dark:bg-indigo-950 dark:border-indigo-800/50"
+          ? CHIP_DORMANT
           : "text-muted-foreground bg-muted/50 border border-border";
   const sizeClass = size === "md" ? "text-xs px-2 py-0.5" : "text-xs px-1.5 py-0";
   return (
@@ -63,14 +68,20 @@ export function OpportunityScoreBadge({ score, size = "sm" }: { score: number; s
 
 export function OpportunityIndexDisplay({ index, compact = false }: { index: number; compact?: boolean }) {
   const color =
-    index >= 61 ? "text-rose-700" : index >= 41 ? "text-amber-700" : index >= 21 ? "text-indigo-700" : "text-muted-foreground";
+    index >= 61
+      ? "text-[var(--status-loss)]"
+      : index >= 41
+        ? "text-[var(--status-watch)]"
+        : index >= 21
+          ? "text-[var(--status-dormant)]"
+          : "text-muted-foreground";
   const bgColor =
     index >= 61
-      ? "bg-rose-50 border border-rose-200 dark:border-rose-800/50"
+      ? "bg-[var(--status-loss-surface)] border border-[var(--status-loss-light)]"
       : index >= 41
-        ? "bg-amber-50 border border-amber-200 dark:border-amber-800/50"
+        ? "bg-[var(--status-watch-surface)] border border-[var(--status-watch-light)]"
         : index >= 21
-          ? "bg-indigo-50 border border-indigo-200 dark:border-indigo-800/50"
+          ? "bg-[var(--status-dormant-surface)] border border-[var(--status-dormant-light)]"
           : "bg-muted/50 border border-border";
 
   if (compact) {
@@ -111,7 +122,10 @@ export function OpportunityBreakdownDisplay({ breakdown }: { breakdown: Opportun
           <span className="text-[11px] text-muted-foreground">{d.label}</span>
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className={`w-2 h-2 rounded-full ${i < d.value ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"}`} />
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full ${i < d.value ? "bg-[var(--status-watch)]" : "bg-slate-200 dark:bg-slate-700"}`}
+              />
             ))}
           </div>
         </div>
@@ -130,12 +144,12 @@ export function GradeBadge({ grade }: { grade: ReportGrade }) {
     F: "不合格",
   };
   const colors: Record<ReportGrade, string> = {
-    S: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-    A: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-    B: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
-    C: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-    D: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-    F: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
+    S: CHIP_PROFIT,
+    A: CHIP_DORMANT,
+    B: CHIP_DORMANT,
+    C: CHIP_WATCH,
+    D: CHIP_WATCH,
+    F: CHIP_LOSS,
   };
   return (
     <Badge variant="outline" className={`${colors[grade]} text-lg font-display font-bold px-3 py-1`} data-testid="badge-grade">

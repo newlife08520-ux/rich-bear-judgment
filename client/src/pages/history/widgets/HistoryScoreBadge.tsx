@@ -4,7 +4,7 @@ import type { ReportGrade } from "@shared/schema";
 export function HistoryScoreBadge({ score, grade }: { score: number; grade: ReportGrade }) {
   const color =
     score >= 70
-      ? "text-emerald-700 bg-emerald-50 border border-emerald-200 dark:border-emerald-800/50"
+      ? "text-[var(--status-profit)] bg-[var(--status-profit-surface)] border border-[var(--status-profit-light)]"
       : score >= 40
         ? "text-amber-700 bg-amber-50 border border-amber-200 dark:border-amber-800/50"
         : "text-rose-700 bg-rose-50 border border-rose-200 dark:border-rose-800/50";

@@ -42,7 +42,7 @@ export function HomepageDataTruthSection({
 
   const tone =
     status === "has_data"
-      ? "border-slate-200 border-l-4 border-l-emerald-500 dark:border-border"
+      ? "border-slate-200 border-l-4 border-l-[var(--status-profit)] dark:border-border"
       : status === "partial_data"
         ? "border-slate-200 border-l-4 border-l-indigo-500 dark:border-border"
         : "border-slate-200 dark:border-border";
@@ -139,7 +139,7 @@ export function HomepageDataTruthSection({
             <p className="text-[11px] font-semibold text-foreground">可信區 vs 僅供參考</p>
             <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside leading-relaxed">
               <li>
-                <strong className="text-emerald-800 dark:text-emerald-200">較可信</strong>
+                <strong className="text-[var(--status-profit)]">較可信</strong>
                 ：今日戰略指令、五大決策區數值、戰略三桶、沉睡復活候選（同一資料範圍）。
               </li>
               <li>
@@ -174,7 +174,7 @@ export function HomepageDataTruthSection({
 
           <div className="grid sm:grid-cols-2 gap-2 text-xs border-t border-border/60 pt-3">
             <div className="flex gap-2 items-start">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-[var(--status-profit)] shrink-0 mt-0.5" />
               <div>
                 <span className="font-medium text-foreground">跨帳摘要</span>
                 <p className="text-muted-foreground mt-0.5">
@@ -190,7 +190,7 @@ export function HomepageDataTruthSection({
             </div>
             <div className="flex gap-2 items-start">
               <CheckCircle2
-                className={cn("w-3.5 h-3.5 shrink-0 mt-0.5", hasDecisionSignals ? "text-emerald-600" : "text-muted-foreground")}
+                className={cn("w-3.5 h-3.5 shrink-0 mt-0.5", hasDecisionSignals ? "text-[var(--status-profit)]" : "text-muted-foreground")}
               />
               <div>
                 <span className="font-medium text-foreground">活動與商品明細</span>

@@ -35,10 +35,10 @@ export function HomepageCommandPanelV12Chrome({
         <CollapsibleContent className="space-y-2 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" data-testid="block-command-hierarchy-v12">
             <div
-              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-emerald-500 px-3 py-2 shadow-sm dark:border-border dark:bg-card"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-[var(--status-profit)] px-3 py-2 shadow-sm dark:border-border dark:bg-card"
               data-testid="lane-primary-command-surface-v12"
             >
-              <p className="font-semibold text-emerald-800 dark:text-emerald-200">主指令</p>
+              <p className="font-semibold text-[var(--status-profit)]">主指令</p>
               <p className="text-muted-foreground mt-1 leading-tight">優先動作、可信數字帶、放大／救援／復活。</p>
             </div>
             <div
@@ -72,7 +72,7 @@ export function HomepageCommandPanelV12Chrome({
           data-testid="truth-tier-salience-trusted-v12"
           className="rounded-lg border border-slate-100 bg-slate-50/80 px-2 py-1.5 dark:border-border dark:bg-muted/20"
         >
-          <span className="font-bold text-emerald-800 dark:text-emerald-200">可信決策</span>
+          <span className="font-bold text-[var(--status-profit)]">可信決策</span>
           <span className="text-muted-foreground"> — 五大區可下決策。</span>
         </div>
         <div data-testid="truth-tier-reference-only-v12" className="px-2 py-1.5 opacity-90">

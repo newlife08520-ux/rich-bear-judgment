@@ -84,7 +84,7 @@ export function ProductsBattleCard({
   const statusLabel = PRODUCT_STATUS[r.productStatus as keyof typeof PRODUCT_STATUS];
   const statusColor =
     r.productStatus === "scale"
-      ? "border-slate-200 bg-white border-l-4 border-l-emerald-500 dark:border-border dark:bg-card"
+      ? "border-slate-200 bg-white border-l-4 border-l-[var(--status-profit)] dark:border-border dark:bg-card"
       : r.productStatus === "stop"
         ? "border-slate-200 bg-white border-l-4 border-l-rose-500 dark:border-border dark:bg-card"
         : r.productStatus === "danger"
@@ -129,13 +129,13 @@ export function ProductsBattleCard({
                 variant="secondary"
                 className={cn(
                   "text-xs rounded-md",
-                  r.productStatus === "scale" ? "text-emerald-700" : r.productStatus === "stop" ? "text-rose-700" : ""
+                  r.productStatus === "scale" ? "text-[var(--status-profit)]" : r.productStatus === "stop" ? "text-[var(--status-loss)]" : ""
                 )}
               >
                 {statusLabel}
               </Badge>
               {paretoFlags?.top20 ? (
-                <Badge className="text-xs rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50">
+                <Badge className="text-xs rounded-md bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)]">
                   Top 20%
                 </Badge>
               ) : null}
@@ -175,7 +175,7 @@ export function ProductsBattleCard({
             <p
               className={cn(
                 "text-lg font-bold tabular-nums",
-                roasSemantic === "profit" && "text-emerald-600",
+                roasSemantic === "profit" && "text-[var(--status-profit)]",
                 roasSemantic === "loss" && "text-rose-600",
                 roasSemantic === "watch" && "text-amber-600"
               )}

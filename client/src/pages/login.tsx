@@ -162,7 +162,12 @@ export default function LoginPage() {
           className="mt-5 rounded-md border border-dashed border-border bg-muted/50 p-4"
         >
           <p className="text-xs text-muted-foreground mb-3 font-medium">
-            測試帳號 (點擊快速填入)
+            測試帳號（點擊快速填入）
+          </p>
+          <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+            若為<strong className="text-foreground/80">全新資料庫</strong>（例如 Railway 剛接好 Postgres），須先在伺服器執行{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">npm run seed</code>{" "}
+            建立 admin／manager／user，否則會一直顯示帳密錯誤。
           </p>
           <div className="space-y-1.5">
             {[

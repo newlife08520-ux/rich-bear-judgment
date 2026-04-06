@@ -1,6 +1,15 @@
 import { Globe, FileText, Layers } from "lucide-react";
 import type { PageGroup } from "@shared/schema";
 
+const SEM_PROFIT =
+  "bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)]";
+const SEM_LOSS =
+  "bg-[var(--status-loss-surface)] text-[var(--status-loss)] border border-[var(--status-loss-light)]";
+const SEM_WATCH =
+  "bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)]";
+const SEM_DORMANT =
+  "bg-[var(--status-dormant-surface)] text-[var(--status-dormant)] border border-[var(--status-dormant-light)]";
+
 export type AssetView = "official_site" | "single_page" | "full_site";
 
 export type DetailedSortKey =
@@ -24,22 +33,15 @@ export type SortKey =
 export type SortDir = "asc" | "desc";
 
 export const aiLabelColors: Record<string, string> = {
-  最值得放量:
-    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
-  流量有但接不住:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
-  首屏太弱: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
-  說服力不足:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
-  加購意圖低:
-    "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
-  "checkout阻力高":
-    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
-  可當模板:
-    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50",
-  先修再投: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
-  結帳前掉最兇:
-    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
+  最值得放量: SEM_PROFIT,
+  流量有但接不住: SEM_WATCH,
+  首屏太弱: SEM_LOSS,
+  說服力不足: SEM_WATCH,
+  加購意圖低: SEM_WATCH,
+  "checkout阻力高": SEM_LOSS,
+  可當模板: SEM_DORMANT,
+  先修再投: SEM_LOSS,
+  結帳前掉最兇: SEM_LOSS,
   不適合導購: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
 
@@ -51,12 +53,9 @@ export const recommendationPageLabels: Record<string, string> = {
 };
 
 export const recommendationPageColors: Record<string, string> = {
-  add_traffic:
-    "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
-  fix_first:
-    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
-  use_as_template:
-    "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800/50",
+  add_traffic: SEM_PROFIT,
+  fix_first: SEM_LOSS,
+  use_as_template: SEM_DORMANT,
   monitor:
     "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-muted dark:text-muted-foreground dark:border-border",
 };
@@ -117,9 +116,9 @@ export const assetViewPageGroups: Record<AssetView, AssetPageGroup[]> = {
 };
 
 export const priorityColors: Record<string, string> = {
-  high: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800/50",
-  medium: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800/50",
-  low: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800/50",
+  high: SEM_LOSS,
+  medium: SEM_WATCH,
+  low: SEM_PROFIT,
 };
 
 export const priorityLabels: Record<string, string> = {

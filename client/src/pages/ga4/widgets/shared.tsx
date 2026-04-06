@@ -8,6 +8,11 @@ import type { RiskLevel, HighRiskItem, PageRecommendation } from "@shared/schema
 import type { TriScore } from "@shared/schema";
 import { priorityColors, priorityLabels } from "../ga4-types";
 
+const RL_LOSS = "bg-[var(--status-loss-surface)] text-[var(--status-loss)] border border-[var(--status-loss-light)]";
+const RL_WATCH = "bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)]";
+const RL_PROFIT = "bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)]";
+const RL_DORMANT = "bg-[var(--status-dormant-surface)] text-[var(--status-dormant)] border border-[var(--status-dormant-light)]";
+
 const riskLevelLabels: Record<RiskLevel, string> = {
   danger: "危險",
   warning: "警告",
@@ -17,11 +22,11 @@ const riskLevelLabels: Record<RiskLevel, string> = {
 };
 
 const riskLevelStyles: Record<RiskLevel, string> = {
-  danger: "bg-rose-50 text-rose-700 border border-rose-200 dark:border-rose-800/50",
-  warning: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  watch: "bg-amber-50 text-amber-700 border border-amber-200 dark:border-amber-800/50",
-  stable: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:border-emerald-800/50",
-  potential: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:border-indigo-800/50",
+  danger: RL_LOSS,
+  warning: RL_WATCH,
+  watch: RL_WATCH,
+  stable: RL_PROFIT,
+  potential: RL_DORMANT,
 };
 
 export function RiskLevelBadge({ level }: { level: RiskLevel }) {
@@ -58,7 +63,11 @@ export function TriScoreDisplay({ triScore }: { triScore: TriScore }) {
                 strokeDasharray={`${(item.value / 100) * 94.2} 94.2`}
                 strokeLinecap="round"
                 className={
-                  item.value >= 70 ? "text-emerald-500" : item.value >= 40 ? "text-amber-500" : "text-rose-500"
+                  item.value >= 70
+                    ? "text-[var(--status-profit)]"
+                    : item.value >= 40
+                      ? "text-[var(--status-watch)]"
+                      : "text-[var(--status-loss)]"
                 }
                 stroke="currentColor"
               />
@@ -75,10 +84,10 @@ export function TriScoreDisplay({ triScore }: { triScore: TriScore }) {
 export function PageRecommendationCard({ recommendation }: { recommendation: PageRecommendation }) {
   const borderColor =
     recommendation.priority === "high"
-      ? "border-rose-200 dark:border-rose-800/50"
+      ? "border-[var(--status-loss-light)]"
       : recommendation.priority === "medium"
-        ? "border-amber-200 dark:border-amber-800/50"
-        : "border-emerald-200 dark:border-emerald-800/50";
+        ? "border-[var(--status-watch-light)]"
+        : "border-[var(--status-profit-light)]";
 
   return (
     <div className="p-3" data-testid="card-page-recommendation">
@@ -88,10 +97,10 @@ export function PageRecommendationCard({ recommendation }: { recommendation: Pag
             <AlertTriangle
               className={`w-4 h-4 shrink-0 ${
                 recommendation.priority === "high"
-                  ? "text-rose-500"
+                  ? "text-[var(--status-loss)]"
                   : recommendation.priority === "medium"
-                    ? "text-amber-500"
-                    : "text-emerald-500"
+                    ? "text-[var(--status-watch)]"
+                    : "text-[var(--status-profit)]"
               }`}
             />
             <span className="text-sm font-semibold">{recommendation.diagnosis}</span>
@@ -125,7 +134,7 @@ export function ChangeIndicator({ current, previous, inverse = false }: { curren
   const isGood = inverse ? change < 0 : change > 0;
   const absChange = Math.abs(change);
   return (
-    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-emerald-600" : "text-rose-600"}`}>
+    <span className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? "text-[var(--status-profit)]" : "text-[var(--status-loss)]"}`}>
       {isGood ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
       {absChange.toFixed(1)}
     </span>

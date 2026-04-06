@@ -12,17 +12,17 @@ export function scoreToGradeLetter(score: number): ReportGradeLetter {
 }
 
 function gradeTone(g: ReportGradeLetter): string {
-  if (g === "S" || g === "A") return "text-emerald-600 dark:text-emerald-400";
-  if (g === "B") return "text-indigo-600 dark:text-indigo-400";
-  if (g === "C") return "text-amber-600 dark:text-amber-400";
-  return "text-rose-600 dark:text-rose-400";
+  if (g === "S" || g === "A") return "text-[var(--status-profit)]";
+  if (g === "B") return "text-[var(--status-dormant)]";
+  if (g === "C") return "text-[var(--status-watch)]";
+  return "text-[var(--status-loss)]";
 }
 
 function gradeBarColor(g: ReportGradeLetter): string {
-  if (g === "S" || g === "A") return "bg-emerald-500";
-  if (g === "B") return "bg-indigo-500";
-  if (g === "C") return "bg-amber-500";
-  return "bg-rose-500";
+  if (g === "S" || g === "A") return "bg-[var(--status-profit)]";
+  if (g === "B") return "bg-[var(--status-dormant)]";
+  if (g === "C") return "bg-[var(--status-watch)]";
+  return "bg-[var(--status-loss)]";
 }
 
 export function ScoreBar({

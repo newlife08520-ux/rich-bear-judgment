@@ -89,7 +89,7 @@ export function Ga4MainTabs(w: Ga4Workbench) {
                                 <span className="text-xs text-muted-foreground shrink-0">{pg.sessions} 工作階段</span>
                               </div>
                               <p className="text-xs text-rose-600 dark:text-rose-400 mb-0.5">{pg.reason}</p>
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400">建議: {pg.fix}</p>
+                              <p className="text-xs text-[var(--status-profit)]">建議: {pg.fix}</p>
                             </div>
                           ))}
                         </div>

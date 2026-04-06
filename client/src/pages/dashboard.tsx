@@ -239,8 +239,8 @@ export default function DashboardPage() {
                   className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]"
                   data-testid="grid-partial-data-usability-v11"
                 >
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 border-l-4 border-l-emerald-500 px-2.5 py-2 dark:border-border dark:bg-muted/20">
-                    <p className="font-semibold text-emerald-800 dark:text-emerald-200">此刻可用（主決策）</p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 border-l-4 border-l-[var(--status-profit)] px-2.5 py-2 dark:border-border dark:bg-muted/20">
+                    <p className="font-semibold text-[var(--status-profit)]">此刻可用（主決策）</p>
                     <p className="text-muted-foreground mt-1">
                       今日戰略指令、五大決策區數值、加碼／救援焦點、沉睡復活名單（同一資料範圍）。
                     </p>

@@ -302,17 +302,23 @@ export function CreativeTable({
                       {pb.top20 || pb.hiddenDiamond || pb.moneyPit ? (
                         <div className="flex flex-wrap gap-1" data-testid={`pareto-badges-${c.id}`}>
                           {pb.top20 ? (
-                            <Badge variant="outline" className="text-[11px] h-5 border-emerald-500/50 text-emerald-800">
+                            <Badge
+                              variant="outline"
+                              className="text-[11px] h-5 border-[var(--status-profit-light)] text-[var(--status-profit)]"
+                            >
                               Top20
                             </Badge>
                           ) : null}
                           {pb.hiddenDiamond ? (
-                            <Badge variant="outline" className="text-[11px] h-5 border-indigo-500/50 text-indigo-800 dark:text-indigo-200">
+                            <Badge
+                              variant="outline"
+                              className="text-[11px] h-5 border-[var(--status-dormant-light)] text-[var(--status-dormant)]"
+                            >
                               Hidden
                             </Badge>
                           ) : null}
                           {pb.moneyPit ? (
-                            <Badge variant="outline" className="text-[11px] h-5 border-rose-500/50 text-rose-800">
+                            <Badge variant="outline" className="text-[11px] h-5 border-[var(--status-loss-light)] text-[var(--status-loss)]">
                               Pit
                             </Badge>
                           ) : null}

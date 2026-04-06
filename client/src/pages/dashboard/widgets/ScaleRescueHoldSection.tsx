@@ -27,7 +27,7 @@ export function ScaleRescueHoldSection({
         <CardContent className="p-5 space-y-3">
           <div>
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Scale className="w-4 h-4 text-[var(--status-profit)] shrink-0" />
               戰略三桶：加碼 · 救援 · 觀察（Hold）
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
@@ -36,7 +36,7 @@ export function ScaleRescueHoldSection({
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-2">
-              <h3 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+              <h3 className="text-xs font-semibold text-[var(--status-profit)] flex items-center gap-1">
                 <Scale className="w-3.5 h-3.5" />
                 加碼（Scale）
               </h3>

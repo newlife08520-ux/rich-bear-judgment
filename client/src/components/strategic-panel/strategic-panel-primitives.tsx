@@ -13,7 +13,7 @@ export function CommandBand({ className, children, ...rest }: BandProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-slate-200 bg-white shadow-sm border-l-4 border-l-emerald-500 p-5 dark:border-border dark:bg-card",
+        "rounded-xl border border-slate-200 bg-white shadow-sm border-l-4 border-l-[var(--status-profit)] p-5 dark:border-border dark:bg-card",
         className
       )}
       {...rest}

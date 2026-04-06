@@ -27,10 +27,10 @@ export function HomepageScaleRescueSpotlightsSection({
           <p className="text-xs font-semibold text-foreground mb-3">指揮焦點 · 放大與止血（精簡列；完整三桶見下方「營運細節」）</p>
           <div className="grid gap-4 md:grid-cols-2">
             <div
-              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-emerald-500 p-3 space-y-2 dark:border-border dark:bg-card"
+              className="rounded-xl border border-slate-200 bg-white border-l-4 border-l-[var(--status-profit)] p-3 space-y-2 dark:border-border dark:bg-card"
               data-testid="homepage-scale-spotlight"
             >
-              <h3 className="text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+              <h3 className="text-xs font-semibold text-[var(--status-profit)] flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 shrink-0" />
                 今日最值得放大
               </h3>

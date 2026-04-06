@@ -50,7 +50,7 @@ export function JudgmentFocusStrip({
         data-testid="judgment-focus-strip-v12"
       >
         <p className="text-sm font-semibold text-foreground leading-snug tracking-tight">{conclusion}</p>
-        <p className="text-sm text-emerald-800 dark:text-emerald-200 leading-snug">
+        <p className="text-sm text-[var(--status-profit)] leading-snug">
           <span className="font-semibold">下一步 · </span>
           {nextAction}
         </p>

@@ -43,7 +43,7 @@ function publishListStatusBadgeClass(status: PublishStatus): string {
     case "ready":
       return "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950 dark:text-indigo-200 dark:border-indigo-800/50 font-normal";
     case "published":
-      return "bg-emerald-600 text-white hover:bg-emerald-600 border-transparent font-normal";
+      return "bg-[var(--status-profit)] text-white hover:opacity-90 border-transparent font-normal";
     case "failed":
       return "bg-destructive/15 text-destructive border-destructive/50 font-normal";
     default:

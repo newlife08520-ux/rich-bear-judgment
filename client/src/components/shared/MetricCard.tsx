@@ -31,8 +31,8 @@ export function MetricCard({
           <TrendIcon
             className={cn(
               "w-5 h-5 shrink-0 mb-1",
-              trend === "up" && "text-emerald-600",
-              trend === "down" && "text-rose-600",
+              trend === "up" && "text-[var(--status-profit)]",
+              trend === "down" && "text-[var(--status-loss)]",
               trend === "flat" && "text-muted-foreground"
             )}
             aria-hidden

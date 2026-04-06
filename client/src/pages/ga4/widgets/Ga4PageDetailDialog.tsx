@@ -81,11 +81,11 @@ export function Ga4PageDetailDialog(w: Pick<
               {selectedDetail.opportunityBreakdown && <OpportunityBreakdownDisplay breakdown={selectedDetail.opportunityBreakdown} />}
 
               {selectedDetail.suggestedAction && (
-                <div className="flex items-start gap-2 p-3 rounded-xl border border-slate-200 bg-white border-l-4 border-l-emerald-500 dark:border-border dark:bg-card">
-                  <Lightbulb className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 p-3 rounded-xl border border-slate-200 bg-white border-l-4 border-l-[var(--status-profit)] dark:border-border dark:bg-card">
+                  <Lightbulb className="w-4 h-4 text-[var(--status-profit)] shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-0.5">建議動作</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed" data-testid="text-detail-suggested-action">{selectedDetail.suggestedAction}</p>
+                    <p className="text-xs font-semibold text-[var(--status-profit)] mb-0.5">建議動作</p>
+                    <p className="text-sm text-[var(--status-profit)] leading-relaxed" data-testid="text-detail-suggested-action">{selectedDetail.suggestedAction}</p>
                   </div>
                 </div>
               )}

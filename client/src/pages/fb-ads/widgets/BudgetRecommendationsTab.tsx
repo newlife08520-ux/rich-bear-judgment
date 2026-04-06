@@ -127,10 +127,10 @@ export function BudgetRecommendationsTab({
   if (!recs || recs.length === 0) return null;
 
   const typeConfig: Record<string, { icon: typeof ArrowUp; colorClass: string; bgClass: string }> = {
-    increase: { icon: ArrowUp, colorClass: "text-emerald-600", bgClass: "bg-slate-100 dark:bg-muted" },
-    decrease: { icon: ArrowDown, colorClass: "text-amber-600", bgClass: "bg-slate-100 dark:bg-muted" },
-    pause: { icon: Pause, colorClass: "text-rose-600", bgClass: "bg-slate-100 dark:bg-muted" },
-    test: { icon: FlaskConical, colorClass: "text-indigo-600 dark:text-indigo-400", bgClass: "bg-slate-100 dark:bg-muted" },
+    increase: { icon: ArrowUp, colorClass: "text-[var(--status-profit)]", bgClass: "bg-slate-100 dark:bg-muted" },
+    decrease: { icon: ArrowDown, colorClass: "text-[var(--status-watch)]", bgClass: "bg-slate-100 dark:bg-muted" },
+    pause: { icon: Pause, colorClass: "text-[var(--status-loss)]", bgClass: "bg-slate-100 dark:bg-muted" },
+    test: { icon: FlaskConical, colorClass: "text-[var(--status-dormant)]", bgClass: "bg-slate-100 dark:bg-muted" },
   };
 
   return (
@@ -156,7 +156,7 @@ export function BudgetRecommendationsTab({
                   <p className="text-xs text-muted-foreground leading-relaxed mb-1">
                     {rec.reason}
                   </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400" data-testid={`text-budget-impact-${i}`}>
+                  <p className="text-xs text-[var(--status-profit)]" data-testid={`text-budget-impact-${i}`}>
                     預期效果: {rec.expectedImpact}
                   </p>
                   {rec.paceDescription && (

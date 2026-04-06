@@ -24,7 +24,7 @@ export function DashboardWelcomeEmpty({
       <div className="space-y-2 text-sm w-full max-w-md">
         <div className="flex items-center gap-2">
           {hasGeminiKey ? (
-            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+            <CheckCircle className="w-4 h-4 text-[var(--status-profit)] shrink-0" />
           ) : (
             <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
@@ -32,7 +32,7 @@ export function DashboardWelcomeEmpty({
         </div>
         <div className="flex items-center gap-2">
           {hasMetaToken ? (
-            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+            <CheckCircle className="w-4 h-4 text-[var(--status-profit)] shrink-0" />
           ) : (
             <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
@@ -40,7 +40,7 @@ export function DashboardWelcomeEmpty({
         </div>
         <div className="flex items-center gap-2">
           {hasBatchData ? (
-            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+            <CheckCircle className="w-4 h-4 text-[var(--status-profit)] shrink-0" />
           ) : (
             <Circle className="w-4 h-4 text-muted-foreground shrink-0" />
           )}

@@ -156,7 +156,7 @@ export function HistoryReportDialog({
 
                     <div>
                       <h4
-                        className="text-sm font-semibold text-emerald-600 mb-2 flex items-center gap-1.5"
+                        className="text-sm font-semibold text-[var(--status-profit)] mb-2 flex items-center gap-1.5"
                         data-testid="text-priority-actions-title"
                       >
                         <CheckCircle className="w-4 h-4" />
@@ -177,10 +177,10 @@ export function HistoryReportDialog({
                           return (
                             <div
                               key={i}
-                              className="flex items-start gap-2 p-3 rounded-md bg-white border border-slate-200 border-l-4 border-l-emerald-500 dark:border-border dark:bg-card"
+                              className="flex items-start gap-2 p-3 rounded-md bg-white border border-slate-200 border-l-4 border-l-[var(--status-profit)] dark:border-border dark:bg-card"
                               data-testid={`card-priority-action-${i}`}
                             >
-                              <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 dark:border-emerald-800/50">
+                              <span className="w-5 h-5 rounded-full bg-[var(--status-profit-surface)] text-[var(--status-profit)] border border-[var(--status-profit-light)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                                 {action.order}
                               </span>
                               <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export function HistoryReportDialog({
                       {Object.entries(selectedReport.detail.diagnosis).map(([key, dim]) => {
                         const d = dim as { score: number; analysis: string };
                         const scoreColor =
-                          d.score >= 70 ? "text-emerald-700" : d.score >= 40 ? "text-amber-700" : "text-rose-700";
+                          d.score >= 70 ? "text-[var(--status-profit)]" : d.score >= 40 ? "text-[var(--status-watch)]" : "text-[var(--status-loss)]";
                         return (
                           <div key={key} className="p-2 border-b last:border-0">
                             <div className="flex items-center justify-between">
