@@ -47,7 +47,7 @@ export function AccountExceptionsBlock({
 
   if (compact) {
     return (
-      <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
+      <Card className="bg-card border border-border shadow-sm rounded-xl border-l-4 border-l-[var(--status-watch)]">
         <CardHeader className="py-2 px-3">
           <CardTitle className="text-sm flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -57,9 +57,11 @@ export function AccountExceptionsBlock({
         <CardContent className="py-0 px-3 pb-2">
           <ul className="text-xs space-y-0.5">
             {accounts.slice(0, 5).map((a) => (
-              <li key={a.accountId}>
+              <li key={a.accountId} className="flex flex-wrap items-center gap-1.5">
                 <span className="font-medium">{a.accountName || a.accountId}</span>
-                <span className="text-muted-foreground"> · {a.anomalyCount} 筆異常</span>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                  {a.anomalyCount} 筆異常
+                </span>
               </li>
             ))}
             {accounts.length > 5 && (
@@ -72,7 +74,7 @@ export function AccountExceptionsBlock({
   }
 
   return (
-    <Card className="border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card">
+    <Card className="bg-card border border-border shadow-sm rounded-xl border-l-4 border-l-amber-500">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -82,10 +84,12 @@ export function AccountExceptionsBlock({
       </CardHeader>
       <CardContent className="space-y-3">
         {accounts.map((a) => (
-          <div key={a.accountId} className="rounded-md border bg-background/80 p-2 text-sm">
-            <div className="font-medium flex items-center gap-2">
+          <div key={a.accountId} className="rounded-lg border border-border bg-muted/20 p-3 text-sm">
+            <div className="font-medium flex flex-wrap items-center gap-2">
               {a.accountName || a.accountId}
-              <span className="text-xs text-muted-foreground">({a.anomalyCount} 筆)</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)]">
+                {a.anomalyCount} 筆異常
+              </span>
             </div>
             <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
               {a.anomalies.slice(0, 3).map((an, i) => (

@@ -18,6 +18,14 @@ function isRulesMissingSignal(block: DecisionCardBlock): boolean {
   return /規則缺失|待補成本|尚未設定成本|未設定成本|缺少成本|無成本規則|rules?\s*missing/i.test(t);
 }
 
+function decisionCardLeftBorderClass(block: DecisionCardBlock, rulesMissing: boolean): string {
+  if (rulesMissing) return "border-l-[var(--status-watch)]";
+  const sa = block.suggestedAction ?? "";
+  if (/關閉|止血/.test(sa)) return "border-l-[var(--status-loss)]";
+  if (/加碼|放大/.test(sa)) return "border-l-[var(--status-profit)]";
+  return "border-l-[var(--status-dormant)]";
+}
+
 export function JudgmentDecisionCardsSection({
   decisionCards,
   execution,
@@ -31,8 +39,8 @@ export function JudgmentDecisionCardsSection({
       <h2 className="text-sm font-semibold text-foreground">決策卡（規則引擎產出）</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {decisionCards.length === 0 ? (
-          <Card className="bg-card border border-border col-span-full">
-            <CardContent className="p-4 text-sm text-muted-foreground">
+          <Card className="bg-card border border-border shadow-sm rounded-xl col-span-full">
+            <CardContent className="p-5 text-sm text-muted-foreground">
               載入中或尚無廣告資料，請先同步廣告資料後重新整理。
             </CardContent>
           </Card>
@@ -45,11 +53,11 @@ export function JudgmentDecisionCardsSection({
               <Card
                 key={block.key}
                 className={cn(
-                  "bg-card border border-border",
-                  rulesMissing && "border-slate-200 bg-white border-l-4 border-l-amber-500 dark:border-border dark:bg-card"
+                  "bg-card border border-border shadow-sm rounded-xl border-l-4",
+                  decisionCardLeftBorderClass(block, rulesMissing)
                 )}
               >
-                <CardContent className="p-3 space-y-2">
+                <CardContent className="p-5 space-y-2">
                   <div className="flex items-center justify-between gap-1">
                     <p className="text-xs font-semibold text-muted-foreground">{block.label}</p>
                     <span className="text-xs text-muted-foreground">
@@ -77,11 +85,13 @@ export function JudgmentDecisionCardsSection({
                     )}
                   </div>
                   {rulesMissing ? (
-                    <p className="text-[11px] font-semibold text-amber-900 dark:text-amber-100 rounded border border-amber-400/50 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-1">
+                    <p className="bg-[var(--status-watch-surface)] text-[var(--status-watch)] border border-[var(--status-watch-light)] px-3 py-2 rounded-md font-semibold text-[11px]">
                       成本／規則資料不足：請先至獲利規則中心補齊，避免誤判。
                     </p>
                   ) : null}
-                  <p className="text-sm font-medium whitespace-pre-wrap">{block.conclusion}</p>
+                  <p className="text-sm font-semibold leading-relaxed text-slate-800 dark:text-foreground whitespace-pre-wrap border-l-2 border-slate-300 dark:border-border pl-3 py-1 my-2 bg-transparent">
+                    {block.conclusion}
+                  </p>
                   <div className="text-xs space-y-1 border-t pt-2 text-muted-foreground">
                     <p>
                       <span className="font-medium">觸發規則：</span>

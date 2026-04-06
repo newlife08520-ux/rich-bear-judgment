@@ -96,22 +96,22 @@ export function DormantGemsSurfaceSection({
       <div data-testid="dormant-gems-surface-v2">
         <div data-testid="dormant-gem-primary-work-object-v6" className="min-w-0">
         <Card
-          className="border-dashed border-slate-300 bg-white border-l-4 border-l-indigo-500 dark:border-border dark:bg-card"
+          className="bg-muted/20 border border-border shadow-none rounded-xl"
           data-testid={testId}
           id={anchorId}
         >
           <CardHeader className="py-3 pb-2">
-            <CardTitle className="text-base font-semibold text-indigo-950 dark:text-indigo-100">
+            <CardTitle className="text-base font-semibold text-foreground">
               沉睡復活候選
             </CardTitle>
             <p className="text-xs text-muted-foreground font-normal leading-snug">
               目前無符合條件的候選。尚未投遞、樣本不足等請見上方補充說明或預算頁診斷，與本區分開檢視。
             </p>
             <div
-              className="rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-2 text-[11px] text-muted-foreground leading-snug dark:border-border dark:bg-muted/20"
+              className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground leading-snug"
               data-testid="dormant-zero-spend-classification-legend"
             >
-              <p className="font-medium text-indigo-900 dark:text-indigo-200 mb-1">零花費怎麼看</p>
+              <p className="font-medium text-foreground mb-1">零花費怎麼看</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>
                   <strong>沉睡高潛／暫停贏家</strong>：本區主要操作對象。
@@ -145,11 +145,11 @@ export function DormantGemsSurfaceSection({
     <div data-testid="dormant-gems-operational-shell-v6">
     <div data-testid="dormant-gems-surface-v2">
       <div data-testid="dormant-gem-primary-work-object-v6" className="min-w-0">
-      <Card className="border border-slate-200 bg-white border-l-4 border-l-indigo-500 shadow-sm dark:border-border dark:bg-card" data-testid={testId} id={anchorId}>
+      <Card className="bg-card border border-border shadow-sm rounded-xl border-l-4 border-l-[var(--status-dormant)]" data-testid={testId} id={anchorId}>
         <CardHeader className="py-3 pb-2 space-y-2">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <CardTitle className="text-base font-semibold text-indigo-950 dark:text-indigo-100">
+              <CardTitle className="text-base font-semibold text-foreground">
                 主工作物件：沉睡／暫停高潛名單（可復活）
               </CardTitle>
               <p className="text-xs text-muted-foreground font-normal leading-snug mt-1">
@@ -230,23 +230,17 @@ export function DormantGemsSurfaceSection({
               <Button type="button" size="sm" variant="outline" className="h-8 text-xs rounded-lg" asChild>
                 <Link href="/fb-ads">查看預算</Link>
               </Button>
-              <div className="w-full basis-full text-xs space-y-1.5 pt-1 border-t border-border/50 mt-1">
-                <p
-                  className="text-indigo-900 dark:text-indigo-100 leading-snug border-l-2 border-indigo-300 dark:border-indigo-600/50 pl-2"
-                  data-testid="dormant-gem-reason-line"
-                >
+              <div className="w-full basis-full text-sm space-y-1.5 pt-1 border-t border-border/50 mt-1">
+                <p className="leading-relaxed font-medium text-foreground" data-testid="dormant-gem-reason-line">
                   {reasonFor(c)}
                 </p>
-                <p
-                  className="text-emerald-900/90 dark:text-emerald-100/85 leading-snug border-l-2 border-emerald-400/50 pl-2"
-                  data-testid="dormant-gem-revive-recommendation"
-                >
+                <p className="leading-relaxed font-medium text-muted-foreground" data-testid="dormant-gem-revive-recommendation">
                   {reviveFor(c)}
                 </p>
-                <p className="text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-paused">
+                <p className="text-muted-foreground leading-relaxed text-xs" data-testid="dormant-gem-why-paused">
                   {whyPausedFor(c)}
                 </p>
-                <p className="text-muted-foreground leading-snug pl-2" data-testid="dormant-gem-why-revive">
+                <p className="text-muted-foreground leading-relaxed text-xs" data-testid="dormant-gem-why-revive">
                   {whyReviveFor(c)}
                 </p>
               </div>

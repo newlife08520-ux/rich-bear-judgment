@@ -40,21 +40,25 @@
   --input: 214 32% 91%;
   --ring: 243 75% 58%;
 
-  --status-profit: #059669;
-  --status-profit-light: #6ee7b7;
-  --status-profit-surface: #d1fae5;
-  --status-loss: #e11d48;
-  --status-loss-light: #fecdd3;
-  --status-loss-surface: #ffe4e6;
-  --status-watch: #b45309;
-  --status-watch-light: #fcd34d;
-  --status-watch-surface: #fef3c7;
-  --status-dormant: #6366f1;
-  --status-dormant-light: #c7d2fe;
-  --status-dormant-surface: #e0e7ff;
-  --status-info: #4f46e5;
-  --status-info-light: #a5b4fc;
-  --status-info-surface: #e0e7ff;
+  /* 🟩 戰略獲利（深青墨綠，取代刺眼螢光綠） */
+  --status-profit: #0f766e; /* teal-700 */
+  --status-profit-light: #ccfbf1;
+  --status-profit-surface: #f0fdfa;
+  /* 🟥 戰略止損（深緋紅，取代亮粉紅） */
+  --status-loss: #be123c; /* rose-700 */
+  --status-loss-light: #ffe4e6;
+  --status-loss-surface: #fff1f2;
+  /* 🟨 戰略觀察（日落琥珀金） */
+  --status-watch: #b45309; /* amber-700 */
+  --status-watch-light: #fef3c7;
+  --status-watch-surface: #fffbeb;
+  /* 🟦 戰略資訊／沉睡（冷冽深鋼灰，取代紫藕玩具感） */
+  --status-dormant: #334155; /* slate-700 */
+  --status-dormant-light: #f1f5f9;
+  --status-dormant-surface: #f8fafc;
+  --status-info: #334155;
+  --status-info-light: #f1f5f9;
+  --status-info-surface: #f8fafc;
   --chart-1: 221 83% 53%;
   --chart-2: 142 71% 45%;
   --chart-3: 25 95% 53%;
@@ -118,21 +122,22 @@
   --destructive: 346.8 65% 50%;
   --destructive-foreground: 0 0% 100%;
 
-  --status-profit: #34d399;
-  --status-profit-light: rgba(16, 185, 129, 0.15);
-  --status-profit-surface: rgba(16, 185, 129, 0.08);
+  /* 暗色模式：與淺色同一基因，提高可讀性、避免螢光綠／紫 */
+  --status-profit: #5eead4;
+  --status-profit-light: rgba(15, 118, 110, 0.22);
+  --status-profit-surface: rgba(15, 118, 110, 0.1);
   --status-loss: #fb7185;
-  --status-loss-light: rgba(244, 63, 94, 0.2);
-  --status-loss-surface: rgba(244, 63, 94, 0.1);
+  --status-loss-light: rgba(190, 18, 60, 0.25);
+  --status-loss-surface: rgba(190, 18, 60, 0.12);
   --status-watch: #fbbf24;
-  --status-watch-light: rgba(245, 158, 11, 0.15);
-  --status-watch-surface: rgba(245, 158, 11, 0.08);
-  --status-dormant: #818cf8;
-  --status-dormant-light: rgba(99, 102, 241, 0.2);
-  --status-dormant-surface: rgba(99, 102, 241, 0.1);
-  --status-info: #818cf8;
-  --status-info-light: rgba(99, 102, 241, 0.2);
-  --status-info-surface: rgba(99, 102, 241, 0.1);
+  --status-watch-light: rgba(180, 83, 9, 0.22);
+  --status-watch-surface: rgba(180, 83, 9, 0.1);
+  --status-dormant: #94a3b8;
+  --status-dormant-light: rgba(51, 65, 85, 0.35);
+  --status-dormant-surface: rgba(51, 65, 85, 0.16);
+  --status-info: #94a3b8;
+  --status-info-light: rgba(51, 65, 85, 0.35);
+  --status-info-surface: rgba(51, 65, 85, 0.16);
 }
 
 @layer base {

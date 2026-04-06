@@ -19,6 +19,15 @@ function todayTypeToSemantic(t: string): StatusSemantic {
   return "neutral";
 }
 
+/** Obsidian：刀鋒左線對齊 index.css 語意色（覆寫 ActionCard 預設 stripe） */
+function todayActionRazorClass(type: string): string {
+  if (type === "止血") return "border-l-[var(--status-loss)]";
+  if (type === "放大") return "border-l-[var(--status-profit)]";
+  if (type === "不要誤殺") return "border-l-[var(--status-watch)]";
+  if (type === "值得延伸") return "border-l-[var(--status-dormant)]";
+  return "border-l-[var(--status-dormant)]";
+}
+
 export type TodayActionsExecutionProps = {
   metaWritesAllowed: boolean;
   guardMessage: string | null;
@@ -35,7 +44,7 @@ export function TodayActionsSection({
 }) {
   return (
     <section data-testid="section-today-actions">
-      <Card className="border-slate-200 bg-white shadow-md border-l-4 border-l-indigo-500 dark:border-border dark:bg-card">
+      <Card className="bg-card border border-border shadow-sm rounded-xl border-l-4 border-l-indigo-600">
         <CardContent className="p-6 sm:p-7">
           <div className="mb-4 sm:mb-5">
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 sm:text-xl" data-testid="heading-today-top-actions">
@@ -57,6 +66,7 @@ export function TodayActionsSection({
                   <li key={`${a.type}-${a.productName}-${a.campaignId ?? a.campaignName ?? i}`}>
                     <ActionCard
                       semantic={todayTypeToSemantic(a.type)}
+                      className={todayActionRazorClass(a.type)}
                       title={title}
                       subtitle={subtitle}
                       metrics={
@@ -70,7 +80,10 @@ export function TodayActionsSection({
                         </>
                       }
                     >
-                      <p className="text-base font-semibold text-foreground w-full" data-testid="director-verdict">
+                      <p
+                        className="text-sm font-semibold text-foreground border-l-2 border-primary/50 pl-3 py-1 my-2 bg-transparent w-full leading-relaxed"
+                        data-testid="director-verdict"
+                      >
                         {a.directorVerdict}
                       </p>
                       {showExec ? (

@@ -92,11 +92,12 @@ import {
   type SortDir,
   type AccountFilter,
 } from "./shared";
+import { cn } from "@/lib/utils";
 
 export function OperationalSummarySection({ data, isLoading }: { data?: FbAccountOverview; isLoading: boolean }) {
   if (isLoading) {
     return (
-      <Card data-testid="card-operational-summary" className="hover:shadow-md transition-shadow">
+      <Card data-testid="card-operational-summary" className="border border-border bg-card shadow-sm rounded-xl hover:shadow-md transition-shadow">
         <CardContent className="p-5">
           <Skeleton className="w-32 h-5 mb-3" />
           <Skeleton className="w-full h-14 mb-5" />
@@ -153,11 +154,11 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
   ];
 
   return (
-    <Card data-testid="card-operational-summary" className="hover:shadow-md transition-shadow">
+    <Card data-testid="card-operational-summary" className="border border-border bg-card shadow-sm rounded-xl hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-md bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center shrink-0">
-            <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <div className="w-8 h-8 rounded-md border border-border bg-card flex items-center justify-center shrink-0">
+            <Target className="w-4 h-4 text-foreground" />
           </div>
           <h2 className="section-title text-muted-foreground" data-testid="text-summary-title">整體操盤狀況</h2>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
@@ -174,11 +175,11 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           {primaryMetrics.map((m) => (
             <div
               key={m.key}
-              className="p-3 rounded-md bg-muted/40"
+              className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between text-center"
               data-testid={`summary-metric-${m.key}`}
             >
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
-              <p className="text-xl font-bold tracking-tight mb-1" data-testid={`summary-value-${m.key}`}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">{m.label}</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter tabular-nums mb-1" data-testid={`summary-value-${m.key}`}>
                 {m.value}
               </p>
               <ChangeIndicator metricKey={m.key} change={m.kpi?.change ?? 0} />
@@ -193,11 +194,11 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           {secondaryMetrics.map((m) => (
             <div
               key={m.key}
-              className="p-3 rounded-md bg-muted/40 text-center"
+              className="bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between text-center"
               data-testid={`summary-metric-${m.key}`}
             >
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{m.label}</p>
-              <p className="text-lg font-bold tracking-tight" data-testid={`summary-value-${m.key}`}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">{m.label}</p>
+              <p className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter tabular-nums" data-testid={`summary-value-${m.key}`}>
                 {m.value}
               </p>
               <ChangeIndicator metricKey={m.key} change={m.kpi?.change ?? 0} />
@@ -205,11 +206,20 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           ))}
 
           <div
-            className={`p-3 rounded-md text-center ${data.stopSuggestionCount > 0 ? "bg-rose-50 dark:bg-rose-950/40" : "bg-muted/40"}`}
+            className={cn(
+              "bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between text-center",
+              data.stopSuggestionCount > 0 && "border-t-[4px] border-t-[var(--status-loss)]"
+            )}
             data-testid="summary-metric-dangerCount"
           >
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">危險數量</p>
-            <p className={`text-lg font-bold tracking-tight ${data.stopSuggestionCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`} data-testid="summary-value-dangerCount">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">危險數量</p>
+            <p
+              className={cn(
+                "text-2xl sm:text-3xl font-black tracking-tighter tabular-nums",
+                data.stopSuggestionCount > 0 ? "text-[var(--status-loss)]" : "text-foreground"
+              )}
+              data-testid="summary-value-dangerCount"
+            >
               {data.stopSuggestionCount}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
@@ -218,11 +228,14 @@ export function OperationalSummarySection({ data, isLoading }: { data?: FbAccoun
           </div>
 
           <div
-            className={`p-3 rounded-md text-center ${data.highPotentialCount > 0 ? "bg-indigo-50 dark:bg-indigo-950/40" : "bg-muted/40"}`}
+            className={cn(
+              "bg-card border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between text-center",
+              data.highPotentialCount > 0 && "border-t-[4px] border-t-[var(--status-profit)]"
+            )}
             data-testid="summary-metric-scalableCount"
           >
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">可擴量數量</p>
-            <p className={`text-lg font-bold tracking-tight ${data.highPotentialCount > 0 ? "text-indigo-600 dark:text-indigo-400" : "text-foreground"}`} data-testid="summary-value-scalableCount">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1">可擴量數量</p>
+            <p className="text-2xl sm:text-3xl font-black text-foreground tracking-tighter tabular-nums" data-testid="summary-value-scalableCount">
               {data.highPotentialCount}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
