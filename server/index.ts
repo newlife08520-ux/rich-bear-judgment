@@ -140,10 +140,15 @@ app.use((req, res, next) => {
 
     httpServer.listen(port, host, () => {
       httpServer.removeAllListeners("error");
+      const openHost = host === "0.0.0.0" || host === "::" ? "localhost" : host;
+      const url = `http://${openHost}:${port}`;
       if (port !== 5000 && portsToTry.length > 1) {
-        console.log(`[提示] 5000 被佔用，已改用埠 ${port}。請開啟 http://localhost:${port}`);
+        console.log(`\n[提示] 預設埠 5000 已被佔用，已改用埠 ${port}。`);
       }
-      log(`serving on http://${host === "0.0.0.0" ? "localhost" : host}:${port}`);
+      console.log(`\n┌──────────────────────────────────────────────`);
+      console.log(`│ 請用瀏覽器開啟：${url}`);
+      console.log(`└──────────────────────────────────────────────\n`);
+      log(`serving on ${url}`);
     });
   }
   tryListen();

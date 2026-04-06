@@ -505,7 +505,11 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const row = await prisma.user.findUnique({ where: { username } });
+    const name = username.trim();
+    if (!name) return undefined;
+    const row = await prisma.user.findFirst({
+      where: { username: { equals: name, mode: "insensitive" } },
+    });
     if (!row) return undefined;
     return {
       id: row.id,

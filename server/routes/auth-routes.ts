@@ -25,7 +25,11 @@ export function registerAuthRoutes(
     if (!result.success) {
       return res.status(400).json({ message: "請輸入帳號與密碼" });
     }
-    const { username, password } = result.data;
+    const username = result.data.username.trim();
+    const password = result.data.password;
+    if (!username) {
+      return res.status(400).json({ message: "請輸入帳號與密碼" });
+    }
     const ip = clientIp(req);
     const limit = checkLoginRateLimit(ip, username);
     if (!limit.ok) {
